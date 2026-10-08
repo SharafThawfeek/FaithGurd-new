@@ -205,7 +205,7 @@ def parse_cell(text: str) -> NumberMention | None:
 def detect_scale(text: str) -> int:
     """The scale stated in a table title or header, e.g. "Rs. '000" -> 3, "(in millions)" -> 6."""
     low = text.lower()
-    if re.search(r"['’]000|in thousands|thousands of", low):
+    if re.search(r"['’]000|in thousands|thousands of|(?:rs\.?|lkr|usd|us\$|\$)\s?000\b", low):  # "Rs 000" too
         return 3
     if re.search(r"in millions|millions of|\bmn\b|\(million|\bmillion\)", low):
         return 6
