@@ -3,31 +3,31 @@
     "items": 2133,
     "emitted": 1659,
     "emission_coverage": 0.7777777777777778,
-    "residual_risk": 0.012055455093429777,
-    "useful_coverage": 0.7674636661978435,
-    "unsafe_emitted": 20
+    "residual_risk": 0.018083182640144666,
+    "useful_coverage": 0.7627754336615096,
+    "unsafe_emitted": 30
   },
   "always_send": {
     "items": 2133,
     "emitted": 2133,
     "emission_coverage": 1.0,
-    "residual_risk": 0.7158931082981715,
-    "useful_coverage": 0.2841068917018284,
-    "unsafe_emitted": 1527
+    "residual_risk": 0.7909048288795124,
+    "useful_coverage": 0.2090951711204876,
+    "unsafe_emitted": 1687
   },
   "always_repair": {
     "items": 2133,
     "emitted": 1659,
     "emission_coverage": 0.7777777777777778,
-    "residual_risk": 0.012055455093429777,
-    "useful_coverage": 0.7674636661978435,
-    "unsafe_emitted": 20
+    "residual_risk": 0.018083182640144666,
+    "useful_coverage": 0.7627754336615096,
+    "unsafe_emitted": 30
   },
   "flip_matrix": {
     "unsupported": {
-      "unsupported": 20,
+      "unsupported": 30,
       "supported_unhelpful": 2,
-      "supported_useful": 1031,
+      "supported_useful": 1181,
       "abstained": 474
     },
     "supported_unhelpful": {
@@ -39,7 +39,7 @@
     "supported_useful": {
       "unsupported": 0,
       "supported_unhelpful": 0,
-      "supported_useful": 606,
+      "supported_useful": 446,
       "abstained": 0
     }
   },
@@ -76,7 +76,7 @@
     },
     "sign": {
       "repair -> supported_useful": 238,
-      "send -> supported_useful": 10
+      "send -> unsupported": 10
     }
   },
   "items": 2133

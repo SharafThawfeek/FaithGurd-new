@@ -61,7 +61,12 @@ def test_finqa_companies_cannot_enter_test_or_calibration(tmp_path):
         splits.build(csv, finqa)
 
 
-DECISION_TIME = ("detect", "policy", "repair", "executor.py", "claims.py", "pipeline.py", "calc", "tables.py", "records.py")
+# Code that runs while answering a user. Offline training and certification code
+# (policy/study.py, policy/certify.py, policy/outcome.py fitting) may read replay outcomes.
+DECISION_TIME = (
+    "detect", "repair", "executor.py", "claims.py", "pipeline.py", "calc", "tables.py", "records.py",
+    "policy/features.py", "policy/threshold.py", "policy/deployed.py",
+)
 
 
 def test_decision_time_code_never_reads_gold():

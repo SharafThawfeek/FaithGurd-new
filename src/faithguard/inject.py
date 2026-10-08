@@ -27,7 +27,7 @@ from faithguard.calc import expr, ops
 from faithguard.calc.numbers import NumberStyle, default_style, render
 from faithguard.data.example import Example
 from faithguard.gold import Injection
-from faithguard.records import Answer, Cell, Item
+from faithguard.records import Answer, Calculate, CannotFix, Cell, Copy, EditProgram, Item
 from faithguard.tables import parse_table_cell
 
 ERRORS = ("none", "period", "metric", "entity", "scale", "sign", "basis", "missing_operand")
@@ -166,6 +166,63 @@ def _write(s: Shape, a_value: Decimal, b_value: Decimal | None, variant: int, a_
     return f"{_cap(label)} was {A} in {s.a.period}, {'up' if up else 'down'} {_pct(abs(g))} from {B} in {s.b.period}."
 
 
+def _roles(s: Shape, variant: int, directional_difference: bool) -> list[str]:
+    """What each number in a template answer stands for, in the order the numbers appear.
+
+    A and B are the two cells, D their difference, G the growth rate, S the share.
+    """
+    if s.kind == "lookup":
+        return ["A"]
+    if s.kind == "share":
+        return ["S"]
+    if s.kind == "difference":
+        return ["D", "B", "A"] if directional_difference else ["B", "A", "D"]
+    return ["G", "B", "A"] if variant == 0 else ["A", "G", "B"]
+
+
+def _true_values(s: Shape) -> dict[str, tuple[Decimal, str]]:
+    """role -> (true value, cell expression that computes it)."""
+    a, b = s.a, s.b
+    out = {"A": (a.value, a.id)}
+    if b is not None:
+        out["B"] = (b.value, b.id)
+        out["D"] = (ops.diff(a.value, b.value), f"diff({a.id}, {b.id})")
+        if b.value != 0:
+            out["G"] = (ops.growth(a.value, b.value), f"growth({a.id}, {b.id})")
+            out["S"] = (ops.share(a.value, b.value), f"share({a.id}, {b.id})")
+    return out
+
+
+def target_program(text: str, s: Shape, roles: list[str]) -> EditProgram | None:
+    """Edits that fix exactly the wrong numbers in `text` (an empty program if nothing is wrong).
+
+    A number is right if it rounds to its role's true value and, for a change, its
+    direction word agrees with the sign. Returns None if the numbers cannot be aligned.
+    """
+    from faithguard.calc.numbers import find_numbers, matches
+    from faithguard.claims import DIRECTION_WORDS, extract_claims
+
+    claims = extract_claims(text)
+    if len(claims) != len(roles):
+        return None
+    mentions = {(m.start, m.end): m for m in find_numbers(text)}
+    truth = _true_values(s)
+    edits = []
+    for claim, role in zip(claims, roles):
+        value, expression = truth[role]
+        mention = mentions[(claim.start, claim.end)]
+        if claim.direction_span:
+            word = text[claim.direction_span[0] : claim.direction_span[1]].lower()
+            polarity = DIRECTION_WORDS[word][0]
+            right = matches(mention, abs(value)) and (polarity == "up") == (value >= 0)
+        else:
+            right = matches(mention, value)
+        if right:
+            continue
+        edits.append(Copy(claim=claim.id, cell=expression) if role in ("A", "B") else Calculate(claim=claim.id, expr=expression))
+    return EditProgram(edits=edits)
+
+
 def inject(example: Example, errors: tuple[str, ...] = ERRORS, seed: int = 13) -> list[tuple[Item, Injection]]:
     s = shape_of(example)
     if s is None or s.a.value is None or (s.b is not None and s.b.value is None):
@@ -179,7 +236,7 @@ def inject(example: Example, errors: tuple[str, ...] = ERRORS, seed: int = 13) -
         return []
     out = []
     for error in errors:
-        evidence, changed, removed, expected = example.evidence, [], [], "repair"
+        evidence, changed, removed, expected, detail = example.evidence, [], [], "repair", None
         if error == "none":
             text, expected = correct, "send"
         elif error in ("period", "metric", "entity"):
@@ -197,13 +254,27 @@ def inject(example: Example, errors: tuple[str, ...] = ERRORS, seed: int = 13) -
         elif error == "basis":
             text = _write(s, a, b, variant, basis=True) if s.kind == "growth" else None
         elif error == "missing_operand":
-            wrong = _wrong_cell(cells, s, "period") or _wrong_cell(cells, s, "metric")
+            wrong, detail = _wrong_cell(cells, s, "period"), "period"
+            if wrong is None:
+                wrong, detail = _wrong_cell(cells, s, "metric"), "metric"
             text = _write(s, wrong.value, b, variant) if wrong else None
             evidence, changed, removed, expected = example.evidence.without([s.a.id]), [wrong.id] if wrong else [], [s.a.id], "abstain"
         else:
             raise ValueError(error)
         if text is None or (error != "none" and text == correct):
             continue
+        directional = s.kind == "difference" and (error == "sign" or variant != 0)
+        roles = _roles(s, variant, directional)
+        if error == "missing_operand":
+            claims = __import__("faithguard.claims", fromlist=["extract_claims"]).extract_claims(text)
+            a_claim = next((c.id for c, r in zip(claims, roles) if r == "A"), None) if len(claims) == len(roles) else None
+            program = EditProgram(edits=[CannotFix(reason="missing_operand", claim=a_claim)])
+            correct_text = None  # with the cell gone, the right response is to decline
+        else:
+            program = target_program(text, s, roles)
+            if program is None:
+                continue
+            correct_text = _write(s, a, b, 1 if directional else variant)
         item_id = f"{example.question.id}:{error}"
         question = example.question.model_copy(update={"question_type": "growth" if s.kind == "growth" else s.kind})
         item = Item(
@@ -212,5 +283,9 @@ def inject(example: Example, errors: tuple[str, ...] = ERRORS, seed: int = 13) -
             evidence=evidence,
             answer=Answer(id=item_id, question_id=example.question.id, generator="template" if error == "none" else f"injected:{error}", text=text),
         )
-        out.append((item, Injection(item_id=item_id, error=error, expected_action=expected, changed_cells=changed, removed_cells=removed)))
+        injection = Injection(
+            item_id=item_id, error=error, expected_action=expected, changed_cells=changed, removed_cells=removed,
+            detail=detail, correct_text=correct_text, target_program=program,
+        )
+        out.append((item, injection))
     return out

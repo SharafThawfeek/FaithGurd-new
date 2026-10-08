@@ -11,7 +11,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
-from faithguard.records import Action, ClaimKind, Record, Slot, read_jsonl, write_jsonl
+from faithguard.records import Action, ClaimKind, EditProgram, Record, Slot, read_jsonl, write_jsonl
 
 
 class GoldValue(Record):
@@ -61,6 +61,9 @@ class Injection(Record):
     expected_action: Action
     changed_cells: list[str] = []
     removed_cells: list[str] = []
+    detail: str | None = None  # for missing_operand: whether the wrong figure came from another period or metric
+    correct_text: str | None = None  # the answer before the error was planted
+    target_program: EditProgram | None = None  # edits that fix exactly the wrong numbers (empty if none)
 
 
 class GoldStore:

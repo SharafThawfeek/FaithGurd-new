@@ -30,10 +30,13 @@ faithguard trace --items runs/slice/items.jsonl --id "demo-lk-2:entity"
 | `src/faithguard/gold.py` | The gold store (gold answers, labels, injections), kept apart from decision-time code |
 | `src/faithguard/calc/` | Calculation API: numbers in text, Decimal arithmetic, the cell expression language |
 | `src/faithguard/tables.py`, `claims.py` | Table normaliser; numeric claims and what each is about |
-| `src/faithguard/detect/` | Channel B rule checker (Channel A arrives in phase 4) |
-| `src/faithguard/executor.py`, `repair/` | Deterministic executor; rule-only repairer v0 and the hard gate |
-| `src/faithguard/policy/` | Pre-action features and threshold policy v0 |
-| `src/faithguard/data/` | Loaders for FinQA, TAT-QA, RAGTruth and SEC XBRL; dataset downloader |
+| `src/faithguard/detect/` | Channel B rule checker; Channel A (span and relation-slot heads); A+B fusion; baseline detectors |
+| `src/faithguard/executor.py`, `repair/` | Deterministic executor; rule-only repairer v0; model repairer (edit programs, one retry); free-rewrite baseline; the hard gate |
+| `src/faithguard/policy/` | Features; threshold policy v0; outcome models, certification, the policy study and the deployable outcome-aware policy |
+| `src/faithguard/data/` | Loaders for FinQA, TAT-QA, RAGTruth and SEC XBRL; XBRL mining; training-data builders; dataset downloader |
+| `src/faithguard/controlled.py` | The controlled track at scale: injected errors, issuer-disjoint track splits, cached parallel replays |
+| `src/faithguard/train/` | GPU training and evaluation entry points (each with a `--tiny` CPU smoke test) |
+| `notebooks/` | Phase-4 Kaggle/Colab notebooks that clone this repository and run the training jobs |
 | `src/faithguard/inject.py`, `replay.py`, `evaluate/` | Error injector, replay harness, scoring and policy metrics |
 | `src/faithguard/stats/` | Issuer-clustered bootstrap, Learn-then-Test certification, Cohen's kappa |
 | `src/faithguard/splits.py`, `manifests/` | Split manifest (frozen with a hash), candidate issuers, dataset checksums |
@@ -90,6 +93,10 @@ export FG_SEC_USER_AGENT="FaithGuard research Your Name you@example.com"
 | `faithguard controlled --source tatqa --split dev` | Controlled track: inject known errors, replay every action, write `runs/controlled/<source>-<split>/summary.json` |
 | `faithguard slice` | Thin end-to-end slice (32 items, rules only), report in `runs/slice/report.md` |
 | `faithguard trace --items F --id ID` | One item step by step, for demonstrations |
+| `faithguard policy` | The policy study: outcome models, certified policies vs baselines, budget curve, SCoRE; report in `runs/policy/controlled/` |
+| `faithguard sft --mode program` (or `rewrite`) | Repairer training data from the controlled track, into `runs/sft/` |
+| `faithguard detector-data` | Channel A training data (controlled track, RAGTruth, XBRL if mined), into `runs/detector/` |
+| `faithguard xbrl-mine` | XBRL-mined wrong-context negatives from training-only US companies (needs `FG_SEC_USER_AGENT`) |
 | `faithguard splits build` | Rebuild the split manifest from `manifests/issuers.csv` |
 | `faithguard labelling tasks --items F` | Blinded Label Studio tasks; the key mapping goes to the gold store |
 | `faithguard labelling import --export F` | Convert a Label Studio export into gold labels |
@@ -138,5 +145,25 @@ Controlled track on development data, made from the project's own templates (pip
 
 | Data | Items | Policy v0: sent | Wrong among sent | Useful sent | Send everything: wrong among sent | Expected action |
 | --- | --- | --- | --- | --- | --- | --- |
-| TAT-QA dev | 2,133 | 77.8% | 1.2% | 76.7% | 71.6% | 96.9% |
-| FinQA dev | 766 | 61.1% | 0.4% | 60.8% | 68.9% | 83.2% |
+| TAT-QA dev | 2,133 | 77.8% | 1.8% | 76.3% | 79.1% | 96.9% |
+| FinQA dev | 766 | 61.1% | 0.9% | 60.6% | 77.2% | 83.2% |
+
+### Phase 4: components (built; GPU runs waiting)
+
+| Part | Built and tested on CPU | Waiting for |
+| --- | --- | --- |
+| Decision policy | Outcome models (LightGBM; TabICLv2 optional), Learn-then-Test certification over a pre-registered grid, five baselines and the oracle, certification-budget curve, issuer-level check, SCoRE comparator, deployable policy: [runs/policy/controlled/report.md](runs/policy/controlled/report.md) | The natural benchmark (phases 3, 5, 6) |
+| Repair | Model repairer with retry, free-rewrite baseline, training data (10,420 examples; basis errors held out), fine-tuning, self-training and evaluation scripts | A Kaggle T4: [notebooks/repair_sft.ipynb](notebooks/repair_sft.ipynb), [repair_baselines.ipynb](notebooks/repair_baselines.ipynb), [repair_self_train.ipynb](notebooks/repair_self_train.ipynb) |
+| Detection | Channel A (span + slot heads), training data (21,157 examples), training and evaluation scripts, A+B fusion with calibration, three baseline detectors, XBRL mining | A Kaggle T4: [notebooks/detector_train.ipynb](notebooks/detector_train.ipynb), [detector_baselines.ipynb](notebooks/detector_baselines.ipynb); SEC access for XBRL (risk R-15) |
+
+Policy study on the controlled track (rehearsal on template answers; certified at alpha = 0.10):
+
+| Policy | Answers sent | Wrong among sent | Useful answers |
+| --- | --- | --- | --- |
+| Send everything | 100% | 79.0% (not certifiable) | 21.0% |
+| Send only verified answers | 21.5% | 2.8% | 20.9% |
+| Outcome-aware (LightGBM) | 73.7% | 1.4% | 72.6% |
+| Oracle with hindsight | 72.9% | 0% | 72.8% |
+
+Certification needs about 200 calibration answers before it reliably passes (80% of random draws at 200, all at 400).
+

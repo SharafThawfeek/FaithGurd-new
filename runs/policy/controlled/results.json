@@ -1,0 +1,464 @@
+{
+  "alpha": 0.1,
+  "delta": 0.05,
+  "counts": {
+    "fit": {
+      "items": 13157,
+      "issuers": 964
+    },
+    "tune": {
+      "items": 2401,
+      "issuers": 190
+    },
+    "calibration": {
+      "items": 5336,
+      "issuers": 390
+    },
+    "test": {
+      "items": 6258,
+      "issuers": 381
+    }
+  },
+  "oracle_test": {
+    "items": 6258,
+    "emitted": 4560,
+    "emission_coverage": 0.7286673058485139,
+    "residual_risk": 0.0,
+    "useful_coverage": 0.7283477149248961,
+    "unsafe_emitted": 0
+  },
+  "families": [
+    {
+      "family": "send_all",
+      "settings": 1,
+      "certified": 0,
+      "chosen": null,
+      "calibration": {},
+      "p_chosen": null,
+      "uncertified_reference": {
+        "setting": "send",
+        "p": 1.0,
+        "test": {
+          "items": 6258,
+          "emitted": 6258,
+          "emission_coverage": 1.0,
+          "residual_risk": 0.789549376797699,
+          "useful_coverage": 0.21029082774049218,
+          "unsafe_emitted": 4941
+        }
+      }
+    },
+    {
+      "family": "repair_all",
+      "settings": 1,
+      "certified": 1,
+      "chosen": "repair",
+      "calibration": {
+        "items": 5336,
+        "emitted": 3868,
+        "emission_coverage": 0.724887556221889,
+        "residual_risk": 0.019131334022750777,
+        "useful_coverage": 0.7106446776611695,
+        "unsafe_emitted": 74
+      },
+      "p_chosen": 1.2334673043431495e-51,
+      "test": {
+        "items": 6258,
+        "emitted": 4620,
+        "emission_coverage": 0.738255033557047,
+        "residual_risk": 0.014502164502164502,
+        "useful_coverage": 0.7272291466922339,
+        "unsafe_emitted": 67,
+        "regret": 0.0011185682326622093
+      },
+      "test_ci": {
+        "residual_risk": [
+          0.0145,
+          0.0086,
+          0.0214
+        ],
+        "useful_coverage": [
+          0.7272,
+          0.7043,
+          0.7487
+        ],
+        "emission_coverage": [
+          0.7383,
+          0.7158,
+          0.7582
+        ]
+      },
+      "cluster_p_calibration": 0.0016557567315584566
+    },
+    {
+      "family": "verified_only",
+      "settings": 3,
+      "certified": 1,
+      "chosen": "risk<0.25",
+      "calibration": {
+        "items": 5336,
+        "emitted": 1184,
+        "emission_coverage": 0.22188905547226387,
+        "residual_risk": 0.03885135135135135,
+        "useful_coverage": 0.2130809595202399,
+        "unsafe_emitted": 46
+      },
+      "p_chosen": 0.00234099713678024,
+      "test": {
+        "items": 6258,
+        "emitted": 1347,
+        "emission_coverage": 0.2152444870565676,
+        "residual_risk": 0.028210838901262063,
+        "useful_coverage": 0.20917225950782997,
+        "unsafe_emitted": 38,
+        "regret": 0.5191754554170662
+      },
+      "test_ci": {
+        "residual_risk": [
+          0.0282,
+          0.0169,
+          0.0404
+        ],
+        "useful_coverage": [
+          0.2092,
+          0.205,
+          0.2135
+        ],
+        "emission_coverage": [
+          0.2152,
+          0.21,
+          0.2214
+        ]
+      },
+      "cluster_p_calibration": 0.915931896452729
+    },
+    {
+      "family": "threshold_v0",
+      "settings": 3,
+      "certified": 1,
+      "chosen": "risk<0.25",
+      "calibration": {
+        "items": 5336,
+        "emitted": 3868,
+        "emission_coverage": 0.724887556221889,
+        "residual_risk": 0.019131334022750777,
+        "useful_coverage": 0.7106446776611695,
+        "unsafe_emitted": 74
+      },
+      "p_chosen": 1.2334673043431495e-51,
+      "test": {
+        "items": 6258,
+        "emitted": 4620,
+        "emission_coverage": 0.738255033557047,
+        "residual_risk": 0.014502164502164502,
+        "useful_coverage": 0.7272291466922339,
+        "unsafe_emitted": 67,
+        "regret": 0.0011185682326622093
+      },
+      "test_ci": {
+        "residual_risk": [
+          0.0145,
+          0.0086,
+          0.0214
+        ],
+        "useful_coverage": [
+          0.7272,
+          0.7043,
+          0.7487
+        ],
+        "emission_coverage": [
+          0.7383,
+          0.7158,
+          0.7582
+        ]
+      },
+      "cluster_p_calibration": 0.0016557567315584566
+    },
+    {
+      "family": "four_state",
+      "settings": 6,
+      "certified": 6,
+      "chosen": "conf>=0.5",
+      "calibration": {
+        "items": 5336,
+        "emitted": 3862,
+        "emission_coverage": 0.7237631184407796,
+        "residual_risk": 0.017866390471258417,
+        "useful_coverage": 0.7104572713643178,
+        "unsafe_emitted": 69
+      },
+      "p_chosen": 2.7680624066586523e-53,
+      "test": {
+        "items": 6258,
+        "emitted": 4607,
+        "emission_coverage": 0.7361776925535315,
+        "residual_risk": 0.01367484263077925,
+        "useful_coverage": 0.725790987535954,
+        "unsafe_emitted": 63,
+        "regret": 0.0025567273889421926
+      },
+      "test_ci": {
+        "residual_risk": [
+          0.0137,
+          0.0081,
+          0.0204
+        ],
+        "useful_coverage": [
+          0.7258,
+          0.7033,
+          0.7475
+        ],
+        "emission_coverage": [
+          0.7362,
+          0.7136,
+          0.7558
+        ]
+      },
+      "cluster_p_calibration": 0.0007624820530543594
+    },
+    {
+      "family": "outcome_aware[lightgbm]",
+      "settings": 56,
+      "certified": 56,
+      "chosen": "send<0.3,fix>0.5",
+      "calibration": {
+        "items": 5336,
+        "emitted": 3863,
+        "emission_coverage": 0.7239505247376312,
+        "residual_risk": 0.01812063163344551,
+        "useful_coverage": 0.7104572713643178,
+        "unsafe_emitted": 70
+      },
+      "p_chosen": 7.207817535570557e-53,
+      "test": {
+        "items": 6258,
+        "emitted": 4611,
+        "emission_coverage": 0.736816874400767,
+        "residual_risk": 0.013662979830839297,
+        "useful_coverage": 0.7264301693831895,
+        "unsafe_emitted": 63,
+        "regret": 0.0019175455417066445
+      },
+      "test_ci": {
+        "residual_risk": [
+          0.0137,
+          0.0077,
+          0.0203
+        ],
+        "useful_coverage": [
+          0.7264,
+          0.7034,
+          0.7485
+        ],
+        "emission_coverage": [
+          0.7368,
+          0.7144,
+          0.7569
+        ]
+      },
+      "cluster_p_calibration": 0.0007624820530543594
+    }
+  ],
+  "models": {
+    "lightgbm": {
+      "rows": 13157,
+      "unsafe": {
+        "auroc": 0.9973733333517742,
+        "brier": 0.007207819507795699,
+        "ece": 0.005206464920452159
+      },
+      "fix": {
+        "auroc": 0.9900557465176608,
+        "brier": 0.011721842263219859,
+        "ece": 0.007357222059420361
+      }
+    }
+  },
+  "chosen_detail": {
+    "flip_matrix_test": {
+      "unsupported": {
+        "unsupported": 65,
+        "supported_unhelpful": 2,
+        "supported_useful": 3241,
+        "abstained": 1633
+      },
+      "supported_unhelpful": {
+        "unsupported": 0,
+        "supported_unhelpful": 0,
+        "supported_useful": 1,
+        "abstained": 0
+      },
+      "supported_useful": {
+        "unsupported": 2,
+        "supported_unhelpful": 0,
+        "supported_useful": 1309,
+        "abstained": 5
+      }
+    },
+    "action_mix_test": {
+      "send": 1333,
+      "repair": 3286,
+      "abstain": 1639
+    },
+    "by_source": {
+      "finqa": {
+        "items": 2124,
+        "emitted": 1432,
+        "emission_coverage": 0.6741996233521658,
+        "residual_risk": 0.007681564245810056,
+        "useful_coverage": 0.6690207156308852,
+        "unsafe_emitted": 11
+      },
+      "tatqa": {
+        "items": 4134,
+        "emitted": 3179,
+        "emission_coverage": 0.7689888727624576,
+        "residual_risk": 0.01635734507706826,
+        "useful_coverage": 0.7559264634736332,
+        "unsafe_emitted": 52
+      }
+    },
+    "by_question_type": {
+      "difference": {
+        "items": 1566,
+        "emitted": 1203,
+        "emission_coverage": 0.7681992337164751,
+        "residual_risk": 0.017456359102244388,
+        "useful_coverage": 0.7541507024265645,
+        "unsafe_emitted": 21
+      },
+      "growth": {
+        "items": 2393,
+        "emitted": 1946,
+        "emission_coverage": 0.8132051817801922,
+        "residual_risk": 0.006166495375128468,
+        "useful_coverage": 0.8081905557877141,
+        "unsafe_emitted": 12
+      },
+      "lookup": {
+        "items": 1669,
+        "emitted": 1293,
+        "emission_coverage": 0.774715398442181,
+        "residual_risk": 0.02165506573859242,
+        "useful_coverage": 0.7573397243858598,
+        "unsafe_emitted": 28
+      },
+      "share": {
+        "items": 630,
+        "emitted": 169,
+        "emission_coverage": 0.26825396825396824,
+        "residual_risk": 0.011834319526627219,
+        "useful_coverage": 0.2650793650793651,
+        "unsafe_emitted": 2
+      }
+    },
+    "by_error": {
+      "basis": {
+        "items": 414,
+        "emitted": 412,
+        "emission_coverage": 0.9951690821256038,
+        "residual_risk": 0.007281553398058253,
+        "useful_coverage": 0.9879227053140096,
+        "unsafe_emitted": 3
+      },
+      "metric": {
+        "items": 1271,
+        "emitted": 1065,
+        "emission_coverage": 0.8379228953579858,
+        "residual_risk": 0.006572769953051643,
+        "useful_coverage": 0.8316286388670339,
+        "unsafe_emitted": 7
+      },
+      "missing_operand": {
+        "items": 1297,
+        "emitted": 22,
+        "emission_coverage": 0.016962220508866616,
+        "residual_risk": 1.0,
+        "useful_coverage": 0.0,
+        "unsafe_emitted": 22
+      },
+      "none": {
+        "items": 1317,
+        "emitted": 1311,
+        "emission_coverage": 0.9954441913439636,
+        "residual_risk": 0.002288329519450801,
+        "useful_coverage": 0.9931662870159453,
+        "unsafe_emitted": 3
+      },
+      "period": {
+        "items": 838,
+        "emitted": 690,
+        "emission_coverage": 0.8233890214797136,
+        "residual_risk": 0.015942028985507246,
+        "useful_coverage": 0.8102625298329356,
+        "unsafe_emitted": 11
+      },
+      "scale": {
+        "items": 322,
+        "emitted": 320,
+        "emission_coverage": 0.9937888198757764,
+        "residual_risk": 0.003125,
+        "useful_coverage": 0.9875776397515528,
+        "unsafe_emitted": 1
+      },
+      "sign": {
+        "items": 799,
+        "emitted": 791,
+        "emission_coverage": 0.9899874843554443,
+        "residual_risk": 0.020227560050568902,
+        "useful_coverage": 0.9699624530663329,
+        "unsafe_emitted": 16
+      }
+    }
+  },
+  "budget_curve": [
+    {
+      "calibration_items": 50,
+      "certified_share": 0.0,
+      "mean_test_useful_coverage_when_certified": null
+    },
+    {
+      "calibration_items": 100,
+      "certified_share": 0.02,
+      "mean_test_useful_coverage_when_certified": 0.6552
+    },
+    {
+      "calibration_items": 200,
+      "certified_share": 0.8,
+      "mean_test_useful_coverage_when_certified": 0.7095
+    },
+    {
+      "calibration_items": 400,
+      "certified_share": 1.0,
+      "mean_test_useful_coverage_when_certified": 0.7248
+    },
+    {
+      "calibration_items": 800,
+      "certified_share": 1.0,
+      "mean_test_useful_coverage_when_certified": 0.7259
+    },
+    {
+      "calibration_items": 1600,
+      "certified_share": 1.0,
+      "mean_test_useful_coverage_when_certified": 0.7264
+    },
+    {
+      "calibration_items": 3200,
+      "certified_share": 1.0,
+      "mean_test_useful_coverage_when_certified": 0.7264
+    }
+  ],
+  "score_comparator": {
+    "guarantee": "expected risk among sent answers <= alpha (not a high-probability bound)",
+    "subsample": {
+      "calibration": 5336,
+      "test": 500,
+      "repeats": 3,
+      "prune": "homo"
+    },
+    "emission_coverage": 0.2287,
+    "residual_risk": 0.0617,
+    "useful_coverage": 0.214
+  },
+  "seconds": 44.1
+}

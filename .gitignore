@@ -24,3 +24,6 @@ llama_work/
 runs/**/*.jsonl
 runs/**/gold/
 labelling/tasks.json
+
+# Fitted models are rebuilt by commands; pickles are never shared (loading one can run code)
+runs/**/*.pkl

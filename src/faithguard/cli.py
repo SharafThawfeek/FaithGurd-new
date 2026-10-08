@@ -32,21 +32,9 @@ SOURCES = {
 
 def _controlled(source: str, split: str):
     """(items, gold store) for the controlled track: injected errors on grounded gold examples."""
-    from faithguard.data import finqa, tatqa
-    from faithguard.gold import GoldStore
-    from faithguard.inject import inject
+    from faithguard.controlled import build
 
-    loader = tatqa if source == "tatqa" else finqa
-    gold = GoldStore("unused")
-    items = []
-    for ex in loader.load(SOURCES[(source, split)]):
-        pairs = inject(ex)
-        if pairs:
-            gold.add_question(ex.gold)
-        for item, injection in pairs:
-            items.append(item)
-            gold.add_injection(injection)
-    return items, gold
+    return build(source, split)
 
 
 def cmd_data(args) -> None:
@@ -128,6 +116,110 @@ def cmd_slice(args) -> None:
     print(f"\nWrote {out / 'report.md'}")
 
 
+def cmd_policy(args) -> None:
+    from faithguard.controlled import load_or_build
+    from faithguard.policy import study
+
+    records = []
+    for source in args.sources.split(","):
+        for split in ("train", "dev", "test"):
+            records += load_or_build(source, split, rebuild=args.rebuild)[2]
+    result = study.run(records, alpha=args.alpha, delta=args.delta, kinds=tuple(args.models.split(",")), seed=args.seed)
+    out = study.save(result, args.out)
+    for f in result["families"]:
+        t = f.get("test")
+        shown = f"sent {t['emission_coverage']:.1%}, wrong {t['residual_risk']:.1%}, useful {t['useful_coverage']:.1%}" if t else "not certified"
+        print(f"{f['family']:28s} {shown}")
+    print(f"Report: {out / 'report.md'}")
+
+
+def cmd_sft(args) -> None:
+    from faithguard.controlled import load_or_build
+    from faithguard.data import repair_examples as sft
+
+    hold_out = tuple(x for x in args.hold_out.split(",") if x)
+    out = Path(args.out)
+    for track, name in (("fit", "train"), ("tune", "dev")):
+        rows = []
+        for source in args.sources.split(","):
+            for split in ("train", "dev", "test"):
+                items, gold, records = load_or_build(source, split)
+                by_track = {r.item_id: r.split for r in records}
+                chosen = [i for i in items if by_track.get(i.id) == track]
+                # held-out error types stay out of training but remain in the dev file for evaluation
+                rows += list(sft.examples(chosen, gold, mode=args.mode, hold_out=hold_out if name == "train" else (), false_flag_rate=args.false_flags))
+        counts = sft.write(out / f"repair-{args.mode}-{name}.jsonl", rows)
+        print(f"{name}: {sum(counts.values())} examples {dict(sorted(counts.items()))}")
+
+
+def cmd_detector_data(args) -> None:
+    from faithguard.controlled import load_or_build
+    from faithguard.data import channel_a_examples as train_data
+
+    out = Path(args.out)
+    for track, name, rag_split in (("fit", "train", "train"), ("tune", "dev", "test")):
+        rows = []
+        for source in args.sources.split(","):
+            for split in ("train", "dev", "test"):
+                items, gold, records = load_or_build(source, split)
+                by_track = {r.item_id: r.split for r in records}
+                rows += list(train_data.controlled_examples([i for i in items if by_track.get(i.id) == track], gold))
+        if args.ragtruth:
+            rows += list(train_data.ragtruth_examples(RAW / "ragtruth", split=rag_split, limit=args.ragtruth_limit if name == "train" else 1000))
+        xbrl = Path(args.xbrl)
+        if xbrl.exists():
+            # XBRL examples are split by company: a stable hash sends one company in ten to dev
+            from faithguard.controlled import track_split
+
+            mined = [json.loads(line) for line in open(xbrl, encoding="utf-8") if line.strip()]
+            company = lambda r: r["id"].split(":")[1]
+            rows += [r for r in mined if (track_split(company(r)) == "tune") == (name == "dev")]
+        counts = train_data.write(out / f"{name}.jsonl", rows)
+        print(f"{name}: {sum(counts.values())} examples {dict(sorted(counts.items()))}")
+
+
+def cmd_xbrl_mine(args) -> None:
+    """Mine wrong-context negatives from recent 10-K filings of training-only US companies."""
+    from faithguard.data import edgar, xbrl_mining
+    from faithguard.data import channel_a_examples as train_data
+
+    cache = Path(args.cache)
+    tickers = [t.upper() for t in args.tickers.split(",")] if args.tickers else sorted({
+        ex["filename"].split("/")[0] for split in ("train", "dev", "test")
+        for ex in json.loads(SOURCES[("finqa", split)].read_text(encoding="utf-8"))
+    })
+    manifest = json.loads(Path("manifests/splits.json").read_text(encoding="utf-8"))
+    benchmark = {k[3:] for k, v in manifest["splits"].items() if k.startswith("US:") and v != "train"}
+    tickers = [t for t in tickers if t not in benchmark][: args.limit]
+    directory = json.loads(edgar.fetch(f"{edgar.SEC_WWW}/files/company_tickers.json", cache / "company_tickers.json"))
+    by_ticker = {row["ticker"].upper(): row for row in directory.values()}
+    rows, done = [], 0
+    for ticker in tickers:
+        entry = by_ticker.get(ticker.replace(".", "-")) or by_ticker.get(ticker)
+        if entry is None:
+            print(f"{ticker}: not in the SEC directory (renamed or delisted)")
+            continue
+        try:
+            filings = [f for f in edgar.annual_filings(entry["cik_str"], cache) if f["inline_xbrl"]]
+            if not filings:
+                print(f"{ticker}: no inline-XBRL 10-K")
+                continue
+            url = edgar.instance_url(entry["cik_str"], filings[0]["accession"], cache)
+            if url is None:
+                print(f"{ticker}: no XBRL instance in {filings[0]['accession']}")
+                continue
+            xml = edgar.fetch(url, cache / f"{filings[0]['accession']}.xml")
+            facts = edgar.parse_instance(xml, entity=edgar.cik10(entry["cik_str"]))
+            mined = list(xbrl_mining.mine(facts, entry["title"]))
+            rows += mined
+            done += 1
+            print(f"{ticker}: {len(facts)} facts, {len(mined)} examples")
+        except edgar.SecAccessError as err:
+            raise SystemExit(str(err))
+    counts = train_data.write(Path(args.out), rows)
+    print(f"{done} filings, {sum(counts.values())} examples {dict(sorted(counts.items()))} -> {args.out}")
+
+
 def cmd_trace(args) -> None:
     from faithguard.pipeline import run
 
@@ -201,6 +293,39 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--seed", type=int, default=7)
     p.add_argument("--out", default="runs/slice")
     p.set_defaults(fn=cmd_slice)
+
+    p = sub.add_parser("policy", help="the policy study on the controlled track")
+    p.add_argument("--sources", default="tatqa,finqa")
+    p.add_argument("--models", default="lightgbm", help="comma-separated: lightgbm, tabicl")
+    p.add_argument("--alpha", type=float, default=0.10)
+    p.add_argument("--delta", type=float, default=0.05)
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--rebuild", action="store_true", help="rebuild the replay records instead of using the cache")
+    p.add_argument("--out", default="runs/policy/controlled")
+    p.set_defaults(fn=cmd_policy)
+
+    p = sub.add_parser("sft", help="repairer training data from the controlled track")
+    p.add_argument("--mode", choices=["program", "rewrite"], default="program")
+    p.add_argument("--sources", default="tatqa,finqa")
+    p.add_argument("--hold-out", default="basis", help="error types kept out of training (RQ2); empty for none")
+    p.add_argument("--false-flags", type=float, default=0.3, help="share of items with one correct claim flagged by mistake")
+    p.add_argument("--out", default="runs/sft")
+    p.set_defaults(fn=cmd_sft)
+
+    p = sub.add_parser("detector-data", help="Channel A training data (controlled track + RAGTruth)")
+    p.add_argument("--sources", default="tatqa,finqa")
+    p.add_argument("--ragtruth", action=argparse.BooleanOptionalAction, default=True)
+    p.add_argument("--ragtruth-limit", type=int, default=8000)
+    p.add_argument("--xbrl", default="runs/detector/xbrl.jsonl", help="XBRL-mined examples, included if the file exists")
+    p.add_argument("--out", default="runs/detector")
+    p.set_defaults(fn=cmd_detector_data)
+
+    p = sub.add_parser("xbrl-mine", help="XBRL-mined negatives from training-only US companies (needs FG_SEC_USER_AGENT)")
+    p.add_argument("--tickers", help="comma-separated; default: FinQA's companies minus benchmark issuers")
+    p.add_argument("--limit", type=int, default=150)
+    p.add_argument("--cache", default="data/raw/edgar")
+    p.add_argument("--out", default="runs/detector/xbrl.jsonl")
+    p.set_defaults(fn=cmd_xbrl_mine)
 
     p = sub.add_parser("trace")
     p.add_argument("--items", required=True)
