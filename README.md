@@ -144,7 +144,7 @@ Every notebook starts with `setup/setup_cell.py`, which installs `requirements/g
 | Calculation API and executor | Done, tested (`calc/`, `executor.py`) |
 | FinQA, TAT-QA, RAGTruth loaded with licences and checksums | Done (`manifests/datasets.json`) |
 | XBRL facts | Parser done and tested on a sample filing; live download waits for `FG_SEC_USER_AGENT` (risk R-15) |
-| Split manifest frozen | Built and hashed (`manifests/splits.json`); Sri Lankan tickers and US CIKs still to verify |
+| Split manifest frozen | Built and hashed (`manifests/splits.json`); Sri Lankan tickers verified on the CSE (D-038); US CIKs wait for SEC access |
 | Label Studio with guide v1 | Interface, converters and guide ready; install and start it as in the guide |
 | Thin end-to-end slice on 20–40 items | Done: [runs/slice/report.md](runs/slice/report.md) (32 items, expected action on 29) |
 

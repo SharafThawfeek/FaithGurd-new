@@ -23,6 +23,7 @@
     "LK:DIAL": "calibration",
     "LK:DIPD": "test",
     "LK:DIST": "calibration",
+    "LK:GRAN": "test",
     "LK:HASU": "calibration",
     "LK:HAYL": "calibration",
     "LK:HHL": "test",
@@ -32,7 +33,6 @@
     "LK:LION": "test",
     "LK:LLUB": "test",
     "LK:NDB": "train",
-    "LK:NEST": "test",
     "LK:NTB": "calibration",
     "LK:PABC": "test",
     "LK:PLC": "test",
@@ -79,5 +79,5 @@
     "US:WSO": "train",
     "US:ZION": "calibration"
   },
-  "sha256": "965b15c081d621002b9bedea0f8ff2d4e63f1146004d7def1e5d9a9fc3978389"
+  "sha256": "69003d41860a001b4f17e12993156daeb9d0bd93a204901fec43b46e19b3f6ba"
 }

@@ -31,36 +31,36 @@ US,NJR,New Jersey Resources,utilities,,candidate,
 US,CHE,Chemed,healthcare,,candidate,
 US,ENSG,Ensign Group,healthcare,,candidate,
 US,MEDP,Medpace Holdings,healthcare,,candidate,
-LK,COMB,Commercial Bank of Ceylon PLC,banks,,candidate,ticker to verify on cse.lk
-LK,HNB,Hatton National Bank PLC,banks,,candidate,ticker to verify on cse.lk
-LK,SAMP,Sampath Bank PLC,banks,,candidate,ticker to verify on cse.lk
-LK,SEYB,Seylan Bank PLC,banks,,candidate,ticker to verify on cse.lk
-LK,NDB,National Development Bank PLC,banks,,candidate,ticker to verify on cse.lk
-LK,DFCC,DFCC Bank PLC,banks,,candidate,ticker to verify on cse.lk
-LK,NTB,Nations Trust Bank PLC,banks,,candidate,ticker to verify on cse.lk
-LK,PABC,Pan Asia Banking Corporation PLC,banks,,candidate,ticker to verify on cse.lk
-LK,PLC,People's Leasing & Finance PLC,finance,,candidate,ticker to verify on cse.lk
-LK,CFIN,Central Finance Company PLC,finance,,candidate,ticker to verify on cse.lk
-LK,CINS,Ceylinco Insurance PLC,insurance,,candidate,ticker to verify on cse.lk
-LK,UAL,Union Assurance PLC,insurance,,candidate,ticker to verify on cse.lk
-LK,HASU,HNB Assurance PLC,insurance,,candidate,ticker to verify on cse.lk
-LK,JKH,John Keells Holdings PLC,diversified,,candidate,ticker to verify on cse.lk
-LK,HAYL,Hayleys PLC,diversified,,candidate,ticker to verify on cse.lk
-LK,HHL,Hemas Holdings PLC,diversified,,candidate,ticker to verify on cse.lk
-LK,SPEN,Aitken Spence PLC,diversified,,candidate,ticker to verify on cse.lk
-LK,VONE,Vallibel One PLC,diversified,,candidate,ticker to verify on cse.lk
-LK,SUN,Sunshine Holdings PLC,diversified,,candidate,ticker to verify on cse.lk
-LK,CCS,Ceylon Cold Stores PLC,consumer,,candidate,ticker to verify on cse.lk
-LK,DIST,Distilleries Company of Sri Lanka PLC,consumer,,candidate,ticker to verify on cse.lk
-LK,LION,Lion Brewery (Ceylon) PLC,consumer,,candidate,ticker to verify on cse.lk
-LK,NEST,Nestle Lanka PLC,consumer,,candidate,ticker to verify on cse.lk
-LK,CARG,Cargills (Ceylon) PLC,consumer,,candidate,ticker to verify on cse.lk
-LK,CTC,Ceylon Tobacco Company PLC,consumer,,candidate,ticker to verify on cse.lk
-LK,TKYO,Tokyo Cement Company (Lanka) PLC,manufacturing,,candidate,ticker to verify on cse.lk
-LK,LLUB,Chevron Lubricants Lanka PLC,manufacturing,,candidate,ticker to verify on cse.lk
-LK,DIPD,Dipped Products PLC,manufacturing,,candidate,ticker to verify on cse.lk
-LK,RCL,Royal Ceramics Lanka PLC,manufacturing,,candidate,ticker to verify on cse.lk
-LK,DIAL,Dialog Axiata PLC,telecom,,candidate,ticker to verify on cse.lk
-LK,SLTL,Sri Lanka Telecom PLC,telecom,,candidate,ticker to verify on cse.lk
-LK,KVAL,Kelani Valley Plantations PLC,plantations,,candidate,ticker to verify on cse.lk
-LK,WATA,Watawala Plantations PLC,plantations,,candidate,ticker to verify on cse.lk
+LK,COMB,Commercial Bank of Ceylon PLC,banks,,verified,"CSE symbol COMB.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,HNB,Hatton National Bank PLC,banks,,verified,"CSE symbol HNB.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,SAMP,Sampath Bank PLC,banks,,verified,"CSE symbol SAMP.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,SEYB,Seylan Bank PLC,banks,,verified,"CSE symbol SEYB.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,NDB,National Development Bank PLC,banks,,verified,"CSE symbol NDB.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,DFCC,DFCC Bank PLC,banks,,verified,"CSE symbol DFCC.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,NTB,Nations Trust Bank PLC,banks,,verified,"CSE symbol NTB.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,PABC,Pan Asia Banking Corporation PLC,banks,,verified,"CSE symbol PABC.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,PLC,People's Leasing & Finance PLC,finance,,verified,"CSE symbol PLC.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,CFIN,Central Finance Company PLC,finance,,verified,"CSE symbol CFIN.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,CINS,Ceylinco Holdings PLC,insurance,,verified,"CSE symbol CINS.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,UAL,Union Assurance PLC,insurance,,verified,"CSE symbol UAL.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,HASU,HNB Life PLC,insurance,,verified,"CSE symbol HASU.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,JKH,John Keells Holdings PLC,diversified,,verified,"CSE symbol JKH.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,HAYL,Hayleys PLC,diversified,,verified,"CSE symbol HAYL.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,HHL,Hemas Holdings PLC,diversified,,verified,"CSE symbol HHL.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,SPEN,Aitken Spence PLC,diversified,,verified,"CSE symbol SPEN.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,VONE,Vallibel One PLC,diversified,,verified,"CSE symbol VONE.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,SUN,Sunshine Holdings PLC,diversified,,verified,"CSE symbol SUN.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,CCS,Ceylon Cold Stores PLC,consumer,,verified,"CSE symbol CCS.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,DIST,Distilleries Company of Sri Lanka PLC,consumer,,verified,"CSE symbol DIST.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,LION,Lion Brewery (Ceylon) PLC,consumer,,verified,"CSE symbol LION.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,GRAN,Ceylon Grain Elevators PLC,consumer,,verified,"CSE symbol GRAN.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,CARG,Cargills (Ceylon) PLC,consumer,,verified,"CSE symbol CARG.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,CTC,Ceylon Tobacco Company PLC,consumer,,verified,"CSE symbol CTC.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,TKYO,Tokyo Cement Company (Lanka) PLC,manufacturing,,verified,"CSE symbol TKYO.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,LLUB,Chevron Lubricants Lanka PLC,manufacturing,,verified,"CSE symbol LLUB.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,DIPD,Dipped Products PLC,manufacturing,,verified,"CSE symbol DIPD.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,RCL,Royal Ceramics Lanka PLC,manufacturing,,verified,"CSE symbol RCL.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,DIAL,Dialog Axiata PLC,telecom,,verified,"CSE symbol DIAL.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,SLTL,Sri Lanka Telecom PLC,telecom,,verified,"CSE symbol SLTL.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,KVAL,Kelani Valley Plantations PLC,plantations,,verified,"CSE symbol KVAL.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
+LK,WATA,Watawala Plantations PLC,plantations,,verified,"CSE symbol WATA.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
