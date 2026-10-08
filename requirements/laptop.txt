@@ -1,0 +1,12 @@
+# Laptop (CPU) environment for FaithGuard: rules, executor, policy, statistics.
+# Python 3.11. Install with: python -m pip install -r requirements/laptop.lock.txt
+# Edit this file to add a package, then regenerate the lock file (see README).
+pydantic==2.13.5
+numpy==2.4.6
+pandas==3.0.6
+scipy==1.17.1
+scikit-learn==1.9.1
+lightgbm==4.7.0
+pyyaml==6.0.3
+tqdm==4.70.1
+pytest==9.1.1
