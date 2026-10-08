@@ -1,0 +1,83 @@
+{
+  "policy": {
+    "items": 2133,
+    "emitted": 1659,
+    "emission_coverage": 0.7777777777777778,
+    "residual_risk": 0.012055455093429777,
+    "useful_coverage": 0.7674636661978435,
+    "unsafe_emitted": 20
+  },
+  "always_send": {
+    "items": 2133,
+    "emitted": 2133,
+    "emission_coverage": 1.0,
+    "residual_risk": 0.7158931082981715,
+    "useful_coverage": 0.2841068917018284,
+    "unsafe_emitted": 1527
+  },
+  "always_repair": {
+    "items": 2133,
+    "emitted": 1659,
+    "emission_coverage": 0.7777777777777778,
+    "residual_risk": 0.012055455093429777,
+    "useful_coverage": 0.7674636661978435,
+    "unsafe_emitted": 20
+  },
+  "flip_matrix": {
+    "unsupported": {
+      "unsupported": 20,
+      "supported_unhelpful": 2,
+      "supported_useful": 1031,
+      "abstained": 474
+    },
+    "supported_unhelpful": {
+      "unsupported": 0,
+      "supported_unhelpful": 0,
+      "supported_useful": 0,
+      "abstained": 0
+    },
+    "supported_useful": {
+      "unsupported": 0,
+      "supported_unhelpful": 0,
+      "supported_useful": 606,
+      "abstained": 0
+    }
+  },
+  "action_accuracy": 0.9690576652601969,
+  "by_error": {
+    "basis": {
+      "repair -> supported_useful": 99,
+      "send -> unsupported": 1
+    },
+    "metric": {
+      "repair -> supported_useful": 407,
+      "abstain -> abstained": 21,
+      "repair -> abstained": 6,
+      "repair -> unsupported": 2
+    },
+    "missing_operand": {
+      "abstain -> abstained": 429,
+      "repair -> unsupported": 6,
+      "send -> unsupported": 6
+    },
+    "none": {
+      "send -> supported_useful": 446
+    },
+    "period": {
+      "repair -> supported_useful": 264,
+      "abstain -> abstained": 17,
+      "send -> unsupported": 4
+    },
+    "scale": {
+      "repair -> supported_useful": 173,
+      "repair -> supported_unhelpful": 2,
+      "abstain -> abstained": 1,
+      "repair -> unsupported": 1
+    },
+    "sign": {
+      "repair -> supported_useful": 238,
+      "send -> supported_useful": 10
+    }
+  },
+  "items": 2133
+}

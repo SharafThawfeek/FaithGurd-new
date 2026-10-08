@@ -1,0 +1,39 @@
+<View>
+  <Style>
+    .fg-table table { border-collapse: collapse; font-size: 13px; }
+    .fg-table td, .fg-table th { border: 1px solid #bbb; padding: 2px 6px; text-align: right; }
+    .fg-table td:first-child, .fg-table th:first-child { text-align: left; }
+  </Style>
+  <Header value="Question"/>
+  <Text name="question" value="$question"/>
+  <Header value="Evidence (the only source the answer may use)"/>
+  <View className="fg-table">
+    <HyperText name="evidence" value="$evidence_html"/>
+  </View>
+  <Header value="Answer: select every wrong or unsupported span and pick what is wrong"/>
+  <Labels name="slot" toName="answer">
+    <Label value="entity_scope" hint="Right number, wrong entity or scope (Bank instead of Group)"/>
+    <Label value="metric" hint="A different line item (profit before tax instead of after tax)"/>
+    <Label value="period" hint="A different year or quarter"/>
+    <Label value="unit" hint="Wrong unit (percent instead of amount, shares instead of currency)"/>
+    <Label value="scale_currency" hint="Right digits, wrong scale or currency (thousand vs million, USD vs Rs.)"/>
+    <Label value="sign" hint="Increase stated as a decrease, or a wrong minus sign"/>
+    <Label value="basis" hint="Growth or share computed on the wrong base"/>
+    <Label value="missing_operand" hint="The evidence does not contain what the claim needs"/>
+    <Label value="value" hint="Simply the wrong number, no better description"/>
+    <Label value="unsupported_text" hint="A non-numeric statement the evidence does not support"/>
+  </Labels>
+  <Text name="answer" value="$answer"/>
+  <Header value="Overall"/>
+  <Choices name="status" toName="answer" choice="single" required="true" showInline="true">
+    <Choice value="correct"/>
+    <Choice value="incorrect"/>
+    <Choice value="ambiguous"/>
+    <Choice value="unhelpful"/>
+  </Choices>
+  <Choices name="useful" toName="answer" choice="single" showInline="true">
+    <Choice value="useful"/>
+    <Choice value="not useful"/>
+  </Choices>
+  <TextArea name="note" toName="answer" rows="2" placeholder="Why ambiguous, or anything the adjudicator should see"/>
+</View>

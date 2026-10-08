@@ -1,0 +1,63 @@
+{
+  "finqa": {
+    "files": {
+      "dev.json": {
+        "bytes": 10954658,
+        "sha256": "a847fb7e0d61a3125a1e2909852df6b89f1ee64d2c5ff1bf689e332214deee51",
+        "url": "https://raw.githubusercontent.com/czyssrs/FinQA/main/dataset/dev.json"
+      },
+      "test.json": {
+        "bytes": 14395143,
+        "sha256": "831dbfb2e785dbc227f895ce3f24046433467aec67b09db2bd6ac7692a8a30dc",
+        "url": "https://raw.githubusercontent.com/czyssrs/FinQA/main/dataset/test.json"
+      },
+      "train.json": {
+        "bytes": 78216616,
+        "sha256": "49f237eb9779b569473b26b08048867d04635a7cc39ad6a7a5664c55bb428db6",
+        "url": "https://raw.githubusercontent.com/czyssrs/FinQA/main/dataset/train.json"
+      }
+    },
+    "homepage": "https://github.com/czyssrs/FinQA",
+    "licence": "MIT",
+    "recorded": "2026-10-08"
+  },
+  "ragtruth": {
+    "files": {
+      "response.jsonl": {
+        "bytes": 21458735,
+        "sha256": "e4c2e4ac24fff676d8984cc61c35d791612fadc58015335d97dd632375e18073",
+        "url": "https://raw.githubusercontent.com/ParticleMedia/RAGTruth/main/dataset/response.jsonl"
+      },
+      "source_info.jsonl": {
+        "bytes": 15117971,
+        "sha256": "0dffc26ea9f3c1c3d7c7e8336b56ef1646e3cec876edffcca3c9c624d12d578b",
+        "url": "https://raw.githubusercontent.com/ParticleMedia/RAGTruth/main/dataset/source_info.jsonl"
+      }
+    },
+    "homepage": "https://github.com/ParticleMedia/RAGTruth",
+    "licence": "MIT",
+    "recorded": "2026-10-08"
+  },
+  "tatqa": {
+    "files": {
+      "tatqa_dataset_dev.json": {
+        "bytes": 1637431,
+        "sha256": "8da095a819af6db3c14877c6df2d4d29960e41d1a63dd1fa853507bd2a616af5",
+        "url": "https://raw.githubusercontent.com/NExTplusplus/TAT-QA/master/dataset_raw/tatqa_dataset_dev.json"
+      },
+      "tatqa_dataset_test_gold.json": {
+        "bytes": 2167546,
+        "sha256": "c4d08418359c1d76468dec420ee748a37f48c06b63cb8ec2766f19d5d314b597",
+        "url": "https://raw.githubusercontent.com/NExTplusplus/TAT-QA/master/dataset_raw/tatqa_dataset_test_gold.json"
+      },
+      "tatqa_dataset_train.json": {
+        "bytes": 12845647,
+        "sha256": "2df6e722cdbaaa37efcbfb280f5c9a15be29a6ec18f618ef936fe63cc6d07c69",
+        "url": "https://raw.githubusercontent.com/NExTplusplus/TAT-QA/master/dataset_raw/tatqa_dataset_train.json"
+      }
+    },
+    "homepage": "https://github.com/NExTplusplus/TAT-QA",
+    "licence": "CC BY 4.0 (data); MIT (code)",
+    "recorded": "2026-10-08"
+  }
+}

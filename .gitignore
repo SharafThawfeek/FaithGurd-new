@@ -18,3 +18,9 @@ data/*
 *.pt
 checkpoints/
 llama_work/
+*.egg-info/
+
+# Run outputs: keep the summaries and reports, not the bulky item files
+runs/**/*.jsonl
+runs/**/gold/
+labelling/tasks.json

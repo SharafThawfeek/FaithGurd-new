@@ -1,0 +1,75 @@
+{
+  "policy": {
+    "items": 766,
+    "emitted": 468,
+    "emission_coverage": 0.6109660574412533,
+    "residual_risk": 0.004273504273504274,
+    "useful_coverage": 0.608355091383812,
+    "unsafe_emitted": 2
+  },
+  "always_send": {
+    "items": 766,
+    "emitted": 766,
+    "emission_coverage": 1.0,
+    "residual_risk": 0.6892950391644909,
+    "useful_coverage": 0.31070496083550914,
+    "unsafe_emitted": 528
+  },
+  "always_repair": {
+    "items": 766,
+    "emitted": 468,
+    "emission_coverage": 0.6109660574412533,
+    "residual_risk": 0.004273504273504274,
+    "useful_coverage": 0.608355091383812,
+    "unsafe_emitted": 2
+  },
+  "flip_matrix": {
+    "unsupported": {
+      "unsupported": 2,
+      "supported_unhelpful": 0,
+      "supported_useful": 230,
+      "abstained": 296
+    },
+    "supported_unhelpful": {
+      "unsupported": 0,
+      "supported_unhelpful": 0,
+      "supported_useful": 0,
+      "abstained": 0
+    },
+    "supported_useful": {
+      "unsupported": 0,
+      "supported_unhelpful": 0,
+      "supported_useful": 236,
+      "abstained": 2
+    }
+  },
+  "action_accuracy": 0.8315926892950392,
+  "by_error": {
+    "basis": {
+      "repair -> supported_useful": 54
+    },
+    "metric": {
+      "repair -> supported_useful": 91,
+      "abstain -> abstained": 71,
+      "send -> unsupported": 1,
+      "repair -> abstained": 1
+    },
+    "missing_operand": {
+      "abstain -> abstained": 171
+    },
+    "none": {
+      "send -> supported_useful": 173,
+      "abstain -> abstained": 2
+    },
+    "period": {
+      "repair -> supported_useful": 55,
+      "abstain -> abstained": 53,
+      "repair -> unsupported": 1
+    },
+    "sign": {
+      "repair -> supported_useful": 91,
+      "send -> supported_useful": 2
+    }
+  },
+  "items": 766
+}

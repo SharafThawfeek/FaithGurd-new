@@ -1,0 +1,66 @@
+country,issuer,name,sector,cik,status,notes
+US,ZION,Zions Bancorporation,banks,,candidate,
+US,WAL,Western Alliance Bancorporation,banks,,candidate,
+US,EWBC,East West Bancorp,banks,,candidate,
+US,FHN,First Horizon,banks,,candidate,
+US,SNV,Synovus Financial,banks,,candidate,
+US,WBS,Webster Financial,banks,,candidate,
+US,CFG,Citizens Financial Group,banks,,candidate,
+US,AFG,American Financial Group,insurance,,candidate,
+US,RLI,RLI Corp,insurance,,candidate,
+US,KNSL,Kinsale Capital Group,insurance,,candidate,
+US,SIGI,Selective Insurance Group,insurance,,candidate,
+US,AAON,AAON Inc,industrials,,candidate,
+US,WSO,Watsco,industrials,,candidate,
+US,FIX,Comfort Systems USA,industrials,,candidate,
+US,EME,EMCOR Group,industrials,,candidate,
+US,MLI,Mueller Industries,industrials,,candidate,
+US,UFPI,UFP Industries,industrials,,candidate,
+US,LSCC,Lattice Semiconductor,technology,,candidate,
+US,POWI,Power Integrations,technology,,candidate,
+US,SLAB,Silicon Laboratories,technology,,candidate,
+US,AMKR,Amkor Technology,technology,,candidate,
+US,POOL,Pool Corporation,consumer,,candidate,
+US,CHDN,Churchill Downs,consumer,,candidate,
+US,WSM,Williams-Sonoma,consumer,,candidate,
+US,DKS,Dick's Sporting Goods,consumer,,candidate,
+US,OGE,OGE Energy,utilities,,candidate,
+US,IDA,IDACORP,utilities,,candidate,
+US,POR,Portland General Electric,utilities,,candidate,
+US,NJR,New Jersey Resources,utilities,,candidate,
+US,CHE,Chemed,healthcare,,candidate,
+US,ENSG,Ensign Group,healthcare,,candidate,
+US,MEDP,Medpace Holdings,healthcare,,candidate,
+LK,COMB,Commercial Bank of Ceylon PLC,banks,,candidate,ticker to verify on cse.lk
+LK,HNB,Hatton National Bank PLC,banks,,candidate,ticker to verify on cse.lk
+LK,SAMP,Sampath Bank PLC,banks,,candidate,ticker to verify on cse.lk
+LK,SEYB,Seylan Bank PLC,banks,,candidate,ticker to verify on cse.lk
+LK,NDB,National Development Bank PLC,banks,,candidate,ticker to verify on cse.lk
+LK,DFCC,DFCC Bank PLC,banks,,candidate,ticker to verify on cse.lk
+LK,NTB,Nations Trust Bank PLC,banks,,candidate,ticker to verify on cse.lk
+LK,PABC,Pan Asia Banking Corporation PLC,banks,,candidate,ticker to verify on cse.lk
+LK,PLC,People's Leasing & Finance PLC,finance,,candidate,ticker to verify on cse.lk
+LK,CFIN,Central Finance Company PLC,finance,,candidate,ticker to verify on cse.lk
+LK,CINS,Ceylinco Insurance PLC,insurance,,candidate,ticker to verify on cse.lk
+LK,UAL,Union Assurance PLC,insurance,,candidate,ticker to verify on cse.lk
+LK,HASU,HNB Assurance PLC,insurance,,candidate,ticker to verify on cse.lk
+LK,JKH,John Keells Holdings PLC,diversified,,candidate,ticker to verify on cse.lk
+LK,HAYL,Hayleys PLC,diversified,,candidate,ticker to verify on cse.lk
+LK,HHL,Hemas Holdings PLC,diversified,,candidate,ticker to verify on cse.lk
+LK,SPEN,Aitken Spence PLC,diversified,,candidate,ticker to verify on cse.lk
+LK,VONE,Vallibel One PLC,diversified,,candidate,ticker to verify on cse.lk
+LK,SUN,Sunshine Holdings PLC,diversified,,candidate,ticker to verify on cse.lk
+LK,CCS,Ceylon Cold Stores PLC,consumer,,candidate,ticker to verify on cse.lk
+LK,DIST,Distilleries Company of Sri Lanka PLC,consumer,,candidate,ticker to verify on cse.lk
+LK,LION,Lion Brewery (Ceylon) PLC,consumer,,candidate,ticker to verify on cse.lk
+LK,NEST,Nestle Lanka PLC,consumer,,candidate,ticker to verify on cse.lk
+LK,CARG,Cargills (Ceylon) PLC,consumer,,candidate,ticker to verify on cse.lk
+LK,CTC,Ceylon Tobacco Company PLC,consumer,,candidate,ticker to verify on cse.lk
+LK,TKYO,Tokyo Cement Company (Lanka) PLC,manufacturing,,candidate,ticker to verify on cse.lk
+LK,LLUB,Chevron Lubricants Lanka PLC,manufacturing,,candidate,ticker to verify on cse.lk
+LK,DIPD,Dipped Products PLC,manufacturing,,candidate,ticker to verify on cse.lk
+LK,RCL,Royal Ceramics Lanka PLC,manufacturing,,candidate,ticker to verify on cse.lk
+LK,DIAL,Dialog Axiata PLC,telecom,,candidate,ticker to verify on cse.lk
+LK,SLTL,Sri Lanka Telecom PLC,telecom,,candidate,ticker to verify on cse.lk
+LK,KVAL,Kelani Valley Plantations PLC,plantations,,candidate,ticker to verify on cse.lk
+LK,WATA,Watawala Plantations PLC,plantations,,candidate,ticker to verify on cse.lk
