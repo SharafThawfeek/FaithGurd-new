@@ -54,7 +54,51 @@ def setup_cell() -> str:
     )
 
 
+GENERATE_START = """from pathlib import Path
+from faithguard.generation import llama
+SERVER = llama.prepare(os.path.join(WORK, 'llama_work'))   # pinned llama.cpp release; builds from source if needed
+servers = {}
+for i, name in enumerate(['qwen', 'gemma']):                # one model per T4
+    servers[name] = llama.LlamaServer(SERVER, llama.model_path(name), port=8080 + i, gpu=str(i), log=f'{OUT}/server-{name}.log')
+for name, s in servers.items():
+    print(name, 'ready in', round(s.wait_ready()), 's')"""
+
+GENERATE_RUN = """import threading
+from faithguard.benchmark import BenchmarkQuestion
+from faithguard.records import read_jsonl
+from faithguard.generation.answers import generate_answers
+from faithguard.generation.models import MODELS
+questions = list(read_jsonl(QUESTIONS, BenchmarkQuestion))
+print(len(questions), 'questions')
+def run(name):
+    n = generate_answers(questions, servers[name].url, name, MODELS[name]['sampling'], Path(OUT) / f'answers-{name}.jsonl')
+    print(name, n, 'new answers')
+threads = [threading.Thread(target=run, args=(n,)) for n in servers]
+for t in threads: t.start()
+for t in threads: t.join()"""
+
+GENERATE_SUMMARY = """import json, statistics
+for s in servers.values(): s.stop()
+for name in servers:
+    rows = [json.loads(l) for l in open(Path(OUT) / f'answers-{name}.jsonl', encoding='utf-8')]
+    speed = [r['settings']['timings'].get('predicted_per_second', 0) for r in rows]
+    print(name, len(rows), 'answers; thinking leaks:', sum(r['settings']['thinking_leak'] for r in rows),
+          '; empty:', sum(not r['text'] for r in rows), '; median tokens/s:', round(statistics.median(speed), 1) if speed else '-')"""
+
 NOTEBOOKS = {
+    "generate_answers": {
+        "title": "Generate benchmark answers with both generators",
+        "about": "Answers every benchmark question once with Qwen3.5-9B and Gemma 4 12B (4-bit, llama.cpp, thinking off, fixed seed), "
+                 "one model per T4, from the frozen evidence. Use the pilot questions first (60 questions, 120 answers), then the full set "
+                 "after the pilot decisions. Re-running skips answers already written. Expect about 1 GPU hour for the pilot and 3-5 for the full set.",
+        "cells": [
+            ("Point to the built questions (a private Kaggle Dataset made from data/benchmark-build/, never the public repository)",
+             "QUESTIONS = '/kaggle/input/faithguard-benchmark/questions.jsonl'  # change to your input path"),
+            ("Start llama.cpp: one server per T4 (downloads 12.7 GB of model files the first time)", GENERATE_START),
+            ("Generate with both models at once (resumable)", GENERATE_RUN),
+            ("Stop the servers and summarise", GENERATE_SUMMARY),
+        ],
+    },
     "repair_sft": {
         "title": "Repair, stage A: fine-tune the edit-program repairer",
         "about": "Fine-tunes Qwen3.5-2B with LoRA to write edit programs (Stage A), then evaluates it on 500 development items "

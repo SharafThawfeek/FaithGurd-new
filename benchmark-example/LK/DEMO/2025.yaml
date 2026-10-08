@@ -1,0 +1,48 @@
+# Example benchmark report (fictional bank). Real reports go under data/benchmark/, which is not committed.
+issuer: DEMO
+country: LK
+name: Demo Bank PLC (fictional)
+fiscal_year: "2025"
+year_end: "2025-12-31"
+source: none (fictional example)
+tables:
+  t1:
+    title: Income statement extract
+    page: 214
+    currency: LKR
+questions:
+  - id: DEMO-2025-01
+    text: What was the Group's profit after tax in FY2025?
+    type: lookup
+    answer: t1r3c1
+    expect: Rs. 14,212,560 thousand
+    author: Sharaf
+    checked_by: M.L Ahamed
+    pilot: true
+  - id: DEMO-2025-02
+    text: By what percentage did the Group's profit after tax grow in FY2025?
+    type: growth
+    answer: growth(t1r3c1, t1r3c2)
+    expect: 9.3%
+    author: Sharaf
+    checked_by: M.S.A Ahamed
+  - id: DEMO-2025-03
+    text: How much higher was the Group's net interest income than the Bank's in FY2025?
+    type: difference
+    answer: t1r2c1 - t1r2c3
+    expect: "2,345,210"
+    author: M.L Ahamed
+    checked_by: Sharaf
+  - id: DEMO-2025-04
+    text: What share of the Group's total assets did the Bank hold at the end of FY2025?
+    type: share
+    answer: share(t1r4c3, t1r4c1)
+    expect: 93.6%
+    author: M.S.A Ahamed
+    checked_by: Sharaf
+  - id: DEMO-2025-05
+    text: What drove the change in the Group's profit after tax in FY2025?
+    type: narrative
+    expect: Not stated in this extract; a correct answer says the evidence does not explain it.
+    author: Sharaf
+    checked_by: M.L Ahamed

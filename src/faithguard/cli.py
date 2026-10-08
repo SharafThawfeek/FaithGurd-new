@@ -220,6 +220,60 @@ def cmd_xbrl_mine(args) -> None:
     print(f"{done} filings, {sum(counts.values())} examples {dict(sorted(counts.items()))} -> {args.out}")
 
 
+def cmd_benchmark(args) -> None:
+    from faithguard import benchmark
+    from faithguard.records import write_jsonl
+
+    use_manifest = args.manifest not in ("", "none") and Path(args.manifest).is_file()
+    manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8")) if use_manifest else None
+    if args.action == "cells":
+        _, evidence = benchmark.load_report(args.report)
+        print(benchmark.cell_listing(evidence))
+        return
+    paths = benchmark.report_paths(args.root)
+    if args.action == "check":
+        findings, counts = benchmark.check(paths, manifest)
+        for f in findings:
+            print(f"{f.level.upper():8} {f.question:16} {f.message}  [{f.file}]")
+        total = sum(counts.values())
+        print(f"\n{len(paths)} reports, {total} questions checked; {sum(f.level == 'error' for f in findings)} errors, {sum(f.level == 'warning' for f in findings)} warnings")
+        for (country, split, qtype), n in sorted(counts.items()):
+            print(f"  {country} {split:12} {qtype:12} {n}")
+        if any(f.level == "error" for f in findings):
+            raise SystemExit(1)
+        return
+    questions, gold = benchmark.build(paths, manifest, pilot_only=args.pilot_only)
+    out = Path(args.out)
+    write_jsonl(out / "questions.jsonl", questions)
+    gold.root = out / "gold"
+    gold.save()
+    print(f"{len(questions)} questions -> {out / 'questions.jsonl'}; gold -> {gold.root}")
+
+
+def cmd_generate(args) -> None:
+    from faithguard.benchmark import BenchmarkQuestion
+    from faithguard.generation.answers import generate_answers
+    from faithguard.generation.models import MODELS
+
+    questions = list(read_jsonl(args.questions, BenchmarkQuestion))
+    n = generate_answers(questions, args.server, args.generator, MODELS[args.generator]["sampling"], Path(args.out), seed=args.seed, max_tokens=args.max_tokens)
+    print(f"{n} new answers -> {args.out}")
+
+
+def cmd_items(args) -> None:
+    from faithguard.benchmark import BenchmarkQuestion
+    from faithguard.records import Answer, Item
+
+    questions = {q.question.id: q for q in read_jsonl(args.questions, BenchmarkQuestion)}
+    items = []
+    for path in args.answers:
+        for answer in read_jsonl(path, Answer):
+            q = questions[answer.question_id]
+            items.append(Item(id=answer.id, question=q.question, evidence=q.evidence, answer=answer))
+    write_jsonl(args.out, items)
+    print(f"{len(items)} items -> {args.out}")
+
+
 def cmd_trace(args) -> None:
     from faithguard.pipeline import run
 
@@ -326,6 +380,30 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--cache", default="data/raw/edgar")
     p.add_argument("--out", default="runs/detector/xbrl.jsonl")
     p.set_defaults(fn=cmd_xbrl_mine)
+
+    p = sub.add_parser("benchmark", help="team benchmark: list cells, check gold answers, build records")
+    p.add_argument("action", choices=["cells", "check", "build"])
+    p.add_argument("report", nargs="?", help="a report YAML (for 'cells')")
+    p.add_argument("--root", default="data/benchmark")
+    p.add_argument("--manifest", default="manifests/splits.json")
+    p.add_argument("--pilot-only", action="store_true")
+    p.add_argument("--out", default="data/benchmark-build")
+    p.set_defaults(fn=cmd_benchmark)
+
+    p = sub.add_parser("generate", help="answers from one generator served by llama.cpp (resumable)")
+    p.add_argument("--questions", required=True)
+    p.add_argument("--server", default="http://127.0.0.1:8080")
+    p.add_argument("--generator", choices=["qwen", "gemma"], required=True)
+    p.add_argument("--out", required=True)
+    p.add_argument("--seed", type=int, default=2026)
+    p.add_argument("--max-tokens", type=int, default=300)
+    p.set_defaults(fn=cmd_generate)
+
+    p = sub.add_parser("items", help="join benchmark questions with generated answers into items")
+    p.add_argument("--questions", required=True)
+    p.add_argument("--answers", nargs="+", required=True)
+    p.add_argument("--out", required=True)
+    p.set_defaults(fn=cmd_items)
 
     p = sub.add_parser("trace")
     p.add_argument("--items", required=True)
