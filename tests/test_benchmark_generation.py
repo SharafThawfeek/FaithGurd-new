@@ -102,3 +102,56 @@ def test_generation_writes_settings_and_resumes(tmp_path):
     assert [r["id"] for r in rows] == [f"{q.question.id}:qwen" for q in questions]
     assert rows[0]["settings"]["seed"] == 2026 and rows[0]["settings"]["prompt_version"]
     assert rows[0]["text"].startswith("Answer to: What was the Group's profit after tax")
+
+
+def test_report_download_checks_size_and_records_checksum(tmp_path):
+    import csv
+    import hashlib
+
+    from faithguard.data import reports
+
+    payload = b"%PDF-1.7 fake report"
+
+    class Files(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+
+        def log_message(self, *args):
+            pass
+
+    server = HTTPServer(("127.0.0.1", 0), Files)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    manifest = tmp_path / "reports.csv"
+    rows = [
+        {"issuer": "DEMO", "split": "dev", "report": "r", "period_end": "2025-12-31", "filed": "2026-03-01",
+         "url": "https://cdn.example/cmt/a.pdf", "bytes": str(len(payload)), "sha256": ""},
+        {"issuer": "SKIP", "split": "test", "report": "r", "period_end": "2025-12-31", "filed": "2026-03-01",
+         "url": "https://cdn.example/cmt/b.pdf", "bytes": "1", "sha256": ""},
+    ]
+    with open(manifest, "w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w.writeheader()
+        w.writerows(rows)
+    try:
+        results = reports.download(manifest, {"dev"}, tmp_path / "raw", base_url=f"http://127.0.0.1:{server.server_address[1]}")
+    finally:
+        server.shutdown()
+    assert results == [("DEMO", "ok (0.0 MB)")]
+    assert (tmp_path / "raw" / "LK" / "DEMO" / "2025-12-31.pdf").read_bytes() == payload
+    saved = reports.read_manifest(manifest)
+    assert saved[0]["sha256"] == hashlib.sha256(payload).hexdigest() and saved[1]["sha256"] == ""
+
+
+def test_report_manifest_covers_every_benchmark_issuer():
+    import json
+
+    from faithguard.data import reports
+
+    rows = reports.read_manifest(ROOT / "manifests" / "lk-reports.csv")
+    manifest = json.loads((ROOT / "manifests" / "splits.json").read_text(encoding="utf-8"))
+    benchmark = {k[3:] for k, v in manifest["splits"].items() if k.startswith("LK:") and v != "train"}
+    assert benchmark <= {r["issuer"] for r in rows}
+    assert all(r["url"].startswith("https://cdn.cse.lk/") and int(r["bytes"]) > 1_000_000 for r in rows)

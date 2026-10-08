@@ -274,6 +274,21 @@ def cmd_items(args) -> None:
     print(f"{len(items)} items -> {args.out}")
 
 
+def cmd_reports(args) -> None:
+    from faithguard.data import reports
+
+    rows = reports.read_manifest(args.manifest)
+    chosen = [r for r in rows if r["split"] in set(args.splits.split(","))]
+    total = sum(int(r["bytes"]) for r in chosen) / 2**20
+    if args.action == "list":
+        for r in chosen:
+            print(f"{r['issuer']:6} {r['split']:12} {r['period_end']}  {int(r['bytes']) / 2**20:5.1f} MB  {r['report']}  {r['url']}")
+        print(f"{len(chosen)} reports, {total:.0f} MB")
+        return
+    for issuer, outcome in reports.download(args.manifest, set(args.splits.split(",")), args.root):
+        print(f"{issuer:6} {outcome}")
+
+
 def cmd_trace(args) -> None:
     from faithguard.pipeline import run
 
@@ -404,6 +419,13 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--answers", nargs="+", required=True)
     p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_items)
+
+    p = sub.add_parser("reports", help="annual report PDFs listed in manifests/lk-reports.csv")
+    p.add_argument("action", choices=["list", "download"])
+    p.add_argument("--splits", default="dev", help="comma-separated: dev (the pilot), calibration, test, train")
+    p.add_argument("--manifest", default="manifests/lk-reports.csv")
+    p.add_argument("--root", default="data/raw/reports")
+    p.set_defaults(fn=cmd_reports)
 
     p = sub.add_parser("trace")
     p.add_argument("--items", required=True)

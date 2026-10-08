@@ -99,6 +99,7 @@ export FG_SEC_USER_AGENT="FaithGuard research Your Name you@example.com"
 | `faithguard sft --mode program` (or `rewrite`) | Repairer training data from the controlled track, into `runs/sft/` |
 | `faithguard detector-data` | Channel A training data (controlled track, RAGTruth, XBRL if mined), into `runs/detector/` |
 | `faithguard xbrl-mine` | XBRL-mined wrong-context negatives from training-only US companies (needs `FG_SEC_USER_AGENT`) |
+| `faithguard reports list` / `download --splits dev` | The Sri Lankan annual reports in `manifests/lk-reports.csv`; downloads record checksums |
 | `faithguard benchmark cells FILE` | Every cell id of a report, for question writers |
 | `faithguard benchmark check` | Recompute every gold answer from its cells and report mistakes ([benchmark guide](docs/benchmark-guide.md)) |
 | `faithguard benchmark build [--pilot-only]` | Questions with frozen evidence, and their gold, into `data/benchmark-build/` |
@@ -159,7 +160,7 @@ Controlled track on development data, made from the project's own templates (pip
 
 | Exit item | State |
 | --- | --- |
-| Corrected tables and questions with gold answers | Format, checker and builder done ([benchmark guide](docs/benchmark-guide.md), [example](benchmark-example/)); reports to be downloaded and tables corrected |
+| Corrected tables and questions with gold answers | Format, checker and builder done ([benchmark guide](docs/benchmark-guide.md), [example](benchmark-example/)); all 33 Sri Lankan reports located on the CSE ([manifests/lk-reports.csv](manifests/lk-reports.csv)); download, then correct tables |
 | Pilot: 60 questions, 120 answers, labelled | Generation notebook ready ([notebooks/generate_answers.ipynb](notebooks/generate_answers.ipynb)); Label Studio flow ready |
 | Annotation guide v2 | After the pilot |
 | Automatic-extraction run on 20 tables | After the reports are collected |

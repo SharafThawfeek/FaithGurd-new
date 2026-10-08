@@ -16,7 +16,17 @@ The repository is public, so benchmark content stays out of it until the test se
 
 ## 2. Which reports
 
-Use the issuers in [manifests/splits.json](../manifests/splits.json): 12 test, 12 calibration and 4 development issuers per country (decision D-007). Take each issuer's latest audited annual report (FY2025, or FY2024/25 for March year-ends). Record the download link in the report file's `source` field.
+Use the issuers in [manifests/splits.json](../manifests/splits.json): 12 test, 12 calibration and 4 development issuers per country (decision D-007). For Sri Lanka, each issuer's latest annual report on the CSE is already listed in [manifests/lk-reports.csv](../manifests/lk-reports.csv) (period, filing date, link, size). List or fetch them by split; the pilot needs only `dev` (4 reports, 43 MB):
+
+```bash
+faithguard reports list --splits dev
+```
+
+```bash
+faithguard reports download --splits dev
+```
+
+Downloads go to `data/raw/reports/LK/<ISSUER>/<period end>.pdf` and their checksums are recorded in the manifest. Put the link in the report file's `source` field.
 
 Pilot questions come only from the 4 development issuers per country (decision D-004).
 
