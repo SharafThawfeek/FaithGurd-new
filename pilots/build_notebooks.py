@@ -132,6 +132,8 @@ def setup_cell() -> str:
         + "import subprocess, sys\n"
         f"REQUIREMENTS = {requirements!r}\n"
         'subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", *REQUIREMENTS])\n'
+        "# Kaggle's image ships torchao 0.10, which PEFT 0.21 rejects when it adds LoRA to fp16 weights; nothing here uses it\n"
+        'subprocess.call([sys.executable, "-m", "pip", "uninstall", "-y", "-q", "torchao"])\n'
         '!nvidia-smi --query-gpu=name,memory.total,driver_version,compute_cap --format=csv'
     )
 

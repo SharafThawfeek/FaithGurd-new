@@ -1,0 +1,237 @@
+{
+  "pilot": "detector",
+  "settings": {
+    "models": "v1-large,v2-mmbert",
+    "seq_lens": "1024,2048",
+    "batches": [
+      1,
+      2,
+      4,
+      8,
+      16
+    ],
+    "steps": 20,
+    "seed": 13,
+    "skip_inference": false,
+    "tiny": false
+  },
+  "environment": {
+    "platform": "kaggle",
+    "python": "3.13.15",
+    "os": "Linux-6.18.48+-x86_64-with-glibc2.39",
+    "started_utc": "2026-10-09T01:37:57+00:00",
+    "nvidia_smi": [
+      "Tesla T4, 15360 MiB, 3 MiB, 580.178.04",
+      "Tesla T4, 15360 MiB, 3 MiB, 580.178.04"
+    ],
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.19.0",
+      "peft": "0.21.2",
+      "accelerate": "1.15.0",
+      "bitsandbytes": "0.50.2",
+      "huggingface_hub": "1.33.0",
+      "lettucedetect": "0.2.3",
+      "flash-linear-attention": null,
+      "triton": "3.6.0"
+    },
+    "gpus": [
+      {
+        "name": "Tesla T4",
+        "memory_gb": 14.56,
+        "compute_capability": "7.5",
+        "native_bf16": false
+      },
+      {
+        "name": "Tesla T4",
+        "memory_gb": 14.56,
+        "compute_capability": "7.5",
+        "native_bf16": false
+      }
+    ],
+    "torch_cuda": "12.8"
+  },
+  "runs": [
+    {
+      "model": "v1-large",
+      "model_id": "KRLabsOrg/lettucedect-large-modernbert-en-v1",
+      "seq_len": 1024,
+      "params_m": 395.8,
+      "largest_batch": 16,
+      "batch": 16,
+      "losses": [
+        0.0001,
+        0.0,
+        0.0001,
+        0.0,
+        0.0001,
+        0.0001,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "nonfinite_losses": 0,
+      "skipped_steps": 0,
+      "seconds_per_step": 4.163,
+      "tokens_per_second": 3935.5,
+      "peak_memory_gb": 7.42,
+      "gpu_hours_per_million_tokens": 0.07,
+      "verdict": "PASS",
+      "reasons": []
+    },
+    {
+      "model": "v1-large",
+      "model_id": "KRLabsOrg/lettucedect-large-modernbert-en-v1",
+      "seq_len": 2048,
+      "params_m": 395.8,
+      "largest_batch": 16,
+      "batch": 16,
+      "losses": [
+        0.3453,
+        0.2084,
+        0.1,
+        0.0314,
+        0.0102,
+        0.0028,
+        0.0009,
+        0.0002,
+        0.0001,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "nonfinite_losses": 0,
+      "skipped_steps": 0,
+      "seconds_per_step": 11.624,
+      "tokens_per_second": 2819.1,
+      "peak_memory_gb": 9.93,
+      "gpu_hours_per_million_tokens": 0.1,
+      "verdict": "PASS",
+      "reasons": []
+    },
+    {
+      "model": "v2-mmbert",
+      "model_id": "KRLabsOrg/lettucedect-v2-mmbert-base",
+      "seq_len": 1024,
+      "params_m": 307.5,
+      "largest_batch": 16,
+      "batch": 16,
+      "losses": [
+        0.885,
+        0.9061,
+        0.8673,
+        1.2994,
+        0.6198,
+        0.3659,
+        0.2621,
+        0.1375,
+        0.0565,
+        0.014,
+        0.0028,
+        0.0004,
+        0.0001,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "nonfinite_losses": 0,
+      "skipped_steps": 2,
+      "seconds_per_step": 2.362,
+      "tokens_per_second": 6936.9,
+      "peak_memory_gb": 5.78,
+      "gpu_hours_per_million_tokens": 0.04,
+      "verdict": "PASS",
+      "reasons": []
+    },
+    {
+      "model": "v2-mmbert",
+      "model_id": "KRLabsOrg/lettucedect-v2-mmbert-base",
+      "seq_len": 2048,
+      "params_m": 307.5,
+      "largest_batch": 16,
+      "batch": 16,
+      "losses": [
+        0.8152,
+        0.8062,
+        0.8009,
+        1.2987,
+        0.6211,
+        0.3681,
+        0.2622,
+        0.1464,
+        0.0649,
+        0.0192,
+        0.0025,
+        0.0003,
+        0.0001,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "nonfinite_losses": 0,
+      "skipped_steps": 2,
+      "seconds_per_step": 5.774,
+      "tokens_per_second": 5675.0,
+      "peak_memory_gb": 6.79,
+      "gpu_hours_per_million_tokens": 0.05,
+      "verdict": "PASS",
+      "reasons": []
+    }
+  ],
+  "inference": {
+    "v1-large": {
+      "ok": true,
+      "load_seconds": 1.1,
+      "predict_seconds": 0.08,
+      "spans": [
+        {
+          "start": 0,
+          "end": 55,
+          "confidence": 0.9678505063056946,
+          "text": "Group profit after tax rose 7.0% to Rs. 12,450 million."
+        }
+      ]
+    },
+    "v2-mmbert": {
+      "ok": true,
+      "load_seconds": 3.8,
+      "predict_seconds": 0.03,
+      "spans": [
+        {
+          "start": 22,
+          "end": 55,
+          "confidence": 0.9623751044273376,
+          "text": " rose 7.0% to Rs. 12,450 million."
+        }
+      ]
+    }
+  },
+  "script_seconds": 640.8
+}

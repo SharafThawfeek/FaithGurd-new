@@ -46,7 +46,7 @@ PILOTS = ["repair_pilot", "detector_pilot", "generation_pilot"]
 def kaggle(*args: str, capture: bool = False, check: bool = True) -> str:
     exe = Path(sys.executable).parent / ("kaggle.exe" if os.name == "nt" else "kaggle")
     command = [str(exe) if exe.exists() else "kaggle", *args]
-    env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}  # the CLI writes notebook logs in the default encoding
     out = subprocess.run(command, check=check, text=True, capture_output=capture, env=env, encoding="utf-8")
     return (out.stdout or "") + (out.stderr or "") if capture else ""
 
@@ -59,7 +59,8 @@ def username() -> str:
 
 
 def slug(user: str, name: str) -> str:
-    return f"{user}/faithguard-{name.replace('_', '-')}"
+    """The notebook's address, which Kaggle derives from its title ("FaithGuard answer generation" -> faithguard-answer-generation)."""
+    return f"{user}/" + re.sub(r"[^a-z0-9]+", "-", NOTEBOOKS[name][1].lower()).strip("-")
 
 
 def push(names: list[str], datasets: list[str]) -> None:
