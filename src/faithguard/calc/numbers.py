@@ -121,6 +121,20 @@ def _scale_from_suffix(suffix: str) -> int:
     return SCALE_WORDS.get(word, SCALE_WORDS.get(word.rstrip("s"), 0))
 
 
+# Units written in brackets after a figure, "Rs. 1,983,093 (thousands)", "4,083,978 (in thousands)",
+# "(Rs. '000)", or before it, "Rs. '000 80,007,940", as generators often copy them from table headers.
+_UNIT_AFTER = re.compile(
+    r"\s?\((?:in\s+)?(?:(?:Rs\.?|LKR|US\$|\$)\s?)?(?P<word>['’]000|thousands?|millions?|billions?|mn|bn)\)",
+    re.IGNORECASE,
+)
+_UNIT_BEFORE = re.compile(r"(?:(?P<cur>Rs\.?|LKR|US\$|\$)\s?)?['’]000\s?$", re.IGNORECASE)
+
+
+def _bracket_scale(word: str) -> int:
+    word = word.lower()
+    return 3 if word.endswith("000") else SCALE_WORDS.get(word, SCALE_WORDS.get(word.rstrip("s"), 0))
+
+
 def _is_date_part(text: str, start: int, end: int) -> bool:
     return bool(_DATE_DAY_BEFORE.match(text[end : end + 14]) or _DATE_DAY_AFTER.search(text[max(0, start - 12) : start]))
 
@@ -147,13 +161,22 @@ def find_numbers(text: str, include_years: bool = False, brackets_negative: bool
         raw = Decimal(num.replace(",", ""))
         decimals = len(num.split(".")[1]) if "." in num else 0
         low = suffix.strip().lower()
+        scale = _scale_from_suffix(suffix)
+        prefix = text[m.start("cur") : m.start("sign2") if m.group("sign2") else m.start("num")] if cur else ""
+        unit_after = None if low or brackets else _UNIT_AFTER.match(text, end)
+        unit_before = None if cur or m.group("sign") else _UNIT_BEFORE.search(text, 0, start)
+        if unit_after:
+            suffix, scale, end = unit_after.group(0), _bracket_scale(unit_after.group("word")), unit_after.end()
+        elif unit_before:
+            cur = unit_before.group("cur") or ""
+            prefix, scale, start = text[unit_before.start() : start], 3, unit_before.start()
         if low in ("%", "percent", "per cent", "pct", "percentage points", "pp", "ppt", "ppts") or "cent" in low:
             kind: Kind = "percent"
         elif low in ("bps", "bp", "basis points"):
             kind = "percent"
         elif low in ("x", "times"):
             kind = "ratio"
-        elif cur or cur_after or _scale_from_suffix(suffix):
+        elif cur or cur_after or scale:
             kind = "amount"
         elif len(num) == 4 and num.isdigit() and 1900 <= int(num) <= 2100:
             kind = "year"
@@ -165,9 +188,9 @@ def find_numbers(text: str, include_years: bool = False, brackets_negative: bool
             continue
         style = NumberStyle(
             kind=kind,
-            prefix=text[m.start("cur") : m.start("sign2") if m.group("sign2") else m.start("num")] if cur else "",
+            prefix=prefix,
             suffix=suffix + cur_after,
-            scale=_scale_from_suffix(suffix) if kind == "amount" else 0,
+            scale=scale if kind == "amount" else 0,
             decimals=decimals,
             grouping="," in num or len(num.split(".")[0]) < 4,
             brackets=brackets,

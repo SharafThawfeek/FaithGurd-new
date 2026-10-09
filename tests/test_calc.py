@@ -48,6 +48,31 @@ def test_find_numbers_parses_kinds_and_scales(text, kind, value, scale, decimals
     assert (m.kind, m.value, m.scale, m.decimals) == (kind, value, scale, decimals)
 
 
+@pytest.mark.parametrize(
+    "text, value, currency, printed",
+    [
+        ("profit was Rs. 32,571,337 (thousands).", D("32571337000"), "LKR", "Rs. 32,571,337 (thousands)"),
+        ("liabilities were Rs. 4,083,978 (in thousands)", D("4083978000"), "LKR", "Rs. 4,083,978 (in thousands)"),
+        ("net income of US$ 451,123 ('000)", D("451123000"), "USD", "US$ 451,123 ('000)"),
+        ("deposits of 1,627,060 (Rs. '000)", D("1627060000"), None, "1,627,060 (Rs. '000)"),
+        ("decreasing from Rs. '000 80,007,940", D("80007940000"), "LKR", "Rs. '000 80,007,940"),
+        ("revenue of 2.5 (millions)", D("2500000"), None, "2.5 (millions)"),
+    ],
+)
+def test_units_in_brackets_or_before_the_figure(text, value, currency, printed):
+    m = one(text)
+    assert (m.kind, m.value, m.currency, m.text) == ("amount", value, currency, printed)
+
+
+def test_a_unit_in_brackets_keeps_its_style_when_rewritten():
+    m = one("profit was Rs. 32,571,337 (thousands).")
+    assert render(D("30210717000"), m.style) == "Rs. 30,210,717 (thousands)"
+    m = one("from Rs. '000 80,007,940 in 2024")
+    assert render(D("77782390000"), m.style) == "Rs. '000 77,782,390"
+    assert one("profit (Rs. 5 million) rose").value == D("5000000")  # an aside, not a unit
+    assert [x.value for x in find_numbers("grew 5% (3 million)")] == [D("5"), D("3000000")]
+
+
 def test_currency_codes():
     assert one("Rs. 5 million").currency == "LKR"
     assert one("$5 million").currency == "USD"
