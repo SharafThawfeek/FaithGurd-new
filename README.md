@@ -4,7 +4,7 @@ FaithGuard checks each AI answer about a financial report before it reaches the 
 
 - **Research plan:** [docs/FaithGuard-Revised-Plan.md](docs/FaithGuard-Revised-Plan.md), covering what is built and why
 - **Phase plan:** [docs/FaithGuard-Phase-Plan.md](docs/FaithGuard-Phase-Plan.md), covering what to do in what order; each phase ends at an exit checklist
-- **Decision log:** [docs/decision-log.md](docs/decision-log.md) · **Risk register:** [docs/risk-register.md](docs/risk-register.md) · **Annotation guide (v2):** [docs/annotation-guide.md](docs/annotation-guide.md)
+- **Decision log:** [docs/decision-log.md](docs/decision-log.md) · **Risk register:** [docs/risk-register.md](docs/risk-register.md) · **Annotation guide (v2):** [docs/annotation-guide.md](docs/annotation-guide.md) · **Pre-registration (draft):** [docs/preregistration.md](docs/preregistration.md)
 
 ## How it works
 
