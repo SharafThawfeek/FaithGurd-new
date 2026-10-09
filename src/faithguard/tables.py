@@ -29,6 +29,7 @@ _FINQA_NEGATIVE = re.compile(r"^\s*(-?[\d.,]+)\s*\(\s*[\d.,]+\s*\)\s*$")
 _PERIOD_WORDS = {"", "fiscal", "year", "fy", "fiscal year", "year ended", "years ended", "as at", "as of"}
 _UNIT_MARKER = re.compile(r"^(?:Rs\.?|LKR|SLR|USD|US\$|\$)?\s?['’]?000$", re.IGNORECASE)  # "Rs 000", "Rs.'000"
 _PER_SHARE = re.compile(r"per (?:common |ordinary )?share|\beps\b|\(cents|\bcents\b|\bdividend per\b", re.IGNORECASE)
+_SECTION_ONLY = {"basic", "diluted", "basic and diluted"}  # row labels that mean nothing without their section
 
 
 def normalise_period(text: str) -> str | None:
@@ -129,6 +130,8 @@ def table_from_grid(
             section = row_label
         metric_source = row_label or section
         per_share = bool(_PER_SHARE.search(metric_source))
+        if section and row_label.lower().rstrip(":").strip() in _SECTION_ONLY:
+            per_share = per_share or bool(_PER_SHARE.search(section))  # "Basic" under "Earnings per share:"
         for c in range(1, width):
             text = row[c]
             if not text:

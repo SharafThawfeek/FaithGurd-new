@@ -57,6 +57,24 @@ def test_per_share_rows_ignore_the_table_scale_and_blank_labels_inherit_the_sect
     assert (eps.metric, eps.scale, eps.value) == ("basic earnings per share", 0, D("2.79"))
 
 
+def test_basic_and_diluted_rows_under_a_per_share_section_are_per_share():
+    # As US income statements print them: "Basic" twice, once per share and once as shares (in thousands)
+    grid = [
+        ["(in thousands, except per share amounts)", "2025", "2024"],
+        ["Net income", "451,123", "404,386"],
+        ["Net income per share attributable to common shareholders:", "", ""],
+        ["Basic", "15.64", "13.06"],
+        ["Diluted", "15.28", "12.63"],
+        ["Weighted average common shares outstanding:", "", ""],
+        ["Basic", "28,846", "30,957"],
+    ]
+    cells = {(c.row, c.period): c for c in table_from_grid("t1", grid).cells}
+    eps, shares = cells[(3, "2025")], cells[(6, "2025")]
+    assert (eps.scale, eps.value) == (0, D("15.64"))
+    assert (shares.scale, shares.value) == (3, D("28846000"))
+    assert cells[(1, "2025")].scale == 3
+
+
 def test_finqa_style_table():
     grid = [["", "amount ( in millions )"], ["2009 net revenue", "$ 536.7"], ["other", "-0.3 ( 0.3 )"]]
     t = table_from_grid("t1", grid)

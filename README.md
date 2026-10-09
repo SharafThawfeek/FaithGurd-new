@@ -166,7 +166,7 @@ Controlled track on development data, made from the project's own templates (pip
 | Exit item | State |
 | --- | --- |
 | Corrected tables and questions with gold answers | Format, checker and builder done ([benchmark guide](docs/benchmark-guide.md), [example](benchmark-example/)); all 33 Sri Lankan reports located on the CSE ([manifests/lk-reports.csv](manifests/lk-reports.csv)) and all 32 US 10-Ks on EDGAR ([manifests/us-reports.csv](manifests/us-reports.csv), D-041); pilot reports downloaded; correct tables next |
-| Pilot: 60 questions, 120 answers, labelled | Generation notebook ready ([notebooks/generate_answers.ipynb](notebooks/generate_answers.ipynb)); Label Studio flow ready |
+| Pilot: 60 questions, 120 answers, labelled | 60 pilot questions written and built: 33 Sri Lankan, 27 US (D-046, D-051), each awaiting a second reader; answers need the generation notebook on Kaggle ([notebooks/generate_answers.ipynb](notebooks/generate_answers.ipynb)); Label Studio flow ready |
 | Annotation guide v2 | After the pilot |
 | Automatic-extraction run on 20 tables | After the reports are collected |
 

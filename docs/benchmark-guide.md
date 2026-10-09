@@ -8,7 +8,7 @@ A complete working example is in [benchmark-example/](../benchmark-example/) (a 
 
 | What | Where | In git? |
 | --- | --- | --- |
-| Report PDFs | Shared Drive: `FaithGuard/reports/<country>/<ISSUER>/<fiscal year>.pdf` | No |
+| Report files (Sri Lankan PDFs, US 10-K web pages) | `data/raw/reports/<country>/<ISSUER>/<period end>.pdf` or `.htm`, copied to the shared Drive `FaithGuard/reports/` | No |
 | Corrected tables and questions | `data/benchmark/<country>/<ISSUER>/<fiscal year>.yaml` and `data/benchmark/<country>/<ISSUER>/<fiscal year>/<table id>.csv` | No: keep them in the private Drive and a private Kaggle Dataset |
 | Built questions and gold | `data/benchmark-build/` (made by `faithguard benchmark build`) | No |
 
@@ -27,6 +27,14 @@ faithguard reports download --splits dev
 ```
 
 Downloads go to `data/raw/reports/LK/<ISSUER>/<period end>.pdf` and their checksums are recorded in the manifest. Put the link in the report file's `source` field.
+
+For the US, [manifests/us-reports.csv](../manifests/us-reports.csv) lists each issuer's latest 10-K on SEC EDGAR (decision D-041); the pilot's four are 9 MB. The SEC needs a declared contact, so set `FG_SEC_USER_AGENT` first (see the README):
+
+```bash
+faithguard reports download --country US --splits dev
+```
+
+Each 10-K's main document is saved as `data/raw/reports/US/<ISSUER>/<period end>.htm`, byte for byte as filed (the script tag the SEC's web server adds is removed, so checksums agree). `faithguard reports locate --country US` rebuilds the manifest from EDGAR, for example to find next year's reports.
 
 Pilot questions come only from the 4 development issuers per country (decision D-004).
 
@@ -48,6 +56,18 @@ python -m faithguard.data.pdf_tables data/raw/reports/LK/SAMP/2025-12-31.pdf 374
 ```
 
 The reader takes the figures from the PDF's own text, so the digits are exact. What can still go wrong is a figure in the wrong row or column, or a label that wraps onto a second line starting with a capital letter ("Impact on restructuring of Sri Lanka / International Sovereign Bonds"): join such labels by hand. It also reports how many subtotals add up. In a full statement every "Total ..." row equals the rows above it, so a total that does not add up points at a misplaced or misread figure. Scanned reports have no text to read; type those tables.
+
+For a US 10-K, list its tables by the text above each one, then draft the one you need by its number:
+
+```bash
+python -m faithguard.data.html_tables data/raw/reports/US/MEDP/2025-12-31.htm list "balance sheet|statements? of operations"
+```
+
+```bash
+python -m faithguard.data.html_tables data/raw/reports/US/MEDP/2025-12-31.htm extract 14 data/benchmark/US/MEDP/2025/t1.csv
+```
+
+The 10-K's own HTML table gives the digits and layout, so drafts are usually right as they stand (decision D-048): a lone "$" is dropped, a bracket or "%" in its own cell is joined to its number, and the unit line ("(in thousands, except per share data)") goes in the first column. Still compare every row with the filing, and run `faithguard benchmark check`, which adds up the totals. A 10-K has no page numbers to give; leave `page` out and use the statement's title. For a fiscal year that ends in January (Dick's Sporting Goods, Silicon Labs), `fiscal_year` is the calendar year it ends in, and questions should name the year-end date ("the fiscal year ended January 31, 2026") rather than the company's own "fiscal 2025".
 
 Name tables `t1`, `t2`, ... in the report file:
 
