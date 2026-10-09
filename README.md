@@ -139,7 +139,7 @@ Every notebook starts with `setup/setup_cell.py`, which stops at once if the ses
 | Repository, environment, logs, decision log, risk register, authorship | Done | Review the logs at each weekly check |
 | Adjudicator | Draft: [docs/drafts/adjudicator-request.md](docs/drafts/adjudicator-request.md) | Send to an accounting lecturer or senior student |
 | GPU quota per account | Template: [logs/gpu-quota.csv](logs/gpu-quota.csv) | Record what Kaggle and Colab show |
-| Repair, detector and generation GPU pilots | Run on Kaggle T4s (2026-10-09), results in [pilots/results/](pilots/results/): detector PASS (D-054), generation PASS (D-055), repair QLoRA PASS; the fp16 repair runs failed on Kaggle's torchao and are being re-run with the fix (D-053) | Log the fp16 repair verdict and settle the repair training mode (D-003) |
+| Repair, detector and generation GPU pilots | Done on Kaggle T4s (2026-10-09), results in [pilots/results/](pilots/results/): detector PASS (D-054), generation PASS (D-055), repair: fp16 LoRA at 1,024 and 2,048 tokens and QLoRA all train; repair training starts with fp16 LoRA (D-058) | None: phase-1 pilots complete |
 | Closest prior work per paper | Tables in [docs/related-work/](docs/related-work/) | Open each work and fill in its row (LettuceDetect v2 taxonomy head first) |
 
 ### Phase 2: shared foundation

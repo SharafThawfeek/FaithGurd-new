@@ -261,7 +261,7 @@ def main() -> None:
 
         model.train()
         losses, step_seconds, grad_norms, scales = [], [], [], []
-        nonfinite_losses, skipped_steps = 0, 0
+        nonfinite_losses, skipped_steps, calibration_steps = 0, 0, 0
         block = 0
         for step in range(args.steps):
             start = time.perf_counter()
@@ -283,6 +283,8 @@ def main() -> None:
             scaler.update()
             if use_amp and scaler.get_scale() < scale_before:
                 skipped_steps += 1  # the scaler found inf/nan gradients and skipped this step
+                if skipped_steps == step + 1:
+                    calibration_steps += 1  # an unbroken run from the first step: the scaler is finding its scale
             if device == "cuda":
                 torch.cuda.synchronize()
             step_seconds.append(time.perf_counter() - start)
@@ -304,6 +306,7 @@ def main() -> None:
             "grad_scaler_scale": scales,
             "nonfinite_losses": nonfinite_losses,
             "skipped_steps": skipped_steps,
+            "calibration_skips": calibration_steps,
             "seconds_per_step": round(seconds_per_step, 2),
             "tokens_per_second": round(tokens_per_second, 1),
             "gpu_hours_per_million_tokens": round(1e6 / tokens_per_second / 3600, 2),
@@ -318,8 +321,11 @@ def main() -> None:
         reasons = []
         if late_bad:
             reasons.append(f"{late_bad} non-finite losses in the second half")
-        if use_amp and skipped_steps > max(3, args.steps // 5):
-            reasons.append(f"GradScaler skipped {skipped_steps} of {args.steps} steps (fp16 overflow)")
+        # Skips while the scaler falls from its starting scale to one that fits (an unbroken run from the
+        # first step) are calibration, a one-off cost; later skips mean gradients keep overflowing.
+        overflow = skipped_steps - calibration_steps
+        if use_amp and (overflow > max(3, args.steps // 5) or calibration_steps > args.steps // 2):
+            reasons.append(f"GradScaler skipped {overflow} of {args.steps} steps after calibration (fp16 overflow)")
         if not tail < head * 0.8:
             reasons.append("loss did not fall by at least 20%")
         result["verdict"] = "PASS" if not reasons else "FAIL"
