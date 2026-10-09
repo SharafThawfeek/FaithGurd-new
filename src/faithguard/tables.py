@@ -51,7 +51,8 @@ def normalise_metric(text: str) -> str:
     t = text.lower()
     t = re.sub(r"\([^)]*\)|\bnote\s+\d+\b", " ", t)  # footnote markers, notes, "(in millions)"
     t = re.sub(r"(?<!\d)(?:fy\s?)?(?:19|20)\d{2}(?:\s?[/-]\s?\d{2,4})?(?!\d)", " ", t)  # years belong in the period
-    t = re.sub(r"[^a-z0-9&%' ]+", " ", t)
+    t = t.replace("&", " and ")  # "loans & advances" is "loans and advances"
+    t = re.sub(r"[^a-z0-9%' ]+", " ", t)
     return re.sub(r"\s+", " ", t).strip()
 
 

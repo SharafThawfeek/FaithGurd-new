@@ -1,0 +1,142 @@
+{
+  "pilot": "generation",
+  "settings": {
+    "models": "qwen,gemma",
+    "questions": 8,
+    "max_tokens": 300,
+    "ctx": 6144,
+    "parallel": 4,
+    "seed": 1234,
+    "workdir": "llama_work",
+    "llama_server": null,
+    "dry_run": false
+  },
+  "environment": {
+    "platform": "kaggle",
+    "python": "3.13.15",
+    "os": "Linux-6.18.48+-x86_64-with-glibc2.39",
+    "started_utc": "2026-10-09T01:51:50+00:00",
+    "nvidia_smi": [
+      "Tesla T4, 15360 MiB, 0 MiB, 580.178.04",
+      "Tesla T4, 15360 MiB, 0 MiB, 580.178.04"
+    ],
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.19.0",
+      "peft": "0.21.2",
+      "accelerate": "1.15.0",
+      "bitsandbytes": "0.50.2",
+      "huggingface_hub": "1.33.0",
+      "lettucedetect": "0.2.3",
+      "flash-linear-attention": null,
+      "triton": "3.6.0"
+    },
+    "gpus": [
+      {
+        "name": "Tesla T4",
+        "memory_gb": 14.56,
+        "compute_capability": "7.5",
+        "native_bf16": false
+      },
+      {
+        "name": "Tesla T4",
+        "memory_gb": 14.56,
+        "compute_capability": "7.5",
+        "native_bf16": false
+      }
+    ],
+    "torch_cuda": "12.8"
+  },
+  "llama_cpp_tag": "b11490",
+  "llama_cpp": {
+    "server": "llama_work/llama-b11490-prebuilt/llama-b11490/llama-server",
+    "how": "prebuilt",
+    "seconds": "12.1",
+    "notes": "[]"
+  },
+  "models": [
+    {
+      "model": "qwen",
+      "repo": "unsloth/Qwen3.5-9B-GGUF",
+      "file": "Qwen3.5-9B-Q4_K_M.gguf",
+      "sampling": {
+        "temperature": 1.0,
+        "top_p": 1.0,
+        "top_k": 20,
+        "presence_penalty": 2.0
+      },
+      "load_seconds": 64.0,
+      "vram_after_load": [
+        "5353 MiB",
+        "3 MiB"
+      ],
+      "sequential": {
+        "answers": 8,
+        "mean_seconds_per_answer": 5.02,
+        "prompt_tokens_mean": 1859,
+        "output_tokens_mean": 91,
+        "prompt_tokens_per_second": 893.9,
+        "output_tokens_per_second": 30.8,
+        "answers_per_gpu_hour": 718,
+        "thinking_leaks": 0,
+        "sample_answers": [
+          "The Group's profit after tax for FY2025 was Rs 38,916,826 thousand (or approximately Rs 38.92 billion). This figure is reported under the 'Group' column for the year ended 31 December 2025 in the provided extract.",
+          "The Bank's net interest income decreased by 4.17% in FY2025 compared to the prior period, moving from Rs. 45,287,915 thousand ('000) in 2024 to Rs. 43,395,699 thousand ('000) in 2025. All figures are presented in Rupees (Rs.) and represent the Bank entity specifically.",
+          "The Group's total operating income for the financial year ended 31 December 2025 was Rs 308,663,021 thousand, compared to Rs 312,266,365 thousand in FY2024. Both figures are presented in thousands of rupees as indicated by the report's unit convention (\"Rs. '000\")."
+        ]
+      },
+      "parallel": {
+        "slots": 4,
+        "answers": 8,
+        "wall_seconds": 31.2,
+        "answers_per_gpu_hour": 924,
+        "thinking_leaks": 0
+      },
+      "best_answers_per_gpu_hour": 924,
+      "gpu_hours_for_460_answers": 0.5,
+      "download_seconds": 251.9
+    },
+    {
+      "model": "gemma",
+      "repo": "google/gemma-4-12B-it-qat-q4_0-gguf",
+      "file": "gemma-4-12b-it-qat-q4_0.gguf",
+      "sampling": {
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 64
+      },
+      "load_seconds": 42.0,
+      "vram_after_load": [
+        "7475 MiB",
+        "3 MiB"
+      ],
+      "sequential": {
+        "answers": 8,
+        "mean_seconds_per_answer": 5.55,
+        "prompt_tokens_mean": 1857,
+        "output_tokens_mean": 62,
+        "prompt_tokens_per_second": 662.4,
+        "output_tokens_per_second": 22.4,
+        "answers_per_gpu_hour": 649,
+        "thinking_leaks": 0,
+        "sample_answers": [
+          "The Group's profit after tax in FY2025 was Rs. 38,916,826 '000.",
+          "The Bank's net interest income decreased from Rs. 45,287,915 for the 2024 period to Rs. 43,395,699 for the 2025 period. This represents a decrease of approximately 4.18 percent.",
+          "The Group's total operating income was Rs. 308,663,021 ('000) in FY2025 compared to Rs. 312,266,365 ('000) in FY2024."
+        ]
+      },
+      "parallel": {
+        "slots": 4,
+        "answers": 8,
+        "wall_seconds": 41.0,
+        "answers_per_gpu_hour": 703,
+        "thinking_leaks": 0
+      },
+      "best_answers_per_gpu_hour": 703,
+      "gpu_hours_for_460_answers": 0.65,
+      "download_seconds": 227.8
+    }
+  ],
+  "script_seconds": 500.9,
+  "gpu_hours_for_all_920_answers": 1.15
+}

@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from faithguard.calc.numbers import NumberMention, find_numbers
+from faithguard.calc.numbers import MONTHS, NumberMention, find_numbers
 from faithguard.records import Cell, Claim, Context, Evidence, Question
 from faithguard.tables import ENTITY_WORDS, normalise_metric, normalise_period
 
@@ -21,6 +21,7 @@ for up, down in [
     ("grew", "declined"), ("growth", "decline"), ("grow", "decline"), ("grows", "declines"), ("growing", "declining"),
     ("up", "down"), ("higher", "lower"), ("gained", "lost"), ("improved", "deteriorated"),
     ("climbed", "dropped"), ("jumped", "dropped"), ("expanded", "contracted"), ("advanced", "retreated"),
+    ("larger", "smaller"),
 ]:
     DIRECTION_WORDS[up] = ("up", down)
     DIRECTION_WORDS[down] = ("down", up)
@@ -29,13 +30,28 @@ for word in ("dropped", "drop", "drops", "shrank", "contracted", "lost", "retrea
 
 _WORD = re.compile(r"[A-Za-z]+")
 _SENTENCE_END = re.compile(r"(?<=[.!?;])\s+(?=[A-Z(])|\n+")
+# A period named right after a figure: "in 2024", "reported in 2025", "for the year ended 31 March 2025",
+# "as of December 31, 2025".
 _PERIOD_AFTER = re.compile(
-    r"^\s*(?:in|for|during|at|as at|as of|at the end of|by the end of)\s+(?:the\s+)?"
-    r"(?:fiscal\s+(?:year\s+)?|financial\s+year\s+|year\s+)?((?:FY\s?)?(?:19|20)\d{2}(?:\s?[/-]\s?\d{2,4})?)",
+    r"^\s*(?:(?:was\s+|were\s+)?(?:reported|recorded|recognised|recognized|posted)\s+)?"
+    r"(?:in|for|during|at|as at|as of|at the end of|by the end of)\s+(?:the\s+)?"
+    r"(?:(?:fiscal|financial)\s+)?(?:year\s+|period\s+)?(?:(?:ended|ending)\s+(?:on\s+)?)?"
+    rf"(?:\d{{1,2}}(?:st|nd|rd|th)?\s+(?:{MONTHS})\s+|(?:{MONTHS})\s+\d{{1,2}},?\s+|(?:{MONTHS})\s+)?"
+    r"((?:FY\s?)?(?:19|20)\d{2}(?:\s?[/-]\s?\d{2,4})?)",
     re.IGNORECASE,
 )
 _YEARISH = re.compile(r"(?<!\d)(?:FY\s?)?(?:19|20)\d{2}(?:\s?[/-]\s?\d{2,4})?(?!\d)", re.IGNORECASE)
 _PREVIOUS_YEAR = re.compile(r"\b(?:previous|prior|preceding|last)\s+(?:financial\s+|fiscal\s+)?year\b", re.IGNORECASE)
+_PREVIOUS_AFTER = re.compile(
+    r"^\s*(?:(?:reported|recorded)\s+)?(?:in|for|during)\s+the\s+(?:previous|prior|preceding|last)\s+"
+    r"(?:financial\s+|fiscal\s+)?(?:year|period)\b",
+    re.IGNORECASE,
+)
+_ASIDE_AFTER = re.compile(r"^\s*\([^()]*\)|^\s*\)")  # "(Rs 18,197.4 million)" after a figure, or the end of the aside it sits in
+# "owners of the company", "equity holders of the Bank" name who profit belongs to, not which entity reports it
+_HOLDERS_OF = re.compile(
+    r"\b(?:owners|(?:equity\s+)?holders|shareholders|stockholders)\s+of\s+the\s+(?:company|parent|bank)\b", re.IGNORECASE
+)
 
 # Common ways of naming the same line item. Keys are normalised metric names.
 ALIASES: dict[str, tuple[str, ...]] = {
@@ -59,6 +75,28 @@ class Surface:
     metric: str  # the evidence metric it names
 
 
+_STOP = {"and", "or", "of", "in", "on", "at", "to", "for", "from", "the", "a", "an", "with", "by"}
+
+
+def _tail_surfaces(metrics: list[str], taken: set[str]) -> list[Surface]:
+    """The distinctive ending of a long row label, as a name for it: an answer says "net investment
+    in leases and hire purchase" for "Financial assets at amortised cost - Net investment in leases
+    and hire purchase". Only endings of three or more words that name no other row."""
+    tails: dict[str, set[str]] = {}
+    for m in metrics:
+        words = m.split()
+        for k in range(3, len(words) - 1):
+            tail = " ".join(words[-k:])
+            if words[-k] not in _STOP:
+                tails.setdefault(tail, set()).add(m)
+    out = []
+    for tail, owners in tails.items():
+        clash = tail in taken or any(f" {tail} " in f" {m} " for m in metrics if m not in owners)
+        if len(owners) == 1 and not clash:
+            out.append(Surface(tail, next(iter(owners))))
+    return out
+
+
 class Vocabulary:
     """The metric, entity and period names that occur in one item's evidence."""
 
@@ -67,6 +105,7 @@ class Vocabulary:
         surfaces = [Surface(m, m) for m in metrics]
         for m in metrics:
             surfaces += [Surface(a, m) for a in ALIASES.get(m, ()) if a not in metrics]
+        surfaces += _tail_surfaces(metrics, {s.text for s in surfaces})
         # longest first, so "net interest income" wins over "interest income"
         self.surfaces = sorted(surfaces, key=lambda s: -len(s.text))
         self.entities = sorted({c.entity for c in cells if c.entity})
@@ -79,9 +118,15 @@ class Vocabulary:
                 return s.metric
         return None
 
+    def metrics_named(self, text: str) -> set[str]:
+        """Every evidence metric the text names, by any of its surfaces."""
+        norm = f" {normalise_metric(text)} "
+        return {s.metric for s in self.surfaces if f" {s.text} " in norm}
+
     def entity_in(self, text: str) -> str | None:
         if not self.entities:
             return None
+        text = _HOLDERS_OF.sub(" ", text)
         found = [ENTITY_WORDS[w] for w in (x.lower() for x in _WORD.findall(text)) if w in ENTITY_WORDS]
         found = [e for e in found if e in self.entities]
         return found[-1] if found else None
@@ -183,15 +228,27 @@ def claim_context(text: str, claims: list[Claim], index: int, vocab: Vocabulary,
     sentence = text[s_start:s_end]
 
     metric = vocab.metric_in(clause) or vocab.metric_in(sentence) or default.metric
-    entity = vocab.entity_in(clause) or vocab.entity_in(sentence) or default.entity
+    # in "A's deposits were larger than B's by X", X is about A
+    subject = re.split(r"\bthan\b", clause, maxsplit=1)[0] if re.search(r"\bthan\b", clause) else ""
+    entity = (vocab.entity_in(subject) or vocab.entity_in(clause) or vocab.entity_in(text[s_start : claim.start])
+              or vocab.entity_in(sentence) or default.entity)
     change = is_change_claim(text, claims, index)
     years = sorted(set(years_in(sentence)))
-    m = _PERIOD_AFTER.match(after)
+    # look past an aside: "Rs. 18,197,393 thousand (Rs 18,197.4 million) in 2024" gives both figures 2024
+    rest = after if after.strip(" (") else text[claim.end : s_end]
+    rest = _ASIDE_AFTER.sub("", rest, count=1)
+    m = _PERIOD_AFTER.match(rest)
     if m and not change:
         period = normalise_period(m.group(1))
+    elif not change and default.period and default.period.isdigit() and _PREVIOUS_AFTER.match(rest):
+        period = str(int(default.period) - 1)
     else:
         period = vocab.period_in(clause, default.period) if not change else None
         if period is None:
+            base_only = (change and len(years) == 1 and default.period is not None and years[0] < default.period
+                         and years_in(text[claim.end : s_end]) == years and not years_in(text[s_start : claim.start]))
+            if base_only:  # "an increase of Rs. 553,081 thousand compared to the Rs. 3,664,776 thousand reported in 2025"
+                return Context(metric=metric, entity=entity, period=default.period, base_period=years[0])
             if len(years) == 1:
                 period = years[0]
             elif years and change:

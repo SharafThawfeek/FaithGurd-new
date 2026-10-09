@@ -54,6 +54,7 @@ class Candidate:
     currency: str | None = None
     slots: set[str] = field(default_factory=set)
     rows: tuple[tuple[str, int], ...] = ()
+    other_metric: str | None = None  # a share's or ratio's denominator: "49.4% of total assets" names it
 
 
 def _ctx(cell: Cell, period: str | None = None) -> Context:
@@ -115,6 +116,21 @@ class EvidenceIndex:
                 if cur.value != 0 and cur.kind != "percent":
                     wrong_base = ops.share(delta, abs(cur.value))
                     self.percents.append(Candidate(wrong_base, ids, ctx, "growth", slots={"basis"}, rows=rows))
+        # the same line item for two entities in one period: "the Group's expenses were Rs. 3.6 bn higher than the Bank's"
+        by_row: dict[tuple[str, int], dict[str, dict[str, Cell]]] = {}
+        for (table, row, entity), by_period in self.series.items():
+            if entity is not None:
+                by_row.setdefault((table, row), {})[entity] = by_period
+        for (table, row), by_entity in by_row.items():
+            for a, a_cells in by_entity.items():
+                for b, b_cells in by_entity.items():
+                    for period, ca in a_cells.items() if a != b else ():
+                        cb = b_cells.get(period)
+                        if cb is not None and ca.kind != "percent" and cb.kind != "percent":
+                            ctx = Context(metric=ca.metric, entity=a, period=period)
+                            self.amounts.append(Candidate(
+                                ops.diff(ca.value, cb.value), [ca.id, cb.id], ctx, "diff", ops.diff(ca.raw, cb.raw), rows=((table, row),),
+                            ))
         by_column: dict[tuple[str, int], list[Cell]] = {}
         for c in self.cells:
             if c.kind == "amount":
@@ -126,8 +142,8 @@ class EvidenceIndex:
                 for b in column:
                     if a.id != b.id and b.value != 0 and abs(a.value) <= abs(b.value):
                         ids, ctx = [a.id, b.id], _ctx(a)
-                        self.percents.append(Candidate(ops.share(a.value, b.value), ids, ctx, "share"))
-                        self.ratios.append(Candidate(ops.ratio(a.value, b.value), ids, ctx, "ratio"))
+                        self.percents.append(Candidate(ops.share(a.value, b.value), ids, ctx, "share", other_metric=b.metric))
+                        self.ratios.append(Candidate(ops.ratio(a.value, b.value), ids, ctx, "ratio", other_metric=b.metric))
         for p in self.item.evidence.passages:
             for m in find_numbers(p.text):
                 s, e = sentence_bounds(p.text, m.start)
@@ -233,7 +249,7 @@ def expected_value(
 
 def check_claim(
     claim: Claim, mention: NumberMention, intended: Context, index: EvidenceIndex,
-    is_change: bool = False, prefer_diff: bool = False, prefer_rows=frozenset(),
+    is_change: bool = False, prefer_diff: bool = False, prefer_rows=frozenset(), named_metrics=frozenset(),
 ) -> tuple[ClaimCheck, tuple[tuple[str, int], ...]]:
     pool = index.percents if claim.kind == "percent" else index.ratios if claim.kind == "ratio" else index.amounts
     best: tuple[int, int, Candidate, set[str]] | None = None
@@ -243,6 +259,9 @@ def check_claim(
         if not ok:
             continue
         slots = set(cand.slots) | extra | context_slots(cand.context, intended)
+        if ("metric" in slots and cand.other_metric is not None and intended.metric == cand.other_metric
+                and cand.context.metric in named_metrics):
+            slots.discard("metric")  # "Leases were Rs. 83 bn. This is 49.4% of total assets": the clause names the denominator
         if claim.currency and cand.currency and claim.currency != cand.currency:
             slots.add("scale_currency")
         key = (len(slots), RELATION_RANK[cand.relation])
@@ -308,6 +327,7 @@ def detect(item: Item) -> DetectorOutput:
                 claim, mentions[(claim.start, claim.end)], intended[i], index,
                 is_change=is_change_claim(text, claims, i), prefer_diff=prefers_difference(text, claim),
                 prefer_rows=frozenset(used_rows.get(intended[i].metric, ())),
+                named_metrics=frozenset(index.vocab.metrics_named(text[: claim.start])),
             )
             results.append(check)
             if rows:

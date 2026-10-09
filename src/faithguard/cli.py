@@ -6,6 +6,7 @@
     faithguard trace --items F --id ID               one item, step by step (for demonstrations)
     faithguard splits build                          rebuild the split manifest
     faithguard labelling tasks|import ...            Label Studio tasks in, gold labels out
+    faithguard pilot                                 the pilot answers at a glance (counts only)
 """
 
 from __future__ import annotations
@@ -282,6 +283,18 @@ def cmd_items(args) -> None:
     print(f"{len(items)} items -> {args.out}")
 
 
+def cmd_pilot(args) -> None:
+    from faithguard.evaluate import pilot
+    from faithguard.gold import GoldStore
+
+    summary = pilot.summarise(list(read_jsonl(args.items, Item)), GoldStore.load(args.gold))
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    (out / "report.md").write_text(pilot.report(summary), encoding="utf-8")
+    print(f"pilot summary (counts only) -> {out / 'report.md'}")
+
+
 def cmd_reports(args) -> None:
     from faithguard import splits
     from faithguard.data import reports
@@ -440,6 +453,12 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--answers", nargs="+", required=True)
     p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_items)
+
+    p = sub.add_parser("pilot", help="automatic first look at the pilot answers: gold scorer and rule checker (counts only)")
+    p.add_argument("--items", default="data/benchmark-build/items.jsonl")
+    p.add_argument("--gold", default="data/benchmark-build/gold")
+    p.add_argument("--out", default="runs/pilot")
+    p.set_defaults(fn=cmd_pilot)
 
     p = sub.add_parser("reports", help="annual reports listed in manifests/lk-reports.csv and manifests/us-reports.csv")
     p.add_argument("action", choices=["list", "download", "locate"], help="locate: find each US issuer's latest 10-K on EDGAR")

@@ -86,3 +86,67 @@ def test_no_numbers_gives_middle_risk():
 def test_direction_words_are_attached():
     claims = extract_claims("Profit rose 7.0% to Rs. 12,450 million, while costs were 3% lower.")
     assert [(c.text, c.direction) for c in claims] == [("7.0%", "up"), ("Rs. 12,450 million", None), ("3%", "down")]
+
+
+# Phrasings from the first natural (generated) pilot answers, which the checker used to flag although they were right.
+LK_GRID = [
+    ["Statement extract", "Group", "Group", "Bank", "Bank"],
+    ["Rs. '000", "2025", "2024", "2025", "2024"],
+    ["Total operating expenses", "50,402,848", "42,802,391", "46,768,432", "39,332,563"],
+    ["Loans & advances", "1,195,918,062", "901,950,481", "1,127,776,792", "860,151,610"],
+    ["Financial assets at amortised cost- Net investment in leases and hire purchase", "83,377,069", "56,556,667", "80,000,000", "50,000,000"],
+    ["Total assets", "2,064,207,240", "1,836,995,366", "1,978,252,563", "1,777,941,123"],
+]
+
+
+def lk_item(answer: str, question: str = "What were the Group's total operating expenses in 2025?"):
+    from faithguard.records import Answer, Evidence, Item, Question
+    from faithguard.tables import table_from_grid
+
+    return Item(
+        id="lk", evidence=Evidence(tables=[table_from_grid("t1", LK_GRID, currency="LKR")]),
+        question=Question(id="q-lk", issuer="lk", country="LK", text=question, question_type="lookup", period="2025"),
+        answer=Answer(id="lk", question_id="q-lk", generator="hand", text=answer),
+    )
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        # a difference between two entities in one year, with the subject before or after the figure
+        "In 2025, the Group's total operating expenses were Rs. 50,402,848 thousand, while the Bank's were "
+        "Rs. 46,768,432 thousand. This makes the Group's expenses Rs. 3,634,416 thousand higher than the Bank's.",
+        "The Group's total operating expenses in 2025 were Rs. 50,402,848 thousand, which were Rs. 3,634,416 thousand "
+        "higher than the Bank's total operating expenses of Rs. 46,768,432 thousand.",
+        # "&" and "and" name the same line; a long row is named by its distinctive ending
+        "The Group's loans and advances were Rs. 1,195,918,062 thousand in 2025.",
+        "The Group's net investment in leases and hire purchase was Rs. 83,377,069 thousand in 2025. "
+        "This represents approximately 4.0% of the Group's total assets.",
+        # the period after an aside, "reported in", "in the previous year"
+        "The Group's total operating expenses grew by 17.8% to Rs. 50,402,848 thousand (Rs 50,402.8 million) in 2025 "
+        "from Rs. 42,802,391 thousand (Rs 42,802.4 million) in 2024.",
+        "The Group's total operating expenses were Rs. 50,402,848 thousand. This represents an increase of "
+        "Rs. 7,600,457 thousand compared to the Rs. 42,802,391 thousand reported in 2024.",
+        "The Group's total operating expenses were Rs. 50,402,848 thousand, up from Rs. 42,802,391 thousand in the previous year.",
+    ],
+)
+def test_natural_phrasings_of_correct_answers_are_supported(answer):
+    _, got = checks(lk_item(answer))
+    assert all(v == "supported" for v, _ in got), got
+
+
+def test_holders_of_the_bank_do_not_make_a_claim_about_the_bank():
+    _, got = checks(bank_item("Group profit after tax attributable to equity holders of the Bank was Rs. 14,213 million in FY2025."))
+    assert got == [("supported", [])]
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "The Group's loans and advances were 4.0% of the Group's total assets in 2025.",  # 4.0% is the leases share
+        "Goodwill was 4.0% of the Group's total assets in 2025.",  # the share's numerator is never named
+    ],
+)
+def test_a_share_with_the_wrong_numerator_is_still_flagged(answer):
+    _, got = checks(lk_item(answer))
+    assert got[-1][0] != "supported"
