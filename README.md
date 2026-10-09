@@ -169,6 +169,7 @@ Controlled track on development data, made from the project's own templates (pip
 | Pilot: 60 questions, 120 answers, labelled | 60 pilot questions written and built: 33 Sri Lankan, 27 US (D-046, D-051), each awaiting a second reader; 120 answers generated on Kaggle (D-056); all 120 labelled by Claude at the user's request (D-066): 19.2% incorrect, so no harder question types are added, and the US count stays at 150 groups. Results in [runs/pilot/report.md](runs/pilot/report.md). The labels await a person's review in Label Studio: importing `data/benchmark-build/labels/tasks-with-labels.json` (not in git) shows them as pre-annotations to accept or correct; time the review to measure minutes per item |
 | Annotation guide v2 | Drafted from the pilot's hard cases (D-068): [docs/annotation-guide.md](docs/annotation-guide.md); frozen once a person has reviewed the pilot labels. Labelling time goes in [logs/labelling-hours.csv](logs/labelling-hours.csv) |
 | Automatic-extraction run on 20 tables | After the reports are collected |
+| Future-period set held back | The next annual report of each test issuer, listed with expected dates in [manifests/future-period.csv](manifests/future-period.csv) (D-069); none downloaded |
 
 ### Phase 4: components (built; GPU runs waiting)
 

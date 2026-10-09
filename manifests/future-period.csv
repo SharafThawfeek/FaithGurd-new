@@ -1,0 +1,25 @@
+country,issuer,benchmark_period_end,next_period_end,approximate,expected_from,status
+LK,CARG,2026-03-31,2027-03-31,no,2027-07-30,held back: not downloaded or opened
+LK,DIPD,2026-03-31,2027-03-31,no,2027-06-08,held back: not downloaded or opened
+LK,GRAN,2025-12-31,2026-12-31,no,2027-05-05,held back: not downloaded or opened
+LK,HHL,2026-03-31,2027-03-31,no,2027-05-22,held back: not downloaded or opened
+LK,HNB,2025-12-31,2026-12-31,no,2027-03-09,held back: not downloaded or opened
+LK,KVAL,2026-03-31,2027-03-31,no,2027-06-03,held back: not downloaded or opened
+LK,LION,2026-03-31,2027-03-31,no,2027-07-06,held back: not downloaded or opened
+LK,LLUB,2025-12-31,2026-12-31,no,2027-05-06,held back: not downloaded or opened
+LK,PABC,2025-12-31,2026-12-31,no,2027-03-05,held back: not downloaded or opened
+LK,PLC,2026-03-31,2027-03-31,no,2027-06-05,held back: not downloaded or opened
+LK,UAL,2025-12-31,2026-12-31,no,2027-03-06,held back: not downloaded or opened
+LK,WATA,2026-03-31,2027-03-31,no,2027-06-04,held back: not downloaded or opened
+US,AFG,2025-12-31,2026-12-31,no,2027-02-25,held back: not downloaded or opened
+US,CHDN,2025-12-31,2026-12-31,no,2027-02-25,held back: not downloaded or opened
+US,CHE,2025-12-31,2026-12-31,no,2027-02-27,held back: not downloaded or opened
+US,ENSG,2025-12-31,2026-12-31,no,2027-02-04,held back: not downloaded or opened
+US,EWBC,2025-12-31,2026-12-31,no,2027-02-27,held back: not downloaded or opened
+US,FNB,2025-12-31,2026-12-31,no,2027-02-24,held back: not downloaded or opened
+US,IDA,2025-12-31,2026-12-31,no,2027-02-19,held back: not downloaded or opened
+US,LSCC,2026-01-03,2027-01-02,yes,2027-02-12,held back: not downloaded or opened
+US,MLI,2025-12-27,2026-12-26,yes,2027-02-24,held back: not downloaded or opened
+US,NJR,2025-09-30,2026-09-30,no,2026-11-20,held back: not downloaded or opened
+US,POR,2025-12-31,2026-12-31,no,2027-02-17,held back: not downloaded or opened
+US,RLI,2025-12-31,2026-12-31,no,2027-02-20,held back: not downloaded or opened
