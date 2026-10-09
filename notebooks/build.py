@@ -104,7 +104,7 @@ NOTEBOOKS = {
                  "after the pilot decisions. Re-running skips answers already written. Expect about 1 GPU hour for the pilot and 3-5 for the full set.",
         "cells": [
             ("Point to the built questions (a private Kaggle Dataset made from data/benchmark-build/, never the public repository)",
-             "QUESTIONS = '/kaggle/input/faithguard-benchmark/questions.jsonl'  # change to your input path"),
+             "import glob\nQUESTIONS = sorted(glob.glob('/kaggle/input/**/questions.jsonl', recursive=True))[0]  # or set the path by hand\nprint(QUESTIONS)"),
             ("Start llama.cpp: one server per T4 (downloads 12.7 GB of model files the first time)", GENERATE_START),
             ("Generate with both models at once (resumable)", GENERATE_RUN),
             ("Stop the servers and summarise", GENERATE_SUMMARY),

@@ -116,7 +116,7 @@ export FG_SEC_USER_AGENT="FaithGuard research Your Name you@example.com"
 
 Every notebook starts with `setup/setup_cell.py`, which stops at once if the session has no internet or GPU, installs `requirements/gpu.txt` and uses the platform's own torch. After changing `requirements/gpu.txt` or any pilot script, rebuild the notebooks with `python pilots/build_notebooks.py`.
 
-**From the command line:** `python pilots/kaggle_run.py push` runs the three pilots on Kaggle as private T4 notebooks, `status` shows their state and `fetch` copies their result files into `pilots/results/`. It needs the Kaggle CLI with an API token in `~/.kaggle/` (never in this folder), and a phone-verified Kaggle account: without one, Kaggle runs notebooks with no GPU and no internet.
+**From the command line:** `python pilots/kaggle_run.py push` runs the three pilots on Kaggle as private T4 notebooks, `status` shows their state and `fetch` copies their result files into `pilots/results/`. For the pilot answers, `dataset faithguard-benchmark data/benchmark-build/questions.jsonl` uploads the built questions as a private dataset (never the gold store), `push generate_answers --dataset faithguard-benchmark` runs the generation notebook on them, and `fetch generate_answers` copies the answers into `data/benchmark-build/`. It needs the Kaggle CLI with an API token in `~/.kaggle/` (never in this folder), and a phone-verified Kaggle account: without one, Kaggle runs notebooks with no GPU and no internet.
 
 **Working rules:** keep runs to a few hours and save a checkpoint at least every hour; save every output as soon as a step finishes; use your own account only; log every GPU session in `logs/gpu-hours.csv` with the session hours the platform shows.
 
