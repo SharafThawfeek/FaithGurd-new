@@ -29,6 +29,19 @@ def test_example_checks_clean_and_builds_gold():
     assert questions[0].question.issuer == "LK:DEMO" and questions[0].question.period == "2025"
 
 
+def test_hashes_pin_files(tmp_path):
+    import hashlib
+
+    from faithguard.cli import main
+
+    a = tmp_path / "answers-a.jsonl"
+    a.write_bytes(b'{"id": 1}\n{"id": 2}\n')
+    main(["hashes", str(a), "--note", "a run", "--out", str(tmp_path / "pins.json")])
+    record = json.loads((tmp_path / "pins.json").read_text(encoding="utf-8"))
+    (pin,) = record["files"]
+    assert record["note"] == "a run" and pin["lines"] == 2 and pin["sha256"] == hashlib.sha256(a.read_bytes()).hexdigest()
+
+
 def test_build_can_keep_only_some_splits():
     manifest = {"splits": {"LK:DEMO": "test"}}
     questions, gold = benchmark.build(benchmark.report_paths(EXAMPLE), manifest, splits={"test", "calibration"})

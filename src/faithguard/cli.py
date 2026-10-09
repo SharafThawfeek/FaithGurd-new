@@ -7,6 +7,7 @@
     faithguard splits build                          rebuild the split manifest
     faithguard labelling tasks|import ...            Label Studio tasks in, gold labels out
     faithguard pilot                                 the pilot answers at a glance (counts only)
+    faithguard hashes FILES --out F                  pin files by SHA-256 (answers, evidence, the locked test set)
 """
 
 from __future__ import annotations
@@ -366,6 +367,23 @@ def cmd_splits(args) -> None:
     print(f"wrote {args.out} (sha256 {manifest['sha256'][:16]})")
 
 
+def cmd_hashes(args) -> None:
+    """SHA-256, size and line count of each file, so a run's inputs and outputs can be pinned (phase 5)."""
+    import datetime
+    import hashlib
+
+    files = []
+    for name in args.files:
+        data = Path(name).read_bytes()
+        files.append({"path": Path(name).as_posix(), "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data),
+                      "lines": data.count(b"\n")})
+    record = {"created": datetime.date.today().isoformat(), "note": args.note, "files": files}
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    print(f"{len(files)} files -> {out}")
+
+
 def cmd_labelling(args) -> None:
     from faithguard import labelling
     from faithguard.gold import GoldStore
@@ -492,6 +510,12 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--out", default="manifests/splits.json")
     p.add_argument("--seed", type=int, default=2026)
     p.set_defaults(fn=cmd_splits)
+
+    p = sub.add_parser("hashes", help="SHA-256 of files, to pin a run's inputs and outputs")
+    p.add_argument("files", nargs="+")
+    p.add_argument("--note", default="", help="what the files are, e.g. the run and its settings")
+    p.add_argument("--out", required=True)
+    p.set_defaults(fn=cmd_hashes)
 
     p = sub.add_parser("labelling")
     p.add_argument("action", choices=["tasks", "import"])
