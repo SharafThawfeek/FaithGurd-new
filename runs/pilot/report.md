@@ -1,4 +1,4 @@
-# Pilot answers: automatic first look
+# Pilot answers
 
 Counts only. The gold scorer is strict (any figure outside the gold program counts as unsupported), so its error rate is an upper bound; the labels decide. See `faithguard.evaluate.pilot`.
 
@@ -32,3 +32,48 @@ Counts only. The gold scorer is strict (any figure outside the gold program coun
 | scale_currency | 5 |
 | entity_scope | 3 |
 | basis | 1 |
+
+## Labels
+
+Labelled by: claude (120). Numeric answers are the answers to every question type but narrative; ambiguous labels are left out of the agreement counts.
+
+**Error rate:** 23 of 120 answers labelled incorrect (19.2%); 23 of 104 numeric answers (22.1%).
+
+| Country, generator | labelled | correct | incorrect | ambiguous | unhelpful | useful | numeric | numeric_incorrect |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| LK gemma | 33 | 23 | 8 | 0 | 2 | 23 | 29 | 8 |
+| LK qwen | 33 | 28 | 4 | 0 | 1 | 29 | 29 | 4 |
+| US gemma | 27 | 21 | 6 | 0 | 0 | 21 | 23 | 6 |
+| US qwen | 27 | 22 | 5 | 0 | 0 | 24 | 23 | 5 |
+| all | 120 | 94 | 23 | 0 | 3 | 97 | 104 | 23 |
+
+### Rule checker and gold scorer against the labels (numeric answers)
+
+| Country, generator | checker flagged, labelled incorrect | flagged, labelled right | missed, labelled incorrect | passed, labelled right | scorer wrong, labelled incorrect | scorer wrong, labelled right | scorer right, labelled incorrect |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| LK gemma | 8 | 1 | 0 | 20 | 8 | 1 | 0 |
+| LK qwen | 1 | 4 | 3 | 21 | 1 | 4 | 3 |
+| US gemma | 6 | 6 | 0 | 11 | 6 | 4 | 0 |
+| US qwen | 4 | 6 | 1 | 12 | 5 | 5 | 0 |
+| all | 19 | 17 | 4 | 64 | 20 | 14 | 3 |
+
+### Labels by question type
+
+| Type | correct | incorrect | ambiguous | unhelpful |
+| --- | --- | --- | --- | --- |
+| comparison | 2 | 1 | 0 | 1 |
+| difference | 14 | 0 | 0 | 0 |
+| growth | 14 | 12 | 0 | 0 |
+| lookup | 35 | 3 | 0 | 0 |
+| narrative | 16 | 0 | 0 | 0 |
+| ratio | 3 | 1 | 0 | 0 |
+| share | 10 | 6 | 0 | 2 |
+
+### Labelled spans by slot
+
+| Slot | Spans |
+| --- | --- |
+| value | 15 |
+| sign | 6 |
+| scale_currency | 4 |
+| unsupported_text | 2 |

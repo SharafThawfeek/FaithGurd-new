@@ -94,5 +94,109 @@
     "scale_currency": 5,
     "entity_scope": 3,
     "basis": 1
+  },
+  "labels": {
+    "annotators": {
+      "claude": 120
+    },
+    "by_country_and_generator": {
+      "LK gemma": {
+        "labelled": 33,
+        "correct": 23,
+        "useful": 23,
+        "numeric": 29,
+        "numeric_incorrect": 8,
+        "checker_passed_and_right": 20,
+        "scorer_right_and_right": 20,
+        "incorrect": 8,
+        "checker_flagged_and_wrong": 8,
+        "scorer_wrong_and_wrong": 8,
+        "checker_flagged_but_right": 1,
+        "scorer_wrong_but_right": 1,
+        "unhelpful": 2
+      },
+      "LK qwen": {
+        "labelled": 33,
+        "correct": 28,
+        "useful": 29,
+        "numeric": 29,
+        "numeric_incorrect": 4,
+        "checker_passed_and_right": 21,
+        "scorer_wrong_but_right": 4,
+        "scorer_right_and_right": 21,
+        "incorrect": 4,
+        "checker_missed_wrong": 3,
+        "scorer_missed_wrong": 3,
+        "checker_flagged_but_right": 4,
+        "unhelpful": 1,
+        "checker_flagged_and_wrong": 1,
+        "scorer_wrong_and_wrong": 1
+      },
+      "US gemma": {
+        "labelled": 27,
+        "correct": 21,
+        "useful": 21,
+        "numeric": 23,
+        "numeric_incorrect": 6,
+        "checker_passed_and_right": 11,
+        "scorer_right_and_right": 13,
+        "incorrect": 6,
+        "checker_flagged_and_wrong": 6,
+        "scorer_wrong_and_wrong": 6,
+        "checker_flagged_but_right": 6,
+        "scorer_wrong_but_right": 4
+      },
+      "US qwen": {
+        "labelled": 27,
+        "correct": 22,
+        "useful": 24,
+        "numeric": 23,
+        "numeric_incorrect": 5,
+        "checker_passed_and_right": 12,
+        "scorer_right_and_right": 13,
+        "checker_flagged_but_right": 6,
+        "scorer_wrong_but_right": 5,
+        "incorrect": 5,
+        "checker_flagged_and_wrong": 4,
+        "scorer_wrong_and_wrong": 5,
+        "checker_missed_wrong": 1
+      }
+    },
+    "by_question_type": {
+      "comparison": {
+        "unhelpful": 1,
+        "incorrect": 1,
+        "correct": 2
+      },
+      "difference": {
+        "correct": 14
+      },
+      "growth": {
+        "incorrect": 12,
+        "correct": 14
+      },
+      "lookup": {
+        "correct": 35,
+        "incorrect": 3
+      },
+      "narrative": {
+        "correct": 16
+      },
+      "ratio": {
+        "correct": 3,
+        "incorrect": 1
+      },
+      "share": {
+        "correct": 10,
+        "incorrect": 6,
+        "unhelpful": 2
+      }
+    },
+    "spans_by_slot": {
+      "value": 15,
+      "sign": 6,
+      "scale_currency": 4,
+      "unsupported_text": 2
+    }
   }
 }

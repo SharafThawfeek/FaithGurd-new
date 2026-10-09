@@ -457,7 +457,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_items)
 
-    p = sub.add_parser("pilot", help="automatic first look at the pilot answers: gold scorer and rule checker (counts only)")
+    p = sub.add_parser("pilot", help="the pilot answers at a glance: gold scorer, rule checker and labels (counts only)")
     p.add_argument("--items", default="data/benchmark-build/items.jsonl")
     p.add_argument("--gold", default="data/benchmark-build/gold")
     p.add_argument("--out", default="runs/pilot")
