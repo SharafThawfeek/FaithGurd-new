@@ -143,7 +143,9 @@ Run it until there are no errors.
 faithguard benchmark build --pilot-only
 ```
 
-2. Upload `data/benchmark-build/` as a **private** Kaggle Dataset and run [notebooks/generate_answers.ipynb](../notebooks/generate_answers.ipynb). It answers every question with both generators.
+Rebuilding (after a table fix, say) replaces only the gold answers: labels and injections already in the gold store are kept.
+
+2. Upload `data/benchmark-build/questions.jsonl` (never the gold store) as a **private** Kaggle Dataset and run [notebooks/generate_answers.ipynb](../notebooks/generate_answers.ipynb). It answers every question with both generators.
 
 3. Download `answers-qwen.jsonl` and `answers-gemma.jsonl`, and join them with the questions:
 

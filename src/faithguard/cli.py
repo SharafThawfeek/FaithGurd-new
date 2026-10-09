@@ -254,12 +254,16 @@ def cmd_benchmark(args) -> None:
         if any(f.level == "error" for f in findings):
             raise SystemExit(1)
         return
-    questions, gold = benchmark.build(paths, manifest, pilot_only=args.pilot_only)
+    from faithguard.gold import GoldStore
+
+    questions, built = benchmark.build(paths, manifest, pilot_only=args.pilot_only)
     out = Path(args.out)
     write_jsonl(out / "questions.jsonl", questions)
-    gold.root = out / "gold"
+    gold = GoldStore.load(out / "gold")  # only the gold answers are rebuilt: labels and injections already there stay
+    gold.questions = built.questions
     gold.save()
-    print(f"{len(questions)} questions -> {out / 'questions.jsonl'}; gold -> {gold.root}")
+    kept = sum(len(v) for v in gold.labels.values())
+    print(f"{len(questions)} questions -> {out / 'questions.jsonl'}; gold -> {gold.root} ({kept} labels kept)")
 
 
 def cmd_generate(args) -> None:

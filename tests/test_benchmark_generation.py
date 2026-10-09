@@ -29,6 +29,21 @@ def test_example_checks_clean_and_builds_gold():
     assert questions[0].question.issuer == "LK:DEMO" and questions[0].question.period == "2025"
 
 
+def test_rebuilding_keeps_the_labels_in_the_gold_store(tmp_path):
+    from faithguard.cli import main
+    from faithguard.gold import GoldLabel, GoldStore
+
+    out = tmp_path / "build"
+    args = ["benchmark", "build", "--root", str(EXAMPLE), "--manifest", "none", "--out", str(out)]
+    main(args)
+    gold = GoldStore.load(out / "gold")
+    gold.add_label(GoldLabel(item_id="DEMO-2025-01:qwen", status="correct", annotator="a"))
+    gold.save()
+    main(args)  # a rebuild (say, after a table fix) replaces the gold answers, never the labels
+    rebuilt = GoldStore.load(out / "gold")
+    assert len(rebuilt.questions) == 5 and [x.annotator for x in rebuilt.labels["DEMO-2025-01:qwen"]] == ["a"]
+
+
 @pytest.mark.parametrize(
     "old, new, message",
     [

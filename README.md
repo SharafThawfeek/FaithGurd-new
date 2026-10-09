@@ -161,11 +161,11 @@ Controlled track on development data, made from the project's own templates (pip
 | TAT-QA dev | 2,133 | 77.8% | 1.8% | 76.3% | 79.1% | 96.9% |
 | FinQA dev | 791 | 61.4% | 0.8% | 60.9% | 77.2% | 83.6% |
 
-### Phase 3: benchmark and pilot (tables in progress)
+### Phase 3: benchmark and pilot (questions drafted; cross-checks and labelling next)
 
 | Exit item | State |
 | --- | --- |
-| Corrected tables and questions with gold answers | Format, checker and builder done ([benchmark guide](docs/benchmark-guide.md), [example](benchmark-example/)); all 28 benchmark reports per country downloaded, with checksums in [manifests/lk-reports.csv](manifests/lk-reports.csv) and [manifests/us-reports.csv](manifests/us-reports.csv); test and calibration tables drafted for all 48 reports (income statement and balance sheet: 48 Sri Lankan and 48 US tables, every total adds up; D-060, D-062); 250 Sri Lankan main questions drafted (D-064), awaiting a second reader; US questions next |
+| Corrected tables and questions with gold answers | Format, checker and builder done ([benchmark guide](docs/benchmark-guide.md), [example](benchmark-example/)); all 28 benchmark reports per country downloaded, with checksums in [manifests/lk-reports.csv](manifests/lk-reports.csv) and [manifests/us-reports.csv](manifests/us-reports.csv); test and calibration tables drafted for all 48 reports (income statement and balance sheet: 48 Sri Lankan and 48 US tables, every total adds up; D-060, D-062); all 400 main questions drafted, 250 Sri Lankan (D-064) and 150 US (D-067), every gold answer recomputed from its cells by `faithguard benchmark check`; each awaits a second reader |
 | Pilot: 60 questions, 120 answers, labelled | 60 pilot questions written and built: 33 Sri Lankan, 27 US (D-046, D-051), each awaiting a second reader; 120 answers generated on Kaggle (D-056); all 120 labelled by Claude at the user's request (D-066): 19.2% incorrect, so no harder question types are added, and the US count stays at 150 groups. Results in [runs/pilot/report.md](runs/pilot/report.md). The labels await a person's review in Label Studio: importing `data/benchmark-build/labels/tasks-with-labels.json` (not in git) shows them as pre-annotations to accept or correct; time the review to measure minutes per item |
 | Annotation guide v2 | After the pilot |
 | Automatic-extraction run on 20 tables | After the reports are collected |
