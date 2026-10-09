@@ -141,7 +141,9 @@ NOTEBOOKS = {
         "about": "Starts from the Stage A adapter (add the repair_sft notebook's output as input and set ADAPTER), samples four programs per "
                  "item, keeps those the executor and gate accept, and fine-tunes again; two rounds, then evaluation. Expect roughly 6-10 GPU hours.",
         "cells": [
-            ("Point to the Stage A adapter", "ADAPTER = '/kaggle/input/repair-sft/outputs/repair-sft/adapter'  # change to your input path\nMODE = 'fp16'\n!faithguard sft --mode program"),
+            ("Point to the Stage A adapter (attach the stage A notebook's output as an input)",
+             "import glob\nADAPTER = sorted(glob.glob('/kaggle/input/**/repair-sft/adapter', recursive=True))[0]  # or set the path by hand\n"
+             "print(ADAPTER)\nMODE = 'fp16'\n!faithguard sft --mode program"),
             ("Self-training rounds (each round is saved; re-running skips finished rounds)", "!python -m faithguard.train.repair_self_train --adapter $ADAPTER --sft runs/sft/repair-program-train.jsonl --out {OUT}/self-train --mode $MODE --rounds 2"),
             ("Evaluate the final adapter", "import glob\nFINAL = sorted(glob.glob(OUT + '/self-train/round-*/adapter'))[-1]\n!python -m faithguard.train.repair_eval --adapter $FINAL --load $MODE --out {OUT}/eval-self-train"),
         ],

@@ -28,6 +28,7 @@ Phase-4 training runs the same way, for example the detector (results -> runs/de
     python pilots/kaggle_run.py push detector_train
     python pilots/kaggle_run.py fetch detector_train
     python pilots/kaggle_run.py push repair_sft         # stage A repair training (results -> runs/repair/kaggle/)
+    python pilots/kaggle_run.py push repair_self_train --kernel repair_sft   # stage B starts from stage A's adapter
 
 Kaggle charges GPU time for the whole session, so take the hours for
 logs/gpu-hours.csv from the notebook's page, not from the scripts.
@@ -57,6 +58,8 @@ NOTEBOOKS = {
                        ROOT / "runs" / "detector" / "kaggle"),
     "repair_sft": (ROOT / "notebooks", "FaithGuard repair stage A", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl",
                    ROOT / "runs" / "repair" / "kaggle"),
+    "repair_self_train": (ROOT / "notebooks", "FaithGuard repair stage B", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl|round[.]json",
+                          ROOT / "runs" / "repair" / "kaggle"),
     "repair_baselines": (ROOT / "notebooks", "FaithGuard repair baselines", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl",
                          ROOT / "runs" / "repair" / "kaggle"),
     "detector_baselines": (ROOT / "notebooks", "FaithGuard detector baselines", r"results[.]json|scores[.]jsonl",
@@ -85,7 +88,7 @@ def slug(user: str, name: str) -> str:
     return f"{user}/" + re.sub(r"[^a-z0-9]+", "-", NOTEBOOKS[name][1].lower()).strip("-")
 
 
-def push(names: list[str], datasets: list[str]) -> None:
+def push(names: list[str], datasets: list[str], kernels: list[str] = ()) -> None:
     user = username()
     with tempfile.TemporaryDirectory() as tmp:
         for name in names:
@@ -105,7 +108,7 @@ def push(names: list[str], datasets: list[str]) -> None:
                 "machine_shape": "NvidiaTeslaT4",
                 "dataset_sources": [d if "/" in d else f"{user}/{d}" for d in datasets],
                 "competition_sources": [],
-                "kernel_sources": [],
+                "kernel_sources": [slug(user, k) if k in NOTEBOOKS else k for k in kernels],  # earlier notebooks' outputs
                 "model_sources": [],
             }
             (folder / "kernel-metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
@@ -163,6 +166,7 @@ def main() -> None:
     parser.add_argument("names", nargs="*", help=f"notebooks ({', '.join(NOTEBOOKS)}; default: the three pilots), "
                                                  "or for `dataset`: the dataset name, then its files")
     parser.add_argument("--dataset", action="append", default=[], help="push: attach this dataset (repeatable)")
+    parser.add_argument("--kernel", action="append", default=[], help="push: attach this notebook's output, e.g. repair_sft (repeatable)")
     parser.add_argument("--out", help="fetch: copy the result files here instead of their usual folder")
     args = parser.parse_args()
     if args.action == "dataset":
@@ -175,7 +179,7 @@ def main() -> None:
     if unknown:
         parser.error(f"unknown notebook: {', '.join(sorted(unknown))}")
     if args.action == "push":
-        push(names, args.dataset)
+        push(names, args.dataset, args.kernel)
     elif args.action == "status":
         status(names)
     else:
