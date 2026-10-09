@@ -173,13 +173,22 @@ Controlled track on development data, made from the project's own templates (pip
 | Automatic-extraction run on 20 tables | Done (D-070): PyMuPDF, pdfplumber and camelot on 20 Sri Lankan tables, [runs/extraction/report.md](runs/extraction/report.md); PyMuPDF (text) chosen, 94.2% of figures right on all 48 Sri Lankan main tables ([runs/extraction/all/report.md](runs/extraction/all/report.md)). Real-world evidence for the 400 main questions built in `data/benchmark-build/main-auto/` (not in git) |
 | Future-period set held back | The next annual report of each test issuer, listed with expected dates in [manifests/future-period.csv](manifests/future-period.csv) (D-069); none downloaded |
 
-### Phase 4: components (built; GPU runs waiting)
+### Phase 5: generate, freeze and pre-register (started)
+
+| Exit item | State |
+| --- | --- |
+| All answers generated and stored | Done (D-073): 800 answers (400 questions, Qwen3.5-9B and Gemma-4-12B), no thinking leaks or empty answers, 0.95 GPU hours; files pinned in [manifests/main-answers.json](manifests/main-answers.json); blinded labelling tasks made (`labelling/main-tasks.json`, not in git), with no suggested labels |
+| Evidence frozen and test set locked | After every table and question has a second reader |
+| Detector, repairer v1 and all variants frozen | After phase 4's GPU runs |
+| Pre-registration filed | Drafted (D-071): [docs/preregistration.md](docs/preregistration.md); filed at lock |
+
+### Phase 4: components (built; GPU runs under way)
 
 | Part | Built and tested on CPU | Waiting for |
 | --- | --- | --- |
 | Decision policy | Outcome models (LightGBM; TabICLv2 optional), Learn-then-Test certification over a pre-registered grid, five baselines and the oracle, certification-budget curve, issuer-level check, SCoRE comparator, deployable policy: [runs/policy/controlled/report.md](runs/policy/controlled/report.md) | The natural benchmark (phases 3, 5, 6) |
-| Repair | Model repairer with retry, free-rewrite baseline, training data (10,587 examples; basis errors held out), fine-tuning, self-training and evaluation scripts | A Kaggle T4: [notebooks/repair_sft.ipynb](notebooks/repair_sft.ipynb), [repair_baselines.ipynb](notebooks/repair_baselines.ipynb), [repair_self_train.ipynb](notebooks/repair_self_train.ipynb) |
-| Detection | Channel A (span + slot heads), training data (34,229 examples, 12,846 of them XBRL-mined), training and evaluation scripts, A+B fusion with calibration, three baseline detectors, XBRL mining | A Kaggle T4: [notebooks/detector_train.ipynb](notebooks/detector_train.ipynb), [detector_baselines.ipynb](notebooks/detector_baselines.ipynb) |
+| Repair | Model repairer with retry, free-rewrite baseline, training data (10,587 examples; basis errors held out), fine-tuning, self-training and evaluation scripts | Stage A running on Kaggle since 2026-10-09 ([notebooks/repair_sft.ipynb](notebooks/repair_sft.ipynb)); then [repair_baselines.ipynb](notebooks/repair_baselines.ipynb) and [repair_self_train.ipynb](notebooks/repair_self_train.ipynb) |
+| Detection | Channel A (span + slot heads), training data (34,229 examples, 12,846 of them XBRL-mined), training and evaluation scripts, A+B fusion with calibration, three baseline detectors, XBRL mining | Training running on Kaggle since 2026-10-09 ([notebooks/detector_train.ipynb](notebooks/detector_train.ipynb)); then [detector_baselines.ipynb](notebooks/detector_baselines.ipynb) |
 
 Policy study on the controlled track (rehearsal on template answers; certified at alpha = 0.10):
 

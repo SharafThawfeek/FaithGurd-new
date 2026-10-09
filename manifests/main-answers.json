@@ -1,0 +1,30 @@
+{
+  "created": "2026-10-09",
+  "note": "Main answers (D-073): Qwen3.5-9B Q4_K_M and Gemma-4-12B QAT Q4_0 on llama.cpp b11490, prompt version 1f13b3d92d8a, Kaggle notebook faithguard-answer-generation version 4, 2026-10-09. The generators read the questions as built before D-072; the questions file pinned here is the rebuild after it, and its rendered evidence is identical for all 400 questions. Not locked: the tables and questions still await a second reader.",
+  "files": [
+    {
+      "path": "data/benchmark-build/main/questions.jsonl",
+      "sha256": "db45d0304502f251295a5b5ab10eb134d1d3f8c8a7786fb5f90320d3415352dc",
+      "bytes": 24899853,
+      "lines": 400
+    },
+    {
+      "path": "data/benchmark-build/main/answers-qwen.jsonl",
+      "sha256": "b1360509876d3823c0382b1983966df3a87577fb02894cc7154c528930fb23f0",
+      "bytes": 353053,
+      "lines": 400
+    },
+    {
+      "path": "data/benchmark-build/main/answers-gemma.jsonl",
+      "sha256": "133940729caba578fc01df94b22ee963a2a5f525dfe15aa09ef11e8775cb7650",
+      "bytes": 293227,
+      "lines": 400
+    },
+    {
+      "path": "data/benchmark-build/main/items.jsonl",
+      "sha256": "4e8194543ae0c6435147115c4cd9612eaae091727e3ad4051e4aadc033cdb634",
+      "bytes": 50491660,
+      "lines": 800
+    }
+  ]
+}
