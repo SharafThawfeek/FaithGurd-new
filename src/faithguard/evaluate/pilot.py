@@ -31,10 +31,14 @@ _SCORER = {(True, True): "scorer_wrong_and_wrong", (True, False): "scorer_wrong_
            (False, True): "scorer_missed_wrong", (False, False): "scorer_right_and_right"}
 
 
+AI_ANNOTATORS = {"claude"}  # labels written by an AI model at the user's request (D-066); a person's label wins over them
+
+
 def label_of(gold: GoldStore, item_id: str) -> GoldLabel | None:
-    """The label that decides an original answer: the adjudicated one if there is one, else the first."""
+    """The label that decides an original answer: the adjudicated one, else the first by a person, else the first."""
     labels = [label for label in gold.labels.get(item_id, []) if label.target == "original"]
-    return next((label for label in labels if label.adjudicated), labels[0] if labels else None)
+    human = [label for label in labels if label.annotator not in AI_ANNOTATORS]
+    return next((label for label in labels if label.adjudicated), (human or labels or [None])[0])
 
 
 def summarise(items: list[Item], gold: GoldStore) -> dict:

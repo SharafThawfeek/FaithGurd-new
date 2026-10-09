@@ -49,6 +49,7 @@ def test_pilot_summary_counts_labels_against_the_checker_and_scorer(tmp_path):
     gold.add_label(GoldLabel(item_id=wrong.id, status="incorrect", useful=True, annotator="a",
                              spans=[GoldSpan(start=37, end=55, slot="entity_scope")]))
     gold.add_label(GoldLabel(item_id=right.id, status="unhelpful", annotator="b"))  # not adjudicated: the first label decides
+    gold.add_label(GoldLabel(item_id=wrong.id, status="correct", annotator="claude"))  # a person's label wins over an AI label
     summary = pilot.summarise([right, wrong], gold)
     counts = summary["labels"]["by_country_and_generator"]["LK hand"]
     assert counts["labelled"] == 2 and counts["incorrect"] == 1 and counts["numeric_incorrect"] == 1
@@ -56,6 +57,10 @@ def test_pilot_summary_counts_labels_against_the_checker_and_scorer(tmp_path):
     assert counts["scorer_wrong_and_wrong"] == 1 and counts["scorer_right_and_right"] == 1
     assert summary["labels"]["spans_by_slot"] == {"entity_scope": 1}
     assert "1 of 2 answers labelled incorrect (50.0%)" in pilot.report(summary)
+    review = GoldStore(tmp_path)
+    review.add_label(GoldLabel(item_id=wrong.id, status="correct", annotator="claude"))
+    review.add_label(GoldLabel(item_id=wrong.id, status="incorrect", annotator="person@x"))
+    assert pilot.label_of(review, wrong.id).annotator == "person@x"
 
 
 def test_label_config_is_valid_xml_and_names_every_slot():
