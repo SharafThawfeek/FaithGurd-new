@@ -13,6 +13,16 @@ import os
 from pathlib import Path
 
 
+def one_gpu() -> None:
+    """Train on the first GPU only. Call before torch starts CUDA.
+
+    On Kaggle's T4 x2 the Trainer would otherwise wrap the model in DataParallel across both GPUs,
+    and Qwen3.5's fallback linear-attention kernels fail on the second copy ("lazy wrapper should be
+    called at most once"). The phase-1 pilot trained on one GPU, so its speeds still apply.
+    """
+    os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0")
+
+
 def load_backbone(model_id: str, mode: str, lora_r: int = 16, adapter: str | None = None, trainable: bool = True):
     import torch
     from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training

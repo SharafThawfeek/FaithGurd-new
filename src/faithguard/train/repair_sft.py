@@ -40,10 +40,12 @@ def main(argv: list[str] | None = None) -> None:
     if args.tiny:
         args.mode, args.max_steps, args.save_steps, args.limit, args.grad_accum, args.max_len = "tiny", 4, 2, 8, 1, 4096
 
+    from faithguard.train.common import collate, encode_chat, latest_checkpoint, load_backbone, one_gpu
+
+    one_gpu()
+
     import torch
     from transformers import Trainer, TrainingArguments
-
-    from faithguard.train.common import collate, encode_chat, latest_checkpoint, load_backbone
 
     random.seed(args.seed)
     torch.manual_seed(args.seed)

@@ -66,6 +66,10 @@ def main(argv: list[str] | None = None) -> None:
     if args.tiny:
         args.mode, args.items, args.samples, args.rounds = "tiny", 3, 2, 1
 
+    from faithguard.train.common import one_gpu
+
+    one_gpu()  # before the Generator starts CUDA, so the training rounds see one GPU too
+
     from faithguard.controlled import load_or_build
     from faithguard.detect import detect
     from faithguard.repair.prompting import SYSTEM, build_prompt, editable_claims, program_json
