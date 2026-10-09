@@ -145,13 +145,14 @@ NOTEBOOKS = {
     "detector_train": {
         "title": "Detection: train Channel A and its ablations",
         "about": "Trains the span head and relation-slot head on the LettuceDetect encoder chosen in the phase-1 pilot (set CHECKPOINT), "
-                 "then the no-slot ablation, and evaluates both against Channel B on 2,000 development items. If XBRL-mined examples exist "
-                 "(runs/detector/xbrl.jsonl from `faithguard xbrl-mine`), the no-XBRL ablation runs too. Expect roughly 3-5 GPU hours.",
+                 "then the no-slot ablation, and evaluates both against Channel B on 2,000 development items. The repository ships the "
+                 "XBRL-mined examples (runs/detector/xbrl.jsonl.gz, from `faithguard xbrl-mine`), so the no-XBRL ablation runs too. "
+                 "Expect roughly 3-5 GPU hours.",
         "cells": [
-            ("Training data (controlled track + RAGTruth, + XBRL if mined)", "CHECKPOINT = 'KRLabsOrg/lettucedect-v2-mmbert-base'  # or KRLabsOrg/lettucedect-large-modernbert-en-v1\n!faithguard detector-data"),
+            ("Training data (controlled track, RAGTruth and XBRL-mined examples)", "CHECKPOINT = 'KRLabsOrg/lettucedect-v2-mmbert-base'  # or KRLabsOrg/lettucedect-large-modernbert-en-v1\n!faithguard detector-data"),
             ("Channel A, full model", "!python -m faithguard.train.detector --data runs/detector/train.jsonl --checkpoint $CHECKPOINT --out {OUT}/channel-a"),
             ("Ablation: without the slot head", "!python -m faithguard.train.detector --data runs/detector/train.jsonl --checkpoint $CHECKPOINT --no-slot --out {OUT}/channel-a-noslot"),
-            ("Ablation: without XBRL negatives (only if XBRL examples were mined)", "import os\nif os.path.exists('runs/detector/xbrl.jsonl'):\n    !python -m faithguard.train.detector --data runs/detector/train.jsonl --checkpoint $CHECKPOINT --exclude xbrl --out {OUT}/channel-a-noxbrl"),
+            ("Ablation: without XBRL negatives (only if XBRL examples were mined)", "import os\nif os.path.exists('runs/detector/xbrl.jsonl') or os.path.exists('runs/detector/xbrl.jsonl.gz'):\n    !python -m faithguard.train.detector --data runs/detector/train.jsonl --checkpoint $CHECKPOINT --exclude xbrl --out {OUT}/channel-a-noxbrl"),
             ("Evaluate (also writes per-claim rows for the A+B fusion)", "!python -m faithguard.train.detector_eval --model-dir {OUT}/channel-a/model --out {OUT}/eval-channel-a\n!python -m faithguard.train.detector_eval --model-dir {OUT}/channel-a-noslot/model --out {OUT}/eval-channel-a-noslot"),
         ],
     },

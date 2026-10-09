@@ -101,6 +101,8 @@ export FG_SEC_USER_AGENT="FaithGuard research Your Name you@example.com"
 | `faithguard xbrl-mine` | XBRL-mined wrong-context negatives from training-only US companies (needs `FG_SEC_USER_AGENT`) |
 | `faithguard reports list` / `download --splits dev` | The annual reports in `manifests/lk-reports.csv` (default) or, with `--country US`, `manifests/us-reports.csv`; downloads record checksums |
 | `faithguard reports locate --country US` | Each US issuer's latest 10-K on EDGAR, into `manifests/us-reports.csv` (needs `FG_SEC_USER_AGENT`) |
+| `python -m faithguard.data.pdf_tables REPORT.pdf PAGES OUT.csv` | Draft a benchmark table from a Sri Lankan report PDF |
+| `python -m faithguard.data.html_tables REPORT.htm list` / `extract N OUT.csv` | List a 10-K's tables, or draft one as a benchmark table |
 | `faithguard benchmark cells FILE` | Every cell id of a report, for question writers |
 | `faithguard benchmark check` | Recompute every gold answer from its cells and report mistakes ([benchmark guide](docs/benchmark-guide.md)) |
 | `faithguard benchmark build [--pilot-only]` | Questions with frozen evidence, and their gold, into `data/benchmark-build/` |
@@ -147,7 +149,7 @@ Every notebook starts with `setup/setup_cell.py`, which stops at once if the ses
 | Record format v1 and gold store | Done (`records.py`, `gold.py`); a test enforces that decision-time code never imports gold |
 | Calculation API and executor | Done, tested (`calc/`, `executor.py`) |
 | FinQA, TAT-QA, RAGTruth loaded with licences and checksums | Done (`manifests/datasets.json`) |
-| XBRL facts | Parser done and tested on a sample filing; live download waits for `FG_SEC_USER_AGENT` (risk R-15) |
+| XBRL facts | Live: 14,512 XBRL-mined training examples from the latest 10-Ks of 120 FinQA companies, committed as `runs/detector/xbrl.jsonl.gz` (D-049) |
 | Split manifest frozen | Built and hashed (`manifests/splits.json`); Sri Lankan tickers verified on the CSE (D-038); US tickers and CIKs verified on the SEC, two banks that stopped filing replaced (D-040) |
 | Label Studio with guide v1 | Interface, converters and guide ready; install and start it as in the guide |
 | Thin end-to-end slice on 20–40 items | Done: [runs/slice/report.md](runs/slice/report.md) (32 items, expected action on 29) |

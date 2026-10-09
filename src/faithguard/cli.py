@@ -12,8 +12,10 @@ from __future__ import annotations
 
 import argparse
 import collections
+import gzip
 import json
 import random
+import shutil
 import sys
 from pathlib import Path
 
@@ -167,11 +169,14 @@ def cmd_detector_data(args) -> None:
         if args.ragtruth:
             rows += list(train_data.ragtruth_examples(RAW / "ragtruth", split=rag_split, limit=args.ragtruth_limit if name == "train" else 1000))
         xbrl = Path(args.xbrl)
+        if not xbrl.exists() and Path(args.xbrl + ".gz").exists():
+            xbrl = Path(args.xbrl + ".gz")  # the committed copy
         if xbrl.exists():
             # XBRL examples are split by company: a stable hash sends one company in ten to dev
             from faithguard.controlled import track_split
 
-            mined = [json.loads(line) for line in open(xbrl, encoding="utf-8") if line.strip()]
+            opener = gzip.open if xbrl.suffix == ".gz" else open
+            mined = [json.loads(line) for line in opener(xbrl, "rt", encoding="utf-8") if line.strip()]
             company = lambda r: r["id"].split(":")[1]
             rows += [r for r in mined if (track_split(company(r)) == "tune") == (name == "dev")]
         counts = train_data.write(out / f"{name}.jsonl", rows)
@@ -217,7 +222,10 @@ def cmd_xbrl_mine(args) -> None:
         except edgar.SecAccessError as err:
             raise SystemExit(str(err))
     counts = train_data.write(Path(args.out), rows)
-    print(f"{done} filings, {sum(counts.values())} examples {dict(sorted(counts.items()))} -> {args.out}")
+    # a byte-stable compressed copy is committed, so notebooks that clone the repository have the examples
+    with open(args.out, "rb") as f, open(args.out + ".gz", "wb") as raw, gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as gz:
+        shutil.copyfileobj(f, gz)
+    print(f"{done} filings, {sum(counts.values())} examples {dict(sorted(counts.items()))} -> {args.out} (and .gz)")
 
 
 def cmd_benchmark(args) -> None:
@@ -397,7 +405,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--sources", default="tatqa,finqa")
     p.add_argument("--ragtruth", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--ragtruth-limit", type=int, default=8000)
-    p.add_argument("--xbrl", default="runs/detector/xbrl.jsonl", help="XBRL-mined examples, included if the file exists")
+    p.add_argument("--xbrl", default="runs/detector/xbrl.jsonl", help="XBRL-mined examples (or the committed .gz copy), included if present")
     p.add_argument("--out", default="runs/detector")
     p.set_defaults(fn=cmd_detector_data)
 

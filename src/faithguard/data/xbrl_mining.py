@@ -47,6 +47,29 @@ def member_label(member: str) -> str:
     return concept_label(local)
 
 
+# How an answer names the part of the company a fact covers, by the fact's XBRL axis
+_SCOPE_PHRASES = {
+    "StatementBusinessSegmentsAxis": " for its {} segment",
+    "StatementGeographicalAxis": " in {}",
+    "StatementEquityComponentsAxis": " in {}",
+    "ProductOrServiceAxis": " from {}",
+    "LegalEntityAxis": " at {}",
+    "ConsolidatedEntitiesAxis": " at {}",
+}
+
+
+def scope(fact: Fact) -> str:
+    """' for its retail segment', ' in retained earnings', ...; empty for a whole-company fact."""
+    if not fact.dimensions:
+        return ""
+    axis, member = fact.dimensions[0]
+    name = member_label(member)
+    phrase = _SCOPE_PHRASES.get(axis.split(":")[-1], " for {}")
+    if name.endswith("segment"):  # "ReportableSegmentMember" is not "the reportable segment segment"
+        phrase = phrase.replace("{} segment", "{}")
+    return phrase.format(name)
+
+
 def fiscal_year(fact: Fact) -> str:
     return fact.period_end[:4]
 
@@ -95,7 +118,7 @@ def evidence_for(facts: list[Fact], concepts: list[str], company: str) -> Eviden
 
 def _answer(company: str, cited: Fact, value: Decimal, scale_shift: int = 0) -> tuple[str, tuple[int, int]]:
     label = concept_label(cited.concept)
-    seg = f" for its {member_label(cited.dimensions[0][1])} segment" if cited.dimensions else ""
+    seg = scope(cited)
     style = default_style("amount", 6 + scale_shift, "USD", 1)
     number = render(value.scaleb(scale_shift) if scale_shift else value, style)
     if _period_kind(cited) == "instant":
@@ -108,7 +131,7 @@ def _answer(company: str, cited: Fact, value: Decimal, scale_shift: int = 0) -> 
 
 
 def _question(company: str, cited: Fact) -> str:
-    seg = f" for its {member_label(cited.dimensions[0][1])} segment" if cited.dimensions else ""
+    seg = scope(cited)
     when = "at the end of" if _period_kind(cited) == "instant" else "in"
     return f"What was {possessive(company)} {concept_label(cited.concept)}{seg} {when} fiscal {fiscal_year(cited)}?"
 
