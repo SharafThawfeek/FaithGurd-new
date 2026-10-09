@@ -21,8 +21,18 @@ SYSTEM = (
     "You answer questions about company annual reports. Use only the report extract provided. "
     "State each figure with its currency, unit and period. Answer in at most three sentences."
 )
-SCALE_NOTES = {3: "Rs. '000 / thousands", 6: "millions", 9: "billions"}
+CURRENCY_SIGNS = {"LKR": "Rs.", "USD": "US$"}
+SCALE_WORDS = {3: "thousands", 6: "millions", 9: "billions"}
 _THINK = re.compile(r"<think>.*?</think>|<\|channel>.*?<channel\|>", re.DOTALL)
+
+
+def unit_note(currency: str | None, scale: int) -> str:
+    """The units line under a table title: "Rs. '000 / thousands", "US$ '000 / thousands", "Rs. millions"."""
+    if scale not in SCALE_WORDS:
+        return ""
+    sign = CURRENCY_SIGNS.get(currency or "", "")
+    note = f"{sign} '000 / thousands" if scale == 3 and sign else f"{sign} {SCALE_WORDS[scale]}"
+    return f" (amounts in {note.strip()})"
 
 
 def render_evidence(evidence: Evidence) -> str:
@@ -37,7 +47,7 @@ def render_evidence(evidence: Evidence) -> str:
             labels[c.row] = c.row_label
             headers[c.col] = c.column_label
         cols = sorted(headers)
-        unit = f" (amounts in {SCALE_NOTES[t.scale]})" if t.scale in SCALE_NOTES else ""
+        unit = unit_note(t.currency, t.scale)
         lines = [f"{t.title or 'Table'}{unit}", "| Item | " + " | ".join(headers[c] for c in cols) + " |", "|" + " --- |" * (len(cols) + 1)]
         for r in sorted(rows):
             lines.append(f"| {labels[r]} | " + " | ".join(rows[r].get(c, "") for c in cols) + " |")
@@ -50,7 +60,16 @@ def user_prompt(question: str, evidence: Evidence) -> str:
     return f"{render_evidence(evidence)}\n\nQuestion: {question}"
 
 
-PROMPT_VERSION = hashlib.sha256((SYSTEM + user_prompt("{q}", Evidence())).encode()).hexdigest()[:12]
+def _prompt_version() -> str:
+    """Changes whenever the system prompt, the template or the way tables are shown changes."""
+    import inspect
+
+    parts = [SYSTEM, user_prompt("{q}", Evidence()), inspect.getsource(render_evidence), inspect.getsource(unit_note),
+             repr(CURRENCY_SIGNS), repr(SCALE_WORDS)]
+    return hashlib.sha256("\n".join(parts).encode()).hexdigest()[:12]
+
+
+PROMPT_VERSION = _prompt_version()
 
 
 _OPEN_THINK = re.compile(r"<think>|<\|channel>|<\|think\|>")

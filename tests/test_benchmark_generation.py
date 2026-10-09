@@ -65,6 +65,17 @@ def test_generators_see_plain_tables_without_cell_ids():
     assert "t1r3c1" not in text and "thousands" in text
 
 
+def test_units_line_names_the_table_currency():
+    from faithguard.records import Evidence
+    from faithguard.tables import table_from_grid
+
+    grid = [["(in thousands)", "2025", "2024"], ["Net income", "451,123", "404,386"]]
+    us = render_evidence(Evidence(tables=[table_from_grid("t1", grid, title="Statements of operations", scale=3, currency="USD")]))
+    lk = render_evidence(Evidence(tables=[table_from_grid("t1", grid, title="Income statement", scale=3, currency="LKR")]))
+    assert "(amounts in US$ '000 / thousands)" in us and "Rs." not in us
+    assert "(amounts in Rs. '000 / thousands)" in lk
+
+
 def test_thinking_is_stripped_and_flagged():
     assert strip_thinking("<think>hmm</think>Profit was Rs. 5 million.") == ("Profit was Rs. 5 million.", True)
     assert strip_thinking("<think> cut off mid-thought") == ("", True)
