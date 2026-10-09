@@ -57,6 +57,10 @@ NOTEBOOKS = {
                        ROOT / "runs" / "detector" / "kaggle"),
     "repair_sft": (ROOT / "notebooks", "FaithGuard repair stage A", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl",
                    ROOT / "runs" / "repair" / "kaggle"),
+    "repair_baselines": (ROOT / "notebooks", "FaithGuard repair baselines", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl",
+                         ROOT / "runs" / "repair" / "kaggle"),
+    "detector_baselines": (ROOT / "notebooks", "FaithGuard detector baselines", r"results[.]json|scores[.]jsonl",
+                           ROOT / "runs" / "detector" / "kaggle"),
 }
 PILOTS = ["repair_pilot", "detector_pilot", "generation_pilot"]
 

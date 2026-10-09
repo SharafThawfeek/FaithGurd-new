@@ -28,7 +28,9 @@ _SHORT_FY = re.compile(r"\bFY\s?(\d{2})\b", re.IGNORECASE)
 _FINQA_NEGATIVE = re.compile(r"^\s*(-?[\d.,]+)\s*\(\s*[\d.,]+\s*\)\s*$")
 _PERIOD_WORDS = {"", "fiscal", "year", "fy", "fiscal year", "year ended", "years ended", "as at", "as of"}
 _UNIT_MARKER = re.compile(r"^(?:Rs\.?|LKR|SLR|USD|US\$|\$)?\s?['’‘]?000$", re.IGNORECASE)  # "Rs 000", "Rs.'000", "Rs. ‘000"
-_PER_SHARE = re.compile(r"per (?:common |ordinary )?share|\beps\b|\(cents|\bcents\b|\bdividend per\b", re.IGNORECASE)
+_PER_SHARE = re.compile(r"per (?:average )?(?:common |ordinary )?share|\beps\b|\(cents|\bcents\b|\bdividend per\b", re.IGNORECASE)
+_SHARE_COUNT = re.compile(r"\bshares?\b|weighted|number of|outstanding", re.IGNORECASE)
+_TWO_DECIMALS = re.compile(r"^\(?-?\$?\s?\d{1,3}(?:,\d{3})*\.\d{2}\)?$")
 _SECTION_ONLY = {"basic", "diluted", "basic and diluted"}  # row labels that mean nothing without their section
 
 
@@ -140,6 +142,11 @@ def table_from_grid(
         per_share = bool(_PER_SHARE.search(metric_source))
         if section and row_label.lower().rstrip(":").strip() in _SECTION_ONLY:
             per_share = per_share or bool(_PER_SHARE.search(section))  # "Basic" under "Earnings per share:"
+        elif section and _PER_SHARE.search(section) and not _SHARE_COUNT.search(row_label):
+            # "Total diluted earnings" or "Net Income" under "Earnings per share": per share if printed like it,
+            # every figure with two decimals (a computation table may list net income itself under such a heading)
+            figures = [c.strip() for c in row[1:] if c.strip() and c.strip() not in ("-", "–", "—")]
+            per_share = per_share or bool(figures) and all(_TWO_DECIMALS.match(f) for f in figures)
         for c in range(1, width):
             text = row[c]
             if not text:

@@ -178,8 +178,8 @@ Controlled track on development data, made from the project's own templates (pip
 | Part | Built and tested on CPU | Waiting for |
 | --- | --- | --- |
 | Decision policy | Outcome models (LightGBM; TabICLv2 optional), Learn-then-Test certification over a pre-registered grid, five baselines and the oracle, certification-budget curve, issuer-level check, SCoRE comparator, deployable policy: [runs/policy/controlled/report.md](runs/policy/controlled/report.md) | The natural benchmark (phases 3, 5, 6) |
-| Repair | Model repairer with retry, free-rewrite baseline, training data (10,420 examples; basis errors held out), fine-tuning, self-training and evaluation scripts | A Kaggle T4: [notebooks/repair_sft.ipynb](notebooks/repair_sft.ipynb), [repair_baselines.ipynb](notebooks/repair_baselines.ipynb), [repair_self_train.ipynb](notebooks/repair_self_train.ipynb) |
-| Detection | Channel A (span + slot heads), training data (21,157 examples), training and evaluation scripts, A+B fusion with calibration, three baseline detectors, XBRL mining | A Kaggle T4: [notebooks/detector_train.ipynb](notebooks/detector_train.ipynb), [detector_baselines.ipynb](notebooks/detector_baselines.ipynb) |
+| Repair | Model repairer with retry, free-rewrite baseline, training data (10,587 examples; basis errors held out), fine-tuning, self-training and evaluation scripts | A Kaggle T4: [notebooks/repair_sft.ipynb](notebooks/repair_sft.ipynb), [repair_baselines.ipynb](notebooks/repair_baselines.ipynb), [repair_self_train.ipynb](notebooks/repair_self_train.ipynb) |
+| Detection | Channel A (span + slot heads), training data (34,229 examples, 12,846 of them XBRL-mined), training and evaluation scripts, A+B fusion with calibration, three baseline detectors, XBRL mining | A Kaggle T4: [notebooks/detector_train.ipynb](notebooks/detector_train.ipynb), [detector_baselines.ipynb](notebooks/detector_baselines.ipynb) |
 
 Policy study on the controlled track (rehearsal on template answers; certified at alpha = 0.10):
 

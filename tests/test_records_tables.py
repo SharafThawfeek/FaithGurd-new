@@ -75,6 +75,24 @@ def test_basic_and_diluted_rows_under_a_per_share_section_are_per_share():
     assert cells[(1, "2025")].scale == 3
 
 
+def test_earnings_rows_under_a_per_share_heading_are_per_share_when_printed_so():
+    # As some statements label them: "Total diluted earnings", "Net Income", "Basic (Rs.)" under a per-share heading.
+    # A computation table may list net income itself under such a heading; it stays an amount.
+    grid = [
+        ["(in millions, except per share data)", "2025", "2024"],
+        ["Net Earnings", "842", "887"],
+        ["Earnings per Common Share:", "", ""],
+        ["Total diluted earnings", "10.08", "10.57"],
+        ["Net income", "842", "887"],
+        ["Average number of shares outstanding", "83.50", "83.90"],
+        ["DILUTED EARNINGS PER AVERAGE COMMON SHARE", "2.32", "2.19"],
+    ]
+    cells = {(c.row, c.period): c for c in table_from_grid("t1", grid).cells}
+    assert (cells[(3, "2025")].scale, cells[(3, "2025")].value) == (0, D("10.08"))
+    assert cells[(4, "2025")].scale == 6 and cells[(5, "2025")].scale == 6
+    assert cells[(6, "2025")].scale == 0
+
+
 def test_finqa_style_table():
     grid = [["", "amount ( in millions )"], ["2009 net revenue", "$ 536.7"], ["other", "-0.3 ( 0.3 )"]]
     t = table_from_grid("t1", grid)
