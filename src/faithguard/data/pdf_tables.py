@@ -94,6 +94,8 @@ def _words(page) -> list[Word]:
     glyphs = _glyph_words(page)
     out = []
     for x0, y0, x1, y1, text, *_ in page.get_text("words"):
+        if y1 - y0 > 1.5 * (x1 - x0) and re.search(r"[A-Za-z]{3}", text):  # vertical side tabs: "Highlights", "Leadership"
+            continue
         for a, b in clean.items():
             text = text.replace(a, b)
         w = Word(x0, y0, x1, y1, text)
@@ -209,7 +211,7 @@ def extract_page(page, label_gap: float = 9.0, min_column_hits: int = 3) -> list
         w for w in words
         if w.x1 <= label_right and w.yc > body_top and not (NOTE_REF.match(w.text) and w.x1 > label_right - 40)
     ]
-    rows = [{"y": _y(line), "label": " ".join(w.text for w in line), "values": {}} for line in _lines(label_words)]
+    rows =[{"y": _y(line), "label": " ".join(w.text for w in line), "values": {}} for line in _lines(label_words)]
     # Closest pairs first, across the page: a figure level with its label is placed before an unlabelled
     # subtotal a line away can take that label's slot (rows can be only 8 points apart).
     placing = [(w, column_of(w)) for w in numbers]

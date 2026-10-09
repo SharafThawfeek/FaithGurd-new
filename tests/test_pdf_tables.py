@@ -235,3 +235,10 @@ def test_net_of_rows_may_be_differences_and_lone_totals_are_not_flagged():
     ]
     sums, failures = benchmark.total_rows(grid)
     assert failures == [] and 5 in sums and 6 in sums
+
+
+def test_vertical_side_tabs_stay_out_of_labels():
+    page = statement_page()
+    page.words.append((21.4, 128.0, 29.2, 157.0, "Leadership", 0, 0, 0))  # printed sideways in the margin, level with a row
+    grid = extract_page(page)
+    assert [r[0] for r in grid[3:6]] == ["Revenue", "Cost of sales", ""]

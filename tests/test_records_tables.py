@@ -128,3 +128,10 @@ def test_items_round_trip_through_jsonl(tmp_path):
     assert back.evidence.digest() == item.evidence.digest()
     assert back.evidence.cell("t1r2c1").raw == D("14212560")
     assert len(item.evidence.without(["t1r2c1"]).cells()) == len(item.evidence.cells()) - 1
+
+
+def test_a_one_entity_table_keeps_its_entity_on_rows_that_mention_a_bank():
+    grid = [["Rs. '000", "2025", "2024"], ["Cash in hand and at bank", "1,200", "1,100"], ["Total assets", "9,000", "8,000"]]
+    table = table_from_grid("t2", grid, entity="company")
+    assert {c.entity for c in table.cells} == {"company"}
+    assert {c.entity for c in table_from_grid("t2", grid).cells if c.row_label.startswith("Cash")} == {"bank"}  # no table entity: as before

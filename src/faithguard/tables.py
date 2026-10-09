@@ -177,7 +177,8 @@ def table_from_grid(
                     scale=cell_scale,
                     currency=cell_currency,
                     metric=normalise_metric(metric_label) or None,
-                    entity=entity_of(column_label) or entity_of(row_label) or entity,
+                    # a table-wide entity (a one-entity statement) beats words in a row label ("Cash at bank")
+                    entity=entity_of(column_label) or entity or entity_of(row_label),
                     period=period,
                 )
             )
