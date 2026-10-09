@@ -16,7 +16,7 @@ from typing import Literal
 Kind = Literal["amount", "percent", "ratio", "number", "year"]
 
 SCALE_WORDS: dict[str, int] = {
-    "thousand": 3, "thousands": 3, "k": 3, "'000": 3, "’000": 3,
+    "thousand": 3, "thousands": 3, "k": 3, "'000": 3, "’000": 3, "‘000": 3,
     "million": 6, "millions": 6, "mn": 6, "mln": 6, "m": 6,
     "billion": 9, "billions": 9, "bn": 9, "b": 9,
     "trillion": 12, "trillions": 12, "tn": 12, "trn": 12,
@@ -38,7 +38,7 @@ _SUFFIX = (
     r"|\s?(?:basis\s+points|bps|bp)\b"
     r"|\s?(?:percentage\s+points|ppts?\b|pp\b)"
     r"|\s?(?:x\b|times\b)"
-    r"|\s?(?:'000|’000)"
+    r"|\s?(?:'000|’000|‘000)"
     r"|\s(?:thousand|million|billion|trillion|mn|mln|bn|tn|trn|lakh|crore)s?\b"
     r"|(?:k|m|mn|b|bn|tn)\b"
     r")?"
@@ -46,7 +46,7 @@ _SUFFIX = (
 _CUR_AFTER = r"(?P<cur_after>\s(?:rupees|dollars|LKR|USD)\b)?"
 
 NUMBER_RE = re.compile(
-    r"(?<![\w.,/'’])"  # never start inside a word, a number, or a range like 2024/25
+    r"(?<![\w.,/'’‘])"  # never start inside a word, a number, or a range like 2024/25
     r"(?P<sign>[-−])?"
     + _PREFIX + r"?\s?"
     r"(?P<sign2>[-−])?"
@@ -124,10 +124,10 @@ def _scale_from_suffix(suffix: str) -> int:
 # Units written in brackets after a figure, "Rs. 1,983,093 (thousands)", "4,083,978 (in thousands)",
 # "(Rs. '000)", or before it, "Rs. '000 80,007,940", as generators often copy them from table headers.
 _UNIT_AFTER = re.compile(
-    r"\s?\((?:in\s+)?(?:(?:Rs\.?|LKR|US\$|\$)\s?)?(?P<word>['’]000|thousands?|millions?|billions?|mn|bn)\)",
+    r"\s?\((?:in\s+)?(?:(?:Rs\.?|LKR|US\$|\$)\s?)?(?P<word>['’‘]000|thousands?|millions?|billions?|mn|bn)\)",
     re.IGNORECASE,
 )
-_UNIT_BEFORE = re.compile(r"(?:(?P<cur>Rs\.?|LKR|US\$|\$)\s?)?['’]000\s?$", re.IGNORECASE)
+_UNIT_BEFORE = re.compile(r"(?:(?P<cur>Rs\.?|LKR|US\$|\$)\s?)?['’‘]000\s?$", re.IGNORECASE)
 
 
 def _bracket_scale(word: str) -> int:
@@ -228,7 +228,7 @@ def parse_cell(text: str) -> NumberMention | None:
 def detect_scale(text: str) -> int:
     """The scale stated in a table title or header, e.g. "Rs. '000" -> 3, "(in millions)" -> 6."""
     low = text.lower()
-    if re.search(r"['’]000|in thousands|thousands of|(?:rs\.?|lkr|usd|us\$|\$)\s?000\b", low):  # "Rs 000" too
+    if re.search(r"['’‘]000|in thousands|thousands of|(?:rs\.?|lkr|usd|us\$|\$)\s?000\b", low):  # "Rs 000" too
         return 3
     if re.search(r"in millions|millions of|\bmn\b|\(million|\bmillion\)", low):
         return 6

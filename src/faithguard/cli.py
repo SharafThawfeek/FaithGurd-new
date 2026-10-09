@@ -8,6 +8,7 @@
     faithguard labelling tasks|import ...            Label Studio tasks in, gold labels out
     faithguard pilot                                 the pilot answers at a glance (counts only)
     faithguard hashes FILES --out F                  pin files by SHA-256 (answers, evidence, the locked test set)
+    faithguard extraction compare                    three PDF table tools against the hand-corrected tables (20 tables)
 """
 
 from __future__ import annotations
@@ -367,6 +368,57 @@ def cmd_splits(args) -> None:
     print(f"wrote {args.out} (sha256 {manifest['sha256'][:16]})")
 
 
+def cmd_extraction(args) -> None:
+    from faithguard.data import extraction
+    from faithguard.splits import split_of
+
+    manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
+    reports = sorted(Path(args.root).glob("*/*.yaml"))
+
+    def split(path: Path) -> str:
+        return split_of(manifest, path.parent.parent.name, path.parent.name)
+
+    if args.action == "evidence":  # the real-world condition: the main questions with their Sri Lankan tables as the tool reads them
+        from faithguard.benchmark import BenchmarkQuestion
+
+        auto, notes = {}, []
+        for path in reports:
+            if split(path) in ("test", "calibration"):
+                tables, n = extraction.automatic_tables(path, Path(args.raw), args.tool, args.strategy)
+                auto[f"{path.parent.parent.name}:{path.parent.name}"] = tables
+                notes += n
+        questions = []
+        for q in read_jsonl(args.questions, BenchmarkQuestion):
+            if q.question.issuer in auto:
+                q = q.model_copy(update={"evidence": q.evidence.model_copy(update={"tables": auto[q.question.issuer]})})
+            questions.append(q)
+        write_jsonl(Path(args.evidence_out) / "questions.jsonl", questions)
+        record = {"tool": args.tool, "strategy": args.strategy, "questions": len(questions),
+                  "questions_with_automatic_tables": sum(q.question.issuer in auto for q in questions),
+                  "tables": len(notes), "scale_right": sum(n["scale_right"] for n in notes),
+                  "scale_from": dict(collections.Counter(n["scale_from"] for n in notes)), "per_table": notes}
+        Path(args.out).mkdir(parents=True, exist_ok=True)
+        (Path(args.out) / "evidence.json").write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+        print(f"{record['questions_with_automatic_tables']} of {len(questions)} questions get automatic tables; "
+              f"scale right on {record['scale_right']} of {len(notes)} tables -> {Path(args.evidence_out) / 'questions.jsonl'}")
+        return
+    if args.action == "compare":
+        chosen = extraction.choose_reports(reports, split, args.per_split, args.seed)
+        title = f"Automatic-extraction run: three tools on {2 * len(chosen)} tables"
+    else:  # every test and calibration report, to see how the chosen tool does beyond the tables it was chosen on
+        chosen = [p for p in reports if split(p) in ("test", "calibration")]
+        title = f"Automatic extraction on all {2 * len(chosen)} test and calibration tables"
+    tools = extraction.TOOLS if not args.tool else {args.tool: (args.strategy,)}
+    rows = extraction.run(chosen, Path(args.raw), tools)
+    summary = extraction.summarise(rows)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    record = {"reports": [p.parent.name for p in chosen], "seed": args.seed, **summary, "tables": rows}
+    (out / "summary.json").write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    (out / "report.md").write_text(extraction.report(summary, rows, title), encoding="utf-8")
+    print(f"best: {summary['best']} -> {out / 'report.md'}")
+
+
 def cmd_hashes(args) -> None:
     """SHA-256, size and line count of each file, so a run's inputs and outputs can be pinned (phase 5)."""
     import datetime
@@ -510,6 +562,20 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--out", default="manifests/splits.json")
     p.add_argument("--seed", type=int, default=2026)
     p.set_defaults(fn=cmd_splits)
+
+    p = sub.add_parser("extraction", help="the automatic-extraction run: PDF table tools against the hand-corrected tables")
+    p.add_argument("action", choices=["compare", "all", "evidence"])
+    p.add_argument("--questions", default="data/benchmark-build/main/questions.jsonl", help="evidence: the main questions")
+    p.add_argument("--evidence-out", default="data/benchmark-build/main-auto", help="evidence: where the real-world questions go")
+    p.add_argument("--root", default="data/benchmark/LK")
+    p.add_argument("--raw", default="data/raw/reports")
+    p.add_argument("--manifest", default="manifests/splits.json")
+    p.add_argument("--per-split", type=int, default=5, help="compare: reports drawn from each of test and calibration")
+    p.add_argument("--seed", type=int, default=2026)
+    p.add_argument("--tool", default="", help="all: the chosen tool (default: every tool)")
+    p.add_argument("--strategy", default="")
+    p.add_argument("--out", default="runs/extraction")
+    p.set_defaults(fn=cmd_extraction)
 
     p = sub.add_parser("hashes", help="SHA-256 of files, to pin a run's inputs and outputs")
     p.add_argument("files", nargs="+")

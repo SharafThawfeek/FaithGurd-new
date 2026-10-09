@@ -1,0 +1,447 @@
+{
+  "tool": "pymupdf",
+  "strategy": "text",
+  "questions": 400,
+  "questions_with_automatic_tables": 250,
+  "tables": 48,
+  "scale_right": 42,
+  "scale_from": {
+    "header": 31,
+    "page": 7,
+    "none": 10
+  },
+  "per_table": [
+    {
+      "issuer": "CARG",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 233,
+      "corrected_cells": 116
+    },
+    {
+      "issuer": "CARG",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "page",
+      "scale_right": true,
+      "cells": 293,
+      "corrected_cells": 148
+    },
+    {
+      "issuer": "CCS",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 110,
+      "corrected_cells": 74
+    },
+    {
+      "issuer": "CCS",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 178,
+      "corrected_cells": 144
+    },
+    {
+      "issuer": "CINS",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 259,
+      "corrected_cells": 187
+    },
+    {
+      "issuer": "CINS",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "page",
+      "scale_right": true,
+      "cells": 301,
+      "corrected_cells": 164
+    },
+    {
+      "issuer": "DFCC",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 346,
+      "corrected_cells": 192
+    },
+    {
+      "issuer": "DFCC",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 281,
+      "corrected_cells": 164
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t1",
+      "scale": 0,
+      "scale_from": "none",
+      "scale_right": false,
+      "cells": 177,
+      "corrected_cells": 108
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t2",
+      "scale": 0,
+      "scale_from": "none",
+      "scale_right": false,
+      "cells": 340,
+      "corrected_cells": 156
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "page",
+      "scale_right": true,
+      "cells": 159,
+      "corrected_cells": 72
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "page",
+      "scale_right": true,
+      "cells": 351,
+      "corrected_cells": 144
+    },
+    {
+      "issuer": "DIST",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 175,
+      "corrected_cells": 116
+    },
+    {
+      "issuer": "DIST",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 238,
+      "corrected_cells": 144
+    },
+    {
+      "issuer": "GRAN",
+      "table": "t1",
+      "scale": 0,
+      "scale_from": "none",
+      "scale_right": false,
+      "cells": 156,
+      "corrected_cells": 98
+    },
+    {
+      "issuer": "GRAN",
+      "table": "t2",
+      "scale": 0,
+      "scale_from": "none",
+      "scale_right": false,
+      "cells": 188,
+      "corrected_cells": 136
+    },
+    {
+      "issuer": "HASU",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 308,
+      "corrected_cells": 236
+    },
+    {
+      "issuer": "HASU",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 215,
+      "corrected_cells": 128
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 173,
+      "corrected_cells": 112
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 338,
+      "corrected_cells": 220
+    },
+    {
+      "issuer": "HHL",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 97,
+      "corrected_cells": 64
+    },
+    {
+      "issuer": "HHL",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 229,
+      "corrected_cells": 152
+    },
+    {
+      "issuer": "HNB",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 336,
+      "corrected_cells": 201
+    },
+    {
+      "issuer": "HNB",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 302,
+      "corrected_cells": 168
+    },
+    {
+      "issuer": "JKH",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 326,
+      "corrected_cells": 154
+    },
+    {
+      "issuer": "JKH",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 265,
+      "corrected_cells": 164
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 154,
+      "corrected_cells": 88
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 350,
+      "corrected_cells": 168
+    },
+    {
+      "issuer": "LION",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 181,
+      "corrected_cells": 96
+    },
+    {
+      "issuer": "LION",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 318,
+      "corrected_cells": 136
+    },
+    {
+      "issuer": "LLUB",
+      "table": "t1",
+      "scale": 0,
+      "scale_from": "none",
+      "scale_right": true,
+      "cells": 129,
+      "corrected_cells": 38
+    },
+    {
+      "issuer": "LLUB",
+      "table": "t2",
+      "scale": 0,
+      "scale_from": "none",
+      "scale_right": true,
+      "cells": 178,
+      "corrected_cells": 45
+    },
+    {
+      "issuer": "NTB",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "page",
+      "scale_right": true,
+      "cells": 188,
+      "corrected_cells": 124
+    },
+    {
+      "issuer": "NTB",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 222,
+      "corrected_cells": 156
+    },
+    {
+      "issuer": "PABC",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 288,
+      "corrected_cells": 122
+    },
+    {
+      "issuer": "PABC",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 246,
+      "corrected_cells": 108
+    },
+    {
+      "issuer": "PLC",
+      "table": "t1",
+      "scale": 0,
+      "scale_from": "none",
+      "scale_right": false,
+      "cells": 226,
+      "corrected_cells": 156
+    },
+    {
+      "issuer": "PLC",
+      "table": "t2",
+      "scale": 0,
+      "scale_from": "none",
+      "scale_right": false,
+      "cells": 363,
+      "corrected_cells": 216
+    },
+    {
+      "issuer": "RCL",
+      "table": "t1",
+      "scale": 0,
+      "scale_from": "none",
+      "scale_right": true,
+      "cells": 291,
+      "corrected_cells": 84
+    },
+    {
+      "issuer": "RCL",
+      "table": "t2",
+      "scale": 0,
+      "scale_from": "none",
+      "scale_right": true,
+      "cells": 240,
+      "corrected_cells": 156
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t1",
+      "scale": 6,
+      "scale_from": "page",
+      "scale_right": true,
+      "cells": 200,
+      "corrected_cells": 116
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t2",
+      "scale": 6,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 402,
+      "corrected_cells": 184
+    },
+    {
+      "issuer": "UAL",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "page",
+      "scale_right": true,
+      "cells": 225,
+      "corrected_cells": 111
+    },
+    {
+      "issuer": "UAL",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 115,
+      "corrected_cells": 56
+    },
+    {
+      "issuer": "VONE",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 370,
+      "corrected_cells": 186
+    },
+    {
+      "issuer": "VONE",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 284,
+      "corrected_cells": 156
+    },
+    {
+      "issuer": "WATA",
+      "table": "t1",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 127,
+      "corrected_cells": 108
+    },
+    {
+      "issuer": "WATA",
+      "table": "t2",
+      "scale": 3,
+      "scale_from": "header",
+      "scale_right": true,
+      "cells": 193,
+      "corrected_cells": 144
+    }
+  ]
+}

@@ -27,7 +27,7 @@ _YEAR = re.compile(r"(?<!\d)(?:FY\s?)?((?:19|20)\d{2})(?:\s?[/-]\s?(\d{2,4}))?(?
 _SHORT_FY = re.compile(r"\bFY\s?(\d{2})\b", re.IGNORECASE)
 _FINQA_NEGATIVE = re.compile(r"^\s*(-?[\d.,]+)\s*\(\s*[\d.,]+\s*\)\s*$")
 _PERIOD_WORDS = {"", "fiscal", "year", "fy", "fiscal year", "year ended", "years ended", "as at", "as of"}
-_UNIT_MARKER = re.compile(r"^(?:Rs\.?|LKR|SLR|USD|US\$|\$)?\s?['’]?000$", re.IGNORECASE)  # "Rs 000", "Rs.'000"
+_UNIT_MARKER = re.compile(r"^(?:Rs\.?|LKR|SLR|USD|US\$|\$)?\s?['’‘]?000$", re.IGNORECASE)  # "Rs 000", "Rs.'000", "Rs. ‘000"
 _PER_SHARE = re.compile(r"per (?:common |ordinary )?share|\beps\b|\(cents|\bcents\b|\bdividend per\b", re.IGNORECASE)
 _SECTION_ONLY = {"basic", "diluted", "basic and diluted"}  # row labels that mean nothing without their section
 

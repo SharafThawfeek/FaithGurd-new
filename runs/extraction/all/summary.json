@@ -1,0 +1,1835 @@
+{
+  "reports": [
+    "CARG",
+    "CCS",
+    "CINS",
+    "DFCC",
+    "DIAL",
+    "DIPD",
+    "DIST",
+    "GRAN",
+    "HASU",
+    "HAYL",
+    "HHL",
+    "HNB",
+    "JKH",
+    "KVAL",
+    "LION",
+    "LLUB",
+    "NTB",
+    "PABC",
+    "PLC",
+    "RCL",
+    "SLTL",
+    "UAL",
+    "VONE",
+    "WATA"
+  ],
+  "seed": 2026,
+  "by_strategy": [
+    {
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "tables": 48,
+      "figures": 5861,
+      "found": 5835,
+      "wrong": 5,
+      "rows": 1642,
+      "rows_complete": 1637,
+      "tables_complete": 45,
+      "seconds": 1.47,
+      "errors": 0,
+      "found_share": 0.9956,
+      "rows_complete_share": 0.997
+    },
+    {
+      "tool": "pymupdf",
+      "strategy": "text",
+      "tables": 48,
+      "figures": 5861,
+      "found": 5518,
+      "wrong": 438,
+      "rows": 1642,
+      "rows_complete": 1440,
+      "tables_complete": 23,
+      "seconds": 14.23,
+      "errors": 0,
+      "found_share": 0.9415,
+      "rows_complete_share": 0.877
+    }
+  ],
+  "best_strategy": {
+    "pymupdf": "text",
+    "pdf_tables": "project"
+  },
+  "best": {
+    "tool": "pymupdf",
+    "strategy": "text"
+  },
+  "tables": [
+    {
+      "issuer": "CARG",
+      "table": "t1",
+      "pages": [
+        199
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.28,
+      "error": "",
+      "figures": 106,
+      "found": 102,
+      "rows": 29,
+      "rows_complete": 27,
+      "table_complete": false,
+      "wrong": 4,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "CARG",
+      "table": "t1",
+      "pages": [
+        199
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.04,
+      "error": "",
+      "figures": 106,
+      "found": 106,
+      "rows": 29,
+      "rows_complete": 29,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "CARG",
+      "table": "t2",
+      "pages": [
+        200,
+        201
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.27,
+      "error": "",
+      "figures": 134,
+      "found": 134,
+      "rows": 37,
+      "rows_complete": 37,
+      "table_complete": true,
+      "wrong": 5,
+      "unmatched_rows_figures": 3
+    },
+    {
+      "issuer": "CARG",
+      "table": "t2",
+      "pages": [
+        200,
+        201
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.06,
+      "error": "",
+      "figures": 134,
+      "found": 134,
+      "rows": 37,
+      "rows_complete": 37,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "CCS",
+      "table": "t1",
+      "pages": [
+        276
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.16,
+      "error": "",
+      "figures": 72,
+      "found": 68,
+      "rows": 20,
+      "rows_complete": 19,
+      "table_complete": false,
+      "wrong": 4,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "CCS",
+      "table": "t1",
+      "pages": [
+        276
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 72,
+      "found": 72,
+      "rows": 20,
+      "rows_complete": 20,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "CCS",
+      "table": "t2",
+      "pages": [
+        278
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.31,
+      "error": "",
+      "figures": 139,
+      "found": 139,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "CCS",
+      "table": "t2",
+      "pages": [
+        278
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 139,
+      "found": 139,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "CINS",
+      "table": "t1",
+      "pages": [
+        140
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.28,
+      "error": "",
+      "figures": 133,
+      "found": 108,
+      "rows": 33,
+      "rows_complete": 26,
+      "table_complete": false,
+      "wrong": 13,
+      "unmatched_rows_figures": 12
+    },
+    {
+      "issuer": "CINS",
+      "table": "t1",
+      "pages": [
+        140
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.04,
+      "error": "",
+      "figures": 133,
+      "found": 116,
+      "rows": 33,
+      "rows_complete": 30,
+      "table_complete": false,
+      "wrong": 5,
+      "unmatched_rows_figures": 12
+    },
+    {
+      "issuer": "CINS",
+      "table": "t2",
+      "pages": [
+        139
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.27,
+      "error": "",
+      "figures": 118,
+      "found": 99,
+      "rows": 41,
+      "rows_complete": 22,
+      "table_complete": false,
+      "wrong": 38,
+      "unmatched_rows_figures": 6
+    },
+    {
+      "issuer": "CINS",
+      "table": "t2",
+      "pages": [
+        139
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 118,
+      "found": 118,
+      "rows": 41,
+      "rows_complete": 41,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DFCC",
+      "table": "t1",
+      "pages": [
+        306,
+        307
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.43,
+      "error": "",
+      "figures": 180,
+      "found": 180,
+      "rows": 48,
+      "rows_complete": 48,
+      "table_complete": true,
+      "wrong": 30,
+      "unmatched_rows_figures": 3
+    },
+    {
+      "issuer": "DFCC",
+      "table": "t1",
+      "pages": [
+        306,
+        307
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.05,
+      "error": "",
+      "figures": 180,
+      "found": 180,
+      "rows": 48,
+      "rows_complete": 48,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DFCC",
+      "table": "t2",
+      "pages": [
+        308,
+        309
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.65,
+      "error": "",
+      "figures": 150,
+      "found": 143,
+      "rows": 41,
+      "rows_complete": 34,
+      "table_complete": false,
+      "wrong": 7,
+      "unmatched_rows_figures": 4
+    },
+    {
+      "issuer": "DFCC",
+      "table": "t2",
+      "pages": [
+        308,
+        309
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.07,
+      "error": "",
+      "figures": 150,
+      "found": 150,
+      "rows": 41,
+      "rows_complete": 41,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t1",
+      "pages": [
+        208
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.26,
+      "error": "",
+      "figures": 100,
+      "found": 98,
+      "rows": 27,
+      "rows_complete": 26,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t1",
+      "pages": [
+        208
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 100,
+      "found": 100,
+      "rows": 27,
+      "rows_complete": 27,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t2",
+      "pages": [
+        206,
+        207
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.32,
+      "error": "",
+      "figures": 139,
+      "found": 120,
+      "rows": 38,
+      "rows_complete": 19,
+      "table_complete": false,
+      "wrong": 51,
+      "unmatched_rows_figures": 9
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t2",
+      "pages": [
+        206,
+        207
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 139,
+      "found": 139,
+      "rows": 38,
+      "rows_complete": 38,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t1",
+      "pages": [
+        501
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.15,
+      "error": "",
+      "figures": 73,
+      "found": 67,
+      "rows": 19,
+      "rows_complete": 16,
+      "table_complete": false,
+      "wrong": 16,
+      "unmatched_rows_figures": 4
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t1",
+      "pages": [
+        501
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 73,
+      "found": 73,
+      "rows": 19,
+      "rows_complete": 19,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t2",
+      "pages": [
+        503
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.31,
+      "error": "",
+      "figures": 129,
+      "found": 129,
+      "rows": 37,
+      "rows_complete": 37,
+      "table_complete": true,
+      "wrong": 22,
+      "unmatched_rows_figures": 12
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t2",
+      "pages": [
+        503
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 129,
+      "found": 129,
+      "rows": 37,
+      "rows_complete": 37,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIST",
+      "table": "t1",
+      "pages": [
+        88
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.22,
+      "error": "",
+      "figures": 109,
+      "found": 107,
+      "rows": 29,
+      "rows_complete": 28,
+      "table_complete": false,
+      "wrong": 2,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIST",
+      "table": "t1",
+      "pages": [
+        88
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 109,
+      "found": 109,
+      "rows": 29,
+      "rows_complete": 29,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIST",
+      "table": "t2",
+      "pages": [
+        89
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.23,
+      "error": "",
+      "figures": 130,
+      "found": 130,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "DIST",
+      "table": "t2",
+      "pages": [
+        89
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 130,
+      "found": 130,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "GRAN",
+      "table": "t1",
+      "pages": [
+        330
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.18,
+      "error": "",
+      "figures": 92,
+      "found": 88,
+      "rows": 25,
+      "rows_complete": 24,
+      "table_complete": false,
+      "wrong": 4,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "GRAN",
+      "table": "t1",
+      "pages": [
+        330
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.01,
+      "error": "",
+      "figures": 92,
+      "found": 92,
+      "rows": 25,
+      "rows_complete": 25,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "GRAN",
+      "table": "t2",
+      "pages": [
+        331
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.26,
+      "error": "",
+      "figures": 124,
+      "found": 124,
+      "rows": 34,
+      "rows_complete": 34,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "GRAN",
+      "table": "t2",
+      "pages": [
+        331
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.01,
+      "error": "",
+      "figures": 124,
+      "found": 124,
+      "rows": 34,
+      "rows_complete": 34,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HASU",
+      "table": "t1",
+      "pages": [
+        337
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.49,
+      "error": "",
+      "figures": 211,
+      "found": 200,
+      "rows": 38,
+      "rows_complete": 34,
+      "table_complete": false,
+      "wrong": 5,
+      "unmatched_rows_figures": 6
+    },
+    {
+      "issuer": "HASU",
+      "table": "t1",
+      "pages": [
+        337
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.04,
+      "error": "",
+      "figures": 211,
+      "found": 211,
+      "rows": 38,
+      "rows_complete": 38,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HASU",
+      "table": "t2",
+      "pages": [
+        336
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.25,
+      "error": "",
+      "figures": 116,
+      "found": 116,
+      "rows": 31,
+      "rows_complete": 31,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "HASU",
+      "table": "t2",
+      "pages": [
+        336
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 116,
+      "found": 116,
+      "rows": 31,
+      "rows_complete": 31,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t1",
+      "pages": [
+        360
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.21,
+      "error": "",
+      "figures": 97,
+      "found": 76,
+      "rows": 28,
+      "rows_complete": 10,
+      "table_complete": false,
+      "wrong": 30,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t1",
+      "pages": [
+        360
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 97,
+      "found": 97,
+      "rows": 28,
+      "rows_complete": 28,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t2",
+      "pages": [
+        362,
+        363
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.39,
+      "error": "",
+      "figures": 173,
+      "found": 173,
+      "rows": 55,
+      "rows_complete": 55,
+      "table_complete": true,
+      "wrong": 17,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t2",
+      "pages": [
+        362,
+        363
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.04,
+      "error": "",
+      "figures": 173,
+      "found": 173,
+      "rows": 55,
+      "rows_complete": 55,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HHL",
+      "table": "t1",
+      "pages": [
+        156
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.14,
+      "error": "",
+      "figures": 58,
+      "found": 56,
+      "rows": 19,
+      "rows_complete": 18,
+      "table_complete": false,
+      "wrong": 2,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HHL",
+      "table": "t1",
+      "pages": [
+        156
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.05,
+      "error": "",
+      "figures": 58,
+      "found": 58,
+      "rows": 19,
+      "rows_complete": 19,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HHL",
+      "table": "t2",
+      "pages": [
+        158
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.3,
+      "error": "",
+      "figures": 129,
+      "found": 129,
+      "rows": 38,
+      "rows_complete": 38,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "HHL",
+      "table": "t2",
+      "pages": [
+        158
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.08,
+      "error": "",
+      "figures": 129,
+      "found": 129,
+      "rows": 38,
+      "rows_complete": 38,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HNB",
+      "table": "t1",
+      "pages": [
+        334,
+        335
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.42,
+      "error": "",
+      "figures": 183,
+      "found": 183,
+      "rows": 51,
+      "rows_complete": 51,
+      "table_complete": true,
+      "wrong": 16,
+      "unmatched_rows_figures": 6
+    },
+    {
+      "issuer": "HNB",
+      "table": "t1",
+      "pages": [
+        334,
+        335
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.06,
+      "error": "",
+      "figures": 183,
+      "found": 183,
+      "rows": 51,
+      "rows_complete": 51,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HNB",
+      "table": "t2",
+      "pages": [
+        336,
+        337
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.3,
+      "error": "",
+      "figures": 155,
+      "found": 155,
+      "rows": 42,
+      "rows_complete": 42,
+      "table_complete": true,
+      "wrong": 30,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "HNB",
+      "table": "t2",
+      "pages": [
+        336,
+        337
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.04,
+      "error": "",
+      "figures": 155,
+      "found": 155,
+      "rows": 42,
+      "rows_complete": 42,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "JKH",
+      "table": "t1",
+      "pages": [
+        465,
+        466
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.32,
+      "error": "",
+      "figures": 127,
+      "found": 124,
+      "rows": 43,
+      "rows_complete": 41,
+      "table_complete": false,
+      "wrong": 6,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "JKH",
+      "table": "t1",
+      "pages": [
+        465,
+        466
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.04,
+      "error": "",
+      "figures": 127,
+      "found": 127,
+      "rows": 43,
+      "rows_complete": 43,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "JKH",
+      "table": "t2",
+      "pages": [
+        467
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.3,
+      "error": "",
+      "figures": 150,
+      "found": 150,
+      "rows": 41,
+      "rows_complete": 41,
+      "table_complete": true,
+      "wrong": 26,
+      "unmatched_rows_figures": 3
+    },
+    {
+      "issuer": "JKH",
+      "table": "t2",
+      "pages": [
+        467
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 150,
+      "found": 150,
+      "rows": 41,
+      "rows_complete": 41,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t1",
+      "pages": [
+        286
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.14,
+      "error": "",
+      "figures": 80,
+      "found": 77,
+      "rows": 22,
+      "rows_complete": 21,
+      "table_complete": false,
+      "wrong": 3,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t1",
+      "pages": [
+        286
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 80,
+      "found": 80,
+      "rows": 22,
+      "rows_complete": 22,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t2",
+      "pages": [
+        288,
+        289
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.3,
+      "error": "",
+      "figures": 145,
+      "found": 111,
+      "rows": 42,
+      "rows_complete": 33,
+      "table_complete": false,
+      "wrong": 4,
+      "unmatched_rows_figures": 32
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t2",
+      "pages": [
+        288,
+        289
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.04,
+      "error": "",
+      "figures": 145,
+      "found": 145,
+      "rows": 42,
+      "rows_complete": 42,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "LION",
+      "table": "t1",
+      "pages": [
+        138
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.19,
+      "error": "",
+      "figures": 92,
+      "found": 92,
+      "rows": 24,
+      "rows_complete": 24,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "LION",
+      "table": "t1",
+      "pages": [
+        138
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 92,
+      "found": 92,
+      "rows": 24,
+      "rows_complete": 24,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "LION",
+      "table": "t2",
+      "pages": [
+        136,
+        137
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.27,
+      "error": "",
+      "figures": 132,
+      "found": 132,
+      "rows": 34,
+      "rows_complete": 34,
+      "table_complete": true,
+      "wrong": 7,
+      "unmatched_rows_figures": 4
+    },
+    {
+      "issuer": "LION",
+      "table": "t2",
+      "pages": [
+        136,
+        137
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 132,
+      "found": 132,
+      "rows": 34,
+      "rows_complete": 34,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "LLUB",
+      "table": "t1",
+      "pages": [
+        95,
+        96
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.12,
+      "error": "",
+      "figures": 39,
+      "found": 37,
+      "rows": 20,
+      "rows_complete": 19,
+      "table_complete": false,
+      "wrong": 2,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "LLUB",
+      "table": "t1",
+      "pages": [
+        95,
+        96
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 39,
+      "found": 39,
+      "rows": 20,
+      "rows_complete": 20,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "LLUB",
+      "table": "t2",
+      "pages": [
+        94
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.19,
+      "error": "",
+      "figures": 46,
+      "found": 46,
+      "rows": 24,
+      "rows_complete": 24,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "LLUB",
+      "table": "t2",
+      "pages": [
+        94
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.01,
+      "error": "",
+      "figures": 46,
+      "found": 46,
+      "rows": 24,
+      "rows_complete": 24,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "NTB",
+      "table": "t1",
+      "pages": [
+        152
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.49,
+      "error": "",
+      "figures": 122,
+      "found": 122,
+      "rows": 31,
+      "rows_complete": 31,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "NTB",
+      "table": "t1",
+      "pages": [
+        152
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 122,
+      "found": 122,
+      "rows": 31,
+      "rows_complete": 31,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "NTB",
+      "table": "t2",
+      "pages": [
+        151
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.57,
+      "error": "",
+      "figures": 154,
+      "found": 154,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "NTB",
+      "table": "t2",
+      "pages": [
+        151
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 154,
+      "found": 154,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PABC",
+      "table": "t1",
+      "pages": [
+        226,
+        227
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.25,
+      "error": "",
+      "figures": 120,
+      "found": 120,
+      "rows": 41,
+      "rows_complete": 41,
+      "table_complete": true,
+      "wrong": 15,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "PABC",
+      "table": "t1",
+      "pages": [
+        226,
+        227
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 120,
+      "found": 120,
+      "rows": 41,
+      "rows_complete": 41,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PABC",
+      "table": "t2",
+      "pages": [
+        228
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.21,
+      "error": "",
+      "figures": 104,
+      "found": 69,
+      "rows": 36,
+      "rows_complete": 1,
+      "table_complete": false,
+      "wrong": 36,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "PABC",
+      "table": "t2",
+      "pages": [
+        228
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 104,
+      "found": 104,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PLC",
+      "table": "t1",
+      "pages": [
+        320
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.22,
+      "error": "",
+      "figures": 144,
+      "found": 92,
+      "rows": 26,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 4
+    },
+    {
+      "issuer": "PLC",
+      "table": "t1",
+      "pages": [
+        320
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 144,
+      "found": 138,
+      "rows": 26,
+      "rows_complete": 25,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 6
+    },
+    {
+      "issuer": "PLC",
+      "table": "t2",
+      "pages": [
+        322
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.35,
+      "error": "",
+      "figures": 199,
+      "found": 133,
+      "rows": 36,
+      "rows_complete": 1,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "PLC",
+      "table": "t2",
+      "pages": [
+        322
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 199,
+      "found": 199,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "RCL",
+      "table": "t1",
+      "pages": [
+        220,
+        221
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.52,
+      "error": "",
+      "figures": 78,
+      "found": 76,
+      "rows": 21,
+      "rows_complete": 20,
+      "table_complete": false,
+      "wrong": 2,
+      "unmatched_rows_figures": 50
+    },
+    {
+      "issuer": "RCL",
+      "table": "t1",
+      "pages": [
+        220,
+        221
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 78,
+      "found": 78,
+      "rows": 21,
+      "rows_complete": 21,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 49
+    },
+    {
+      "issuer": "RCL",
+      "table": "t2",
+      "pages": [
+        218,
+        219
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.39,
+      "error": "",
+      "figures": 140,
+      "found": 140,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "RCL",
+      "table": "t2",
+      "pages": [
+        218,
+        219
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 140,
+      "found": 140,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t1",
+      "pages": [
+        207
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.38,
+      "error": "",
+      "figures": 104,
+      "found": 100,
+      "rows": 29,
+      "rows_complete": 27,
+      "table_complete": false,
+      "wrong": 4,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t1",
+      "pages": [
+        207
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 104,
+      "found": 104,
+      "rows": 29,
+      "rows_complete": 29,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t2",
+      "pages": [
+        208,
+        209
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.47,
+      "error": "",
+      "figures": 166,
+      "found": 166,
+      "rows": 46,
+      "rows_complete": 46,
+      "table_complete": true,
+      "wrong": 13,
+      "unmatched_rows_figures": 5
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t2",
+      "pages": [
+        208,
+        209
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.05,
+      "error": "",
+      "figures": 166,
+      "found": 166,
+      "rows": 46,
+      "rows_complete": 46,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "UAL",
+      "table": "t1",
+      "pages": [
+        255,
+        256
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.28,
+      "error": "",
+      "figures": 107,
+      "found": 102,
+      "rows": 40,
+      "rows_complete": 37,
+      "table_complete": false,
+      "wrong": 13,
+      "unmatched_rows_figures": 3
+    },
+    {
+      "issuer": "UAL",
+      "table": "t1",
+      "pages": [
+        255,
+        256
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 107,
+      "found": 104,
+      "rows": 40,
+      "rows_complete": 39,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 3
+    },
+    {
+      "issuer": "UAL",
+      "table": "t2",
+      "pages": [
+        257
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.16,
+      "error": "",
+      "figures": 55,
+      "found": 55,
+      "rows": 28,
+      "rows_complete": 28,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "UAL",
+      "table": "t2",
+      "pages": [
+        257
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 55,
+      "found": 55,
+      "rows": 28,
+      "rows_complete": 28,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "VONE",
+      "table": "t1",
+      "pages": [
+        272,
+        273
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.35,
+      "error": "",
+      "figures": 145,
+      "found": 141,
+      "rows": 47,
+      "rows_complete": 46,
+      "table_complete": false,
+      "wrong": 1,
+      "unmatched_rows_figures": 6
+    },
+    {
+      "issuer": "VONE",
+      "table": "t1",
+      "pages": [
+        272,
+        273
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 145,
+      "found": 145,
+      "rows": 47,
+      "rows_complete": 47,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "VONE",
+      "table": "t2",
+      "pages": [
+        270,
+        271
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.28,
+      "error": "",
+      "figures": 122,
+      "found": 122,
+      "rows": 38,
+      "rows_complete": 38,
+      "table_complete": true,
+      "wrong": 3,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "VONE",
+      "table": "t2",
+      "pages": [
+        270,
+        271
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 122,
+      "found": 122,
+      "rows": 38,
+      "rows_complete": 38,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t1",
+      "pages": [
+        145
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.18,
+      "error": "",
+      "figures": 102,
+      "found": 95,
+      "rows": 27,
+      "rows_complete": 25,
+      "table_complete": false,
+      "wrong": 7,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t1",
+      "pages": [
+        145
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 102,
+      "found": 102,
+      "rows": 27,
+      "rows_complete": 27,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t2",
+      "pages": [
+        146
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.22,
+      "error": "",
+      "figures": 138,
+      "found": 138,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "WATA",
+      "table": "t2",
+      "pages": [
+        146
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 138,
+      "found": 138,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    }
+  ]
+}

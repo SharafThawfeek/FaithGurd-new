@@ -138,6 +138,7 @@ def test_detect_scale():
     assert detect_scale("Income statement (Rs. '000)") == 3
     assert detect_scale("(in millions)") == 6
     assert detect_scale("Year ended 31 December") == 0
+    assert detect_scale("Rs. ‘000") == detect_scale("All figures in USD ‘000") == 3  # a left quote, as some reports print it
 
 
 def test_ops():

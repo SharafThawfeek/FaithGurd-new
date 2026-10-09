@@ -1,0 +1,3467 @@
+{
+  "reports": [
+    "DIPD",
+    "KVAL",
+    "PABC",
+    "PLC",
+    "WATA",
+    "DIAL",
+    "HAYL",
+    "NTB",
+    "RCL",
+    "SLTL"
+  ],
+  "seed": 2026,
+  "by_strategy": [
+    {
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "tables": 20,
+      "figures": 2507,
+      "found": 1350,
+      "wrong": 91,
+      "rows": 675,
+      "rows_complete": 317,
+      "tables_complete": 8,
+      "seconds": 9.85,
+      "errors": 0,
+      "found_share": 0.5385,
+      "rows_complete_share": 0.4696
+    },
+    {
+      "tool": "camelot",
+      "strategy": "lattice",
+      "tables": 20,
+      "figures": 2507,
+      "found": 124,
+      "wrong": 154,
+      "rows": 675,
+      "rows_complete": 1,
+      "tables_complete": 0,
+      "seconds": 9.72,
+      "errors": 0,
+      "found_share": 0.0495,
+      "rows_complete_share": 0.0015
+    },
+    {
+      "tool": "camelot",
+      "strategy": "network",
+      "tables": 20,
+      "figures": 2507,
+      "found": 1350,
+      "wrong": 92,
+      "rows": 675,
+      "rows_complete": 317,
+      "tables_complete": 8,
+      "seconds": 4.89,
+      "errors": 0,
+      "found_share": 0.5385,
+      "rows_complete_share": 0.4696
+    },
+    {
+      "tool": "camelot",
+      "strategy": "stream",
+      "tables": 20,
+      "figures": 2507,
+      "found": 2191,
+      "wrong": 32,
+      "rows": 675,
+      "rows_complete": 558,
+      "tables_complete": 11,
+      "seconds": 4.26,
+      "errors": 0,
+      "found_share": 0.874,
+      "rows_complete_share": 0.8267
+    },
+    {
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "tables": 20,
+      "figures": 2507,
+      "found": 2501,
+      "wrong": 0,
+      "rows": 675,
+      "rows_complete": 674,
+      "tables_complete": 19,
+      "seconds": 0.6,
+      "errors": 0,
+      "found_share": 0.9976,
+      "rows_complete_share": 0.9985
+    },
+    {
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "tables": 20,
+      "figures": 2507,
+      "found": 307,
+      "wrong": 128,
+      "rows": 675,
+      "rows_complete": 76,
+      "tables_complete": 2,
+      "seconds": 9.57,
+      "errors": 0,
+      "found_share": 0.1225,
+      "rows_complete_share": 0.1126
+    },
+    {
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "tables": 20,
+      "figures": 2507,
+      "found": 2066,
+      "wrong": 215,
+      "rows": 675,
+      "rows_complete": 532,
+      "tables_complete": 9,
+      "seconds": 10.81,
+      "errors": 0,
+      "found_share": 0.8241,
+      "rows_complete_share": 0.7881
+    },
+    {
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "tables": 20,
+      "figures": 2507,
+      "found": 1504,
+      "wrong": 53,
+      "rows": 675,
+      "rows_complete": 359,
+      "tables_complete": 5,
+      "seconds": 3.74,
+      "errors": 0,
+      "found_share": 0.5999,
+      "rows_complete_share": 0.5319
+    },
+    {
+      "tool": "pymupdf",
+      "strategy": "text",
+      "tables": 20,
+      "figures": 2507,
+      "found": 2256,
+      "wrong": 220,
+      "rows": 675,
+      "rows_complete": 523,
+      "tables_complete": 8,
+      "seconds": 6.32,
+      "errors": 0,
+      "found_share": 0.8999,
+      "rows_complete_share": 0.7748
+    }
+  ],
+  "best_strategy": {
+    "pymupdf": "text",
+    "pdfplumber": "text",
+    "camelot": "stream",
+    "pdf_tables": "project"
+  },
+  "best": {
+    "tool": "pymupdf",
+    "strategy": "text"
+  },
+  "tables": [
+    {
+      "issuer": "DIPD",
+      "table": "t1",
+      "pages": [
+        501
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.23,
+      "error": "",
+      "figures": 73,
+      "found": 64,
+      "rows": 19,
+      "rows_complete": 16,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 4
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t1",
+      "pages": [
+        501
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.14,
+      "error": "",
+      "figures": 73,
+      "found": 67,
+      "rows": 19,
+      "rows_complete": 16,
+      "table_complete": false,
+      "wrong": 16,
+      "unmatched_rows_figures": 4
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t1",
+      "pages": [
+        501
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.75,
+      "error": "",
+      "figures": 73,
+      "found": 3,
+      "rows": 19,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 49
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t1",
+      "pages": [
+        501
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.78,
+      "error": "",
+      "figures": 73,
+      "found": 68,
+      "rows": 19,
+      "rows_complete": 17,
+      "table_complete": false,
+      "wrong": 15,
+      "unmatched_rows_figures": 4
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t1",
+      "pages": [
+        501
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.99,
+      "error": "",
+      "figures": 73,
+      "found": 0,
+      "rows": 19,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t1",
+      "pages": [
+        501
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.28,
+      "error": "",
+      "figures": 73,
+      "found": 73,
+      "rows": 19,
+      "rows_complete": 19,
+      "table_complete": true,
+      "wrong": 10,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t1",
+      "pages": [
+        501
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.26,
+      "error": "",
+      "figures": 73,
+      "found": 39,
+      "rows": 19,
+      "rows_complete": 10,
+      "table_complete": false,
+      "wrong": 15,
+      "unmatched_rows_figures": 8
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t1",
+      "pages": [
+        501
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.4,
+      "error": "",
+      "figures": 73,
+      "found": 39,
+      "rows": 19,
+      "rows_complete": 10,
+      "table_complete": false,
+      "wrong": 15,
+      "unmatched_rows_figures": 8
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t1",
+      "pages": [
+        501
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 73,
+      "found": 73,
+      "rows": 19,
+      "rows_complete": 19,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t2",
+      "pages": [
+        503
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.37,
+      "error": "",
+      "figures": 129,
+      "found": 76,
+      "rows": 37,
+      "rows_complete": 22,
+      "table_complete": false,
+      "wrong": 8,
+      "unmatched_rows_figures": 40
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t2",
+      "pages": [
+        503
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.35,
+      "error": "",
+      "figures": 129,
+      "found": 129,
+      "rows": 37,
+      "rows_complete": 37,
+      "table_complete": true,
+      "wrong": 22,
+      "unmatched_rows_figures": 12
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t2",
+      "pages": [
+        503
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.71,
+      "error": "",
+      "figures": 129,
+      "found": 6,
+      "rows": 37,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 4,
+      "unmatched_rows_figures": 85
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t2",
+      "pages": [
+        503
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.79,
+      "error": "",
+      "figures": 129,
+      "found": 129,
+      "rows": 37,
+      "rows_complete": 37,
+      "table_complete": true,
+      "wrong": 22,
+      "unmatched_rows_figures": 9
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t2",
+      "pages": [
+        503
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.41,
+      "error": "",
+      "figures": 129,
+      "found": 0,
+      "rows": 37,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t2",
+      "pages": [
+        503
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.28,
+      "error": "",
+      "figures": 129,
+      "found": 129,
+      "rows": 37,
+      "rows_complete": 37,
+      "table_complete": true,
+      "wrong": 22,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t2",
+      "pages": [
+        503
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.4,
+      "error": "",
+      "figures": 129,
+      "found": 129,
+      "rows": 37,
+      "rows_complete": 37,
+      "table_complete": true,
+      "wrong": 22,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t2",
+      "pages": [
+        503
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.62,
+      "error": "",
+      "figures": 129,
+      "found": 129,
+      "rows": 37,
+      "rows_complete": 37,
+      "table_complete": true,
+      "wrong": 22,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIPD",
+      "table": "t2",
+      "pages": [
+        503
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 129,
+      "found": 129,
+      "rows": 37,
+      "rows_complete": 37,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t1",
+      "pages": [
+        286
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.09,
+      "error": "",
+      "figures": 80,
+      "found": 76,
+      "rows": 22,
+      "rows_complete": 21,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 4
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t1",
+      "pages": [
+        286
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.14,
+      "error": "",
+      "figures": 80,
+      "found": 77,
+      "rows": 22,
+      "rows_complete": 21,
+      "table_complete": false,
+      "wrong": 3,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t1",
+      "pages": [
+        286
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.38,
+      "error": "",
+      "figures": 80,
+      "found": 0,
+      "rows": 22,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 61
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t1",
+      "pages": [
+        286
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.39,
+      "error": "",
+      "figures": 80,
+      "found": 77,
+      "rows": 22,
+      "rows_complete": 21,
+      "table_complete": false,
+      "wrong": 3,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t1",
+      "pages": [
+        286
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.34,
+      "error": "",
+      "figures": 80,
+      "found": 0,
+      "rows": 22,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t1",
+      "pages": [
+        286
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.13,
+      "error": "",
+      "figures": 80,
+      "found": 80,
+      "rows": 22,
+      "rows_complete": 22,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t1",
+      "pages": [
+        286
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.13,
+      "error": "",
+      "figures": 80,
+      "found": 0,
+      "rows": 22,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t1",
+      "pages": [
+        286
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.36,
+      "error": "",
+      "figures": 80,
+      "found": 0,
+      "rows": 22,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t1",
+      "pages": [
+        286
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 80,
+      "found": 80,
+      "rows": 22,
+      "rows_complete": 22,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t2",
+      "pages": [
+        288,
+        289
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.17,
+      "error": "",
+      "figures": 145,
+      "found": 82,
+      "rows": 42,
+      "rows_complete": 24,
+      "table_complete": false,
+      "wrong": 14,
+      "unmatched_rows_figures": 49
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t2",
+      "pages": [
+        288,
+        289
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.3,
+      "error": "",
+      "figures": 145,
+      "found": 111,
+      "rows": 42,
+      "rows_complete": 33,
+      "table_complete": false,
+      "wrong": 4,
+      "unmatched_rows_figures": 32
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t2",
+      "pages": [
+        288,
+        289
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.46,
+      "error": "",
+      "figures": 145,
+      "found": 0,
+      "rows": 42,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 112
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t2",
+      "pages": [
+        288,
+        289
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.52,
+      "error": "",
+      "figures": 145,
+      "found": 145,
+      "rows": 42,
+      "rows_complete": 42,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t2",
+      "pages": [
+        288,
+        289
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.63,
+      "error": "",
+      "figures": 145,
+      "found": 0,
+      "rows": 42,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t2",
+      "pages": [
+        288,
+        289
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.27,
+      "error": "",
+      "figures": 145,
+      "found": 145,
+      "rows": 42,
+      "rows_complete": 42,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t2",
+      "pages": [
+        288,
+        289
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.28,
+      "error": "",
+      "figures": 145,
+      "found": 18,
+      "rows": 42,
+      "rows_complete": 5,
+      "table_complete": false,
+      "wrong": 16,
+      "unmatched_rows_figures": 48
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t2",
+      "pages": [
+        288,
+        289
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.69,
+      "error": "",
+      "figures": 145,
+      "found": 18,
+      "rows": 42,
+      "rows_complete": 5,
+      "table_complete": false,
+      "wrong": 16,
+      "unmatched_rows_figures": 48
+    },
+    {
+      "issuer": "KVAL",
+      "table": "t2",
+      "pages": [
+        288,
+        289
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.04,
+      "error": "",
+      "figures": 145,
+      "found": 145,
+      "rows": 42,
+      "rows_complete": 42,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PABC",
+      "table": "t1",
+      "pages": [
+        226,
+        227
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.14,
+      "error": "",
+      "figures": 120,
+      "found": 0,
+      "rows": 41,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 3,
+      "unmatched_rows_figures": 37
+    },
+    {
+      "issuer": "PABC",
+      "table": "t1",
+      "pages": [
+        226,
+        227
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.24,
+      "error": "",
+      "figures": 120,
+      "found": 120,
+      "rows": 41,
+      "rows_complete": 41,
+      "table_complete": true,
+      "wrong": 15,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "PABC",
+      "table": "t1",
+      "pages": [
+        226,
+        227
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.39,
+      "error": "",
+      "figures": 120,
+      "found": 0,
+      "rows": 41,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 3,
+      "unmatched_rows_figures": 37
+    },
+    {
+      "issuer": "PABC",
+      "table": "t1",
+      "pages": [
+        226,
+        227
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.45,
+      "error": "",
+      "figures": 120,
+      "found": 120,
+      "rows": 41,
+      "rows_complete": 41,
+      "table_complete": true,
+      "wrong": 15,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "PABC",
+      "table": "t1",
+      "pages": [
+        226,
+        227
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.53,
+      "error": "",
+      "figures": 120,
+      "found": 0,
+      "rows": 41,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PABC",
+      "table": "t1",
+      "pages": [
+        226,
+        227
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.24,
+      "error": "",
+      "figures": 120,
+      "found": 120,
+      "rows": 41,
+      "rows_complete": 41,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PABC",
+      "table": "t1",
+      "pages": [
+        226,
+        227
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.22,
+      "error": "",
+      "figures": 120,
+      "found": 120,
+      "rows": 41,
+      "rows_complete": 41,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PABC",
+      "table": "t1",
+      "pages": [
+        226,
+        227
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.58,
+      "error": "",
+      "figures": 120,
+      "found": 120,
+      "rows": 41,
+      "rows_complete": 41,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PABC",
+      "table": "t1",
+      "pages": [
+        226,
+        227
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 120,
+      "found": 120,
+      "rows": 41,
+      "rows_complete": 41,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PABC",
+      "table": "t2",
+      "pages": [
+        228
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.13,
+      "error": "",
+      "figures": 104,
+      "found": 0,
+      "rows": 36,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 35
+    },
+    {
+      "issuer": "PABC",
+      "table": "t2",
+      "pages": [
+        228
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.23,
+      "error": "",
+      "figures": 104,
+      "found": 69,
+      "rows": 36,
+      "rows_complete": 1,
+      "table_complete": false,
+      "wrong": 36,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "PABC",
+      "table": "t2",
+      "pages": [
+        228
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.34,
+      "error": "",
+      "figures": 104,
+      "found": 0,
+      "rows": 36,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 35
+    },
+    {
+      "issuer": "PABC",
+      "table": "t2",
+      "pages": [
+        228
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.43,
+      "error": "",
+      "figures": 104,
+      "found": 69,
+      "rows": 36,
+      "rows_complete": 1,
+      "table_complete": false,
+      "wrong": 36,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "PABC",
+      "table": "t2",
+      "pages": [
+        228
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.29,
+      "error": "",
+      "figures": 104,
+      "found": 0,
+      "rows": 36,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PABC",
+      "table": "t2",
+      "pages": [
+        228
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.11,
+      "error": "",
+      "figures": 104,
+      "found": 104,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PABC",
+      "table": "t2",
+      "pages": [
+        228
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.17,
+      "error": "",
+      "figures": 104,
+      "found": 104,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PABC",
+      "table": "t2",
+      "pages": [
+        228
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.32,
+      "error": "",
+      "figures": 104,
+      "found": 104,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PABC",
+      "table": "t2",
+      "pages": [
+        228
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 104,
+      "found": 104,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PLC",
+      "table": "t1",
+      "pages": [
+        320
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.2,
+      "error": "",
+      "figures": 144,
+      "found": 84,
+      "rows": 26,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 12
+    },
+    {
+      "issuer": "PLC",
+      "table": "t1",
+      "pages": [
+        320
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.22,
+      "error": "",
+      "figures": 144,
+      "found": 92,
+      "rows": 26,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 4
+    },
+    {
+      "issuer": "PLC",
+      "table": "t1",
+      "pages": [
+        320
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.43,
+      "error": "",
+      "figures": 144,
+      "found": 0,
+      "rows": 26,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 71
+    },
+    {
+      "issuer": "PLC",
+      "table": "t1",
+      "pages": [
+        320
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.44,
+      "error": "",
+      "figures": 144,
+      "found": 0,
+      "rows": 26,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 96
+    },
+    {
+      "issuer": "PLC",
+      "table": "t1",
+      "pages": [
+        320
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.4,
+      "error": "",
+      "figures": 144,
+      "found": 0,
+      "rows": 26,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 100
+    },
+    {
+      "issuer": "PLC",
+      "table": "t1",
+      "pages": [
+        320
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.2,
+      "error": "",
+      "figures": 144,
+      "found": 92,
+      "rows": 26,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 4
+    },
+    {
+      "issuer": "PLC",
+      "table": "t1",
+      "pages": [
+        320
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.23,
+      "error": "",
+      "figures": 144,
+      "found": 92,
+      "rows": 26,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 4
+    },
+    {
+      "issuer": "PLC",
+      "table": "t1",
+      "pages": [
+        320
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.45,
+      "error": "",
+      "figures": 144,
+      "found": 92,
+      "rows": 26,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 4
+    },
+    {
+      "issuer": "PLC",
+      "table": "t1",
+      "pages": [
+        320
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 144,
+      "found": 138,
+      "rows": 26,
+      "rows_complete": 25,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 6
+    },
+    {
+      "issuer": "PLC",
+      "table": "t2",
+      "pages": [
+        322
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.26,
+      "error": "",
+      "figures": 199,
+      "found": 129,
+      "rows": 36,
+      "rows_complete": 1,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 4
+    },
+    {
+      "issuer": "PLC",
+      "table": "t2",
+      "pages": [
+        322
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.34,
+      "error": "",
+      "figures": 199,
+      "found": 133,
+      "rows": 36,
+      "rows_complete": 1,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "PLC",
+      "table": "t2",
+      "pages": [
+        322
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.5,
+      "error": "",
+      "figures": 199,
+      "found": 0,
+      "rows": 36,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 99
+    },
+    {
+      "issuer": "PLC",
+      "table": "t2",
+      "pages": [
+        322
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.57,
+      "error": "",
+      "figures": 199,
+      "found": 0,
+      "rows": 36,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 135
+    },
+    {
+      "issuer": "PLC",
+      "table": "t2",
+      "pages": [
+        322
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.37,
+      "error": "",
+      "figures": 199,
+      "found": 77,
+      "rows": 36,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 56
+    },
+    {
+      "issuer": "PLC",
+      "table": "t2",
+      "pages": [
+        322
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.14,
+      "error": "",
+      "figures": 199,
+      "found": 133,
+      "rows": 36,
+      "rows_complete": 1,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PLC",
+      "table": "t2",
+      "pages": [
+        322
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.2,
+      "error": "",
+      "figures": 199,
+      "found": 133,
+      "rows": 36,
+      "rows_complete": 1,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PLC",
+      "table": "t2",
+      "pages": [
+        322
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.39,
+      "error": "",
+      "figures": 199,
+      "found": 133,
+      "rows": 36,
+      "rows_complete": 1,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "PLC",
+      "table": "t2",
+      "pages": [
+        322
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 199,
+      "found": 199,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t1",
+      "pages": [
+        145
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.13,
+      "error": "",
+      "figures": 102,
+      "found": 0,
+      "rows": 27,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 3,
+      "unmatched_rows_figures": 74
+    },
+    {
+      "issuer": "WATA",
+      "table": "t1",
+      "pages": [
+        145
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.19,
+      "error": "",
+      "figures": 102,
+      "found": 95,
+      "rows": 27,
+      "rows_complete": 25,
+      "table_complete": false,
+      "wrong": 7,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t1",
+      "pages": [
+        145
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.38,
+      "error": "",
+      "figures": 102,
+      "found": 4,
+      "rows": 27,
+      "rows_complete": 1,
+      "table_complete": false,
+      "wrong": 112,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "WATA",
+      "table": "t1",
+      "pages": [
+        145
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.42,
+      "error": "",
+      "figures": 102,
+      "found": 95,
+      "rows": 27,
+      "rows_complete": 25,
+      "table_complete": false,
+      "wrong": 7,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t1",
+      "pages": [
+        145
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.31,
+      "error": "",
+      "figures": 102,
+      "found": 0,
+      "rows": 27,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t1",
+      "pages": [
+        145
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.16,
+      "error": "",
+      "figures": 102,
+      "found": 62,
+      "rows": 27,
+      "rows_complete": 16,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t1",
+      "pages": [
+        145
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.24,
+      "error": "",
+      "figures": 102,
+      "found": 102,
+      "rows": 27,
+      "rows_complete": 27,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t1",
+      "pages": [
+        145
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.46,
+      "error": "",
+      "figures": 102,
+      "found": 102,
+      "rows": 27,
+      "rows_complete": 27,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t1",
+      "pages": [
+        145
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 102,
+      "found": 102,
+      "rows": 27,
+      "rows_complete": 27,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t2",
+      "pages": [
+        146
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.17,
+      "error": "",
+      "figures": 138,
+      "found": 0,
+      "rows": 36,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 103
+    },
+    {
+      "issuer": "WATA",
+      "table": "t2",
+      "pages": [
+        146
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.26,
+      "error": "",
+      "figures": 138,
+      "found": 138,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "WATA",
+      "table": "t2",
+      "pages": [
+        146
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.44,
+      "error": "",
+      "figures": 138,
+      "found": 0,
+      "rows": 36,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 173
+    },
+    {
+      "issuer": "WATA",
+      "table": "t2",
+      "pages": [
+        146
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.48,
+      "error": "",
+      "figures": 138,
+      "found": 138,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "WATA",
+      "table": "t2",
+      "pages": [
+        146
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.3,
+      "error": "",
+      "figures": 138,
+      "found": 0,
+      "rows": 36,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t2",
+      "pages": [
+        146
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.12,
+      "error": "",
+      "figures": 138,
+      "found": 138,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t2",
+      "pages": [
+        146
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.22,
+      "error": "",
+      "figures": 138,
+      "found": 138,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t2",
+      "pages": [
+        146
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.36,
+      "error": "",
+      "figures": 138,
+      "found": 138,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "WATA",
+      "table": "t2",
+      "pages": [
+        146
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 138,
+      "found": 138,
+      "rows": 36,
+      "rows_complete": 36,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t1",
+      "pages": [
+        208
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.12,
+      "error": "",
+      "figures": 100,
+      "found": 0,
+      "rows": 27,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 98
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t1",
+      "pages": [
+        208
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.26,
+      "error": "",
+      "figures": 100,
+      "found": 98,
+      "rows": 27,
+      "rows_complete": 26,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t1",
+      "pages": [
+        208
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.4,
+      "error": "",
+      "figures": 100,
+      "found": 0,
+      "rows": 27,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 98
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t1",
+      "pages": [
+        208
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.57,
+      "error": "",
+      "figures": 100,
+      "found": 98,
+      "rows": 27,
+      "rows_complete": 26,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t1",
+      "pages": [
+        208
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.32,
+      "error": "",
+      "figures": 100,
+      "found": 0,
+      "rows": 27,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 120
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t1",
+      "pages": [
+        208
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.17,
+      "error": "",
+      "figures": 100,
+      "found": 98,
+      "rows": 27,
+      "rows_complete": 26,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t1",
+      "pages": [
+        208
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.14,
+      "error": "",
+      "figures": 100,
+      "found": 0,
+      "rows": 27,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t1",
+      "pages": [
+        208
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.35,
+      "error": "",
+      "figures": 100,
+      "found": 0,
+      "rows": 27,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 120
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t1",
+      "pages": [
+        208
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 100,
+      "found": 100,
+      "rows": 27,
+      "rows_complete": 27,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t2",
+      "pages": [
+        206,
+        207
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.17,
+      "error": "",
+      "figures": 139,
+      "found": 6,
+      "rows": 38,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 6,
+      "unmatched_rows_figures": 95
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t2",
+      "pages": [
+        206,
+        207
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.26,
+      "error": "",
+      "figures": 139,
+      "found": 120,
+      "rows": 38,
+      "rows_complete": 19,
+      "table_complete": false,
+      "wrong": 51,
+      "unmatched_rows_figures": 9
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t2",
+      "pages": [
+        206,
+        207
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.43,
+      "error": "",
+      "figures": 139,
+      "found": 6,
+      "rows": 38,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 6,
+      "unmatched_rows_figures": 95
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t2",
+      "pages": [
+        206,
+        207
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.52,
+      "error": "",
+      "figures": 139,
+      "found": 120,
+      "rows": 38,
+      "rows_complete": 19,
+      "table_complete": false,
+      "wrong": 51,
+      "unmatched_rows_figures": 9
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t2",
+      "pages": [
+        206,
+        207
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.63,
+      "error": "",
+      "figures": 139,
+      "found": 3,
+      "rows": 38,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 105,
+      "unmatched_rows_figures": 68
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t2",
+      "pages": [
+        206,
+        207
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.23,
+      "error": "",
+      "figures": 139,
+      "found": 121,
+      "rows": 38,
+      "rows_complete": 33,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t2",
+      "pages": [
+        206,
+        207
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.33,
+      "error": "",
+      "figures": 139,
+      "found": 139,
+      "rows": 38,
+      "rows_complete": 38,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t2",
+      "pages": [
+        206,
+        207
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.68,
+      "error": "",
+      "figures": 139,
+      "found": 139,
+      "rows": 38,
+      "rows_complete": 38,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "DIAL",
+      "table": "t2",
+      "pages": [
+        206,
+        207
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.03,
+      "error": "",
+      "figures": 139,
+      "found": 139,
+      "rows": 38,
+      "rows_complete": 38,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t1",
+      "pages": [
+        360
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.14,
+      "error": "",
+      "figures": 97,
+      "found": 78,
+      "rows": 28,
+      "rows_complete": 22,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 19
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t1",
+      "pages": [
+        360
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.2,
+      "error": "",
+      "figures": 97,
+      "found": 76,
+      "rows": 28,
+      "rows_complete": 10,
+      "table_complete": false,
+      "wrong": 30,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t1",
+      "pages": [
+        360
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.51,
+      "error": "",
+      "figures": 97,
+      "found": 0,
+      "rows": 28,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 76
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t1",
+      "pages": [
+        360
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.56,
+      "error": "",
+      "figures": 97,
+      "found": 76,
+      "rows": 28,
+      "rows_complete": 10,
+      "table_complete": false,
+      "wrong": 30,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t1",
+      "pages": [
+        360
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.4,
+      "error": "",
+      "figures": 97,
+      "found": 0,
+      "rows": 28,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t1",
+      "pages": [
+        360
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.18,
+      "error": "",
+      "figures": 97,
+      "found": 65,
+      "rows": 28,
+      "rows_complete": 19,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t1",
+      "pages": [
+        360
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.21,
+      "error": "",
+      "figures": 97,
+      "found": 0,
+      "rows": 28,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t1",
+      "pages": [
+        360
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.38,
+      "error": "",
+      "figures": 97,
+      "found": 0,
+      "rows": 28,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t1",
+      "pages": [
+        360
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 97,
+      "found": 97,
+      "rows": 28,
+      "rows_complete": 28,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t2",
+      "pages": [
+        362,
+        363
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.25,
+      "error": "",
+      "figures": 173,
+      "found": 153,
+      "rows": 55,
+      "rows_complete": 50,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 20
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t2",
+      "pages": [
+        362,
+        363
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.37,
+      "error": "",
+      "figures": 173,
+      "found": 173,
+      "rows": 55,
+      "rows_complete": 55,
+      "table_complete": true,
+      "wrong": 17,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t2",
+      "pages": [
+        362,
+        363
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.61,
+      "error": "",
+      "figures": 173,
+      "found": 0,
+      "rows": 55,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 137
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t2",
+      "pages": [
+        362,
+        363
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.74,
+      "error": "",
+      "figures": 173,
+      "found": 173,
+      "rows": 55,
+      "rows_complete": 55,
+      "table_complete": true,
+      "wrong": 17,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t2",
+      "pages": [
+        362,
+        363
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.76,
+      "error": "",
+      "figures": 173,
+      "found": 0,
+      "rows": 55,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t2",
+      "pages": [
+        362,
+        363
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.39,
+      "error": "",
+      "figures": 173,
+      "found": 173,
+      "rows": 55,
+      "rows_complete": 55,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t2",
+      "pages": [
+        362,
+        363
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.44,
+      "error": "",
+      "figures": 173,
+      "found": 0,
+      "rows": 55,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 21,
+      "unmatched_rows_figures": 41
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t2",
+      "pages": [
+        362,
+        363
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.78,
+      "error": "",
+      "figures": 173,
+      "found": 0,
+      "rows": 55,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "HAYL",
+      "table": "t2",
+      "pages": [
+        362,
+        363
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.07,
+      "error": "",
+      "figures": 173,
+      "found": 173,
+      "rows": 55,
+      "rows_complete": 55,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "NTB",
+      "table": "t1",
+      "pages": [
+        152
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.19,
+      "error": "",
+      "figures": 122,
+      "found": 114,
+      "rows": 31,
+      "rows_complete": 29,
+      "table_complete": false,
+      "wrong": 19,
+      "unmatched_rows_figures": 17
+    },
+    {
+      "issuer": "NTB",
+      "table": "t1",
+      "pages": [
+        152
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.48,
+      "error": "",
+      "figures": 122,
+      "found": 122,
+      "rows": 31,
+      "rows_complete": 31,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "NTB",
+      "table": "t1",
+      "pages": [
+        152
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.48,
+      "error": "",
+      "figures": 122,
+      "found": 0,
+      "rows": 31,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 90
+    },
+    {
+      "issuer": "NTB",
+      "table": "t1",
+      "pages": [
+        152
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.53,
+      "error": "",
+      "figures": 122,
+      "found": 122,
+      "rows": 31,
+      "rows_complete": 31,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "NTB",
+      "table": "t1",
+      "pages": [
+        152
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.34,
+      "error": "",
+      "figures": 122,
+      "found": 0,
+      "rows": 31,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "NTB",
+      "table": "t1",
+      "pages": [
+        152
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.2,
+      "error": "",
+      "figures": 122,
+      "found": 86,
+      "rows": 31,
+      "rows_complete": 22,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "NTB",
+      "table": "t1",
+      "pages": [
+        152
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.22,
+      "error": "",
+      "figures": 122,
+      "found": 122,
+      "rows": 31,
+      "rows_complete": 31,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "NTB",
+      "table": "t1",
+      "pages": [
+        152
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.36,
+      "error": "",
+      "figures": 122,
+      "found": 122,
+      "rows": 31,
+      "rows_complete": 31,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "NTB",
+      "table": "t1",
+      "pages": [
+        152
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.05,
+      "error": "",
+      "figures": 122,
+      "found": 122,
+      "rows": 31,
+      "rows_complete": 31,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "NTB",
+      "table": "t2",
+      "pages": [
+        151
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.25,
+      "error": "",
+      "figures": 154,
+      "found": 154,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "NTB",
+      "table": "t2",
+      "pages": [
+        151
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.57,
+      "error": "",
+      "figures": 154,
+      "found": 154,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "NTB",
+      "table": "t2",
+      "pages": [
+        151
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.52,
+      "error": "",
+      "figures": 154,
+      "found": 0,
+      "rows": 39,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 116
+    },
+    {
+      "issuer": "NTB",
+      "table": "t2",
+      "pages": [
+        151
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.57,
+      "error": "",
+      "figures": 154,
+      "found": 154,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 1
+    },
+    {
+      "issuer": "NTB",
+      "table": "t2",
+      "pages": [
+        151
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.34,
+      "error": "",
+      "figures": 154,
+      "found": 44,
+      "rows": 39,
+      "rows_complete": 1,
+      "table_complete": false,
+      "wrong": 29,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "NTB",
+      "table": "t2",
+      "pages": [
+        151
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.2,
+      "error": "",
+      "figures": 154,
+      "found": 154,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "NTB",
+      "table": "t2",
+      "pages": [
+        151
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.17,
+      "error": "",
+      "figures": 154,
+      "found": 154,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "NTB",
+      "table": "t2",
+      "pages": [
+        151
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.36,
+      "error": "",
+      "figures": 154,
+      "found": 154,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "NTB",
+      "table": "t2",
+      "pages": [
+        151
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.06,
+      "error": "",
+      "figures": 154,
+      "found": 154,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "RCL",
+      "table": "t1",
+      "pages": [
+        220,
+        221
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.21,
+      "error": "",
+      "figures": 78,
+      "found": 78,
+      "rows": 21,
+      "rows_complete": 21,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 48
+    },
+    {
+      "issuer": "RCL",
+      "table": "t1",
+      "pages": [
+        220,
+        221
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.52,
+      "error": "",
+      "figures": 78,
+      "found": 76,
+      "rows": 21,
+      "rows_complete": 20,
+      "table_complete": false,
+      "wrong": 2,
+      "unmatched_rows_figures": 50
+    },
+    {
+      "issuer": "RCL",
+      "table": "t1",
+      "pages": [
+        220,
+        221
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.41,
+      "error": "",
+      "figures": 78,
+      "found": 0,
+      "rows": 21,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 3,
+      "unmatched_rows_figures": 83
+    },
+    {
+      "issuer": "RCL",
+      "table": "t1",
+      "pages": [
+        220,
+        221
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.47,
+      "error": "",
+      "figures": 78,
+      "found": 76,
+      "rows": 21,
+      "rows_complete": 20,
+      "table_complete": false,
+      "wrong": 2,
+      "unmatched_rows_figures": 50
+    },
+    {
+      "issuer": "RCL",
+      "table": "t1",
+      "pages": [
+        220,
+        221
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.57,
+      "error": "",
+      "figures": 78,
+      "found": 0,
+      "rows": 21,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "RCL",
+      "table": "t1",
+      "pages": [
+        220,
+        221
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.21,
+      "error": "",
+      "figures": 78,
+      "found": 78,
+      "rows": 21,
+      "rows_complete": 21,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 48
+    },
+    {
+      "issuer": "RCL",
+      "table": "t1",
+      "pages": [
+        220,
+        221
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.25,
+      "error": "",
+      "figures": 78,
+      "found": 56,
+      "rows": 21,
+      "rows_complete": 15,
+      "table_complete": false,
+      "wrong": 10,
+      "unmatched_rows_figures": 42
+    },
+    {
+      "issuer": "RCL",
+      "table": "t1",
+      "pages": [
+        220,
+        221
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.59,
+      "error": "",
+      "figures": 78,
+      "found": 56,
+      "rows": 21,
+      "rows_complete": 15,
+      "table_complete": false,
+      "wrong": 10,
+      "unmatched_rows_figures": 42
+    },
+    {
+      "issuer": "RCL",
+      "table": "t1",
+      "pages": [
+        220,
+        221
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 78,
+      "found": 78,
+      "rows": 21,
+      "rows_complete": 21,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 49
+    },
+    {
+      "issuer": "RCL",
+      "table": "t2",
+      "pages": [
+        218,
+        219
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.2,
+      "error": "",
+      "figures": 140,
+      "found": 140,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "RCL",
+      "table": "t2",
+      "pages": [
+        218,
+        219
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.4,
+      "error": "",
+      "figures": 140,
+      "found": 140,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "RCL",
+      "table": "t2",
+      "pages": [
+        218,
+        219
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.4,
+      "error": "",
+      "figures": 140,
+      "found": 18,
+      "rows": 39,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 85
+    },
+    {
+      "issuer": "RCL",
+      "table": "t2",
+      "pages": [
+        218,
+        219
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.44,
+      "error": "",
+      "figures": 140,
+      "found": 140,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "RCL",
+      "table": "t2",
+      "pages": [
+        218,
+        219
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.57,
+      "error": "",
+      "figures": 140,
+      "found": 0,
+      "rows": 39,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "RCL",
+      "table": "t2",
+      "pages": [
+        218,
+        219
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.21,
+      "error": "",
+      "figures": 140,
+      "found": 118,
+      "rows": 39,
+      "rows_complete": 33,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "RCL",
+      "table": "t2",
+      "pages": [
+        218,
+        219
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.25,
+      "error": "",
+      "figures": 140,
+      "found": 4,
+      "rows": 39,
+      "rows_complete": 1,
+      "table_complete": false,
+      "wrong": 8,
+      "unmatched_rows_figures": 26
+    },
+    {
+      "issuer": "RCL",
+      "table": "t2",
+      "pages": [
+        218,
+        219
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.59,
+      "error": "",
+      "figures": 140,
+      "found": 4,
+      "rows": 39,
+      "rows_complete": 1,
+      "table_complete": false,
+      "wrong": 8,
+      "unmatched_rows_figures": 26
+    },
+    {
+      "issuer": "RCL",
+      "table": "t2",
+      "pages": [
+        218,
+        219
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 140,
+      "found": 140,
+      "rows": 39,
+      "rows_complete": 39,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t1",
+      "pages": [
+        207
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.14,
+      "error": "",
+      "figures": 104,
+      "found": 104,
+      "rows": 29,
+      "rows_complete": 29,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t1",
+      "pages": [
+        207
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.38,
+      "error": "",
+      "figures": 104,
+      "found": 100,
+      "rows": 29,
+      "rows_complete": 27,
+      "table_complete": false,
+      "wrong": 4,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t1",
+      "pages": [
+        207
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.49,
+      "error": "",
+      "figures": 104,
+      "found": 104,
+      "rows": 29,
+      "rows_complete": 29,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t1",
+      "pages": [
+        207
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.51,
+      "error": "",
+      "figures": 104,
+      "found": 100,
+      "rows": 29,
+      "rows_complete": 27,
+      "table_complete": false,
+      "wrong": 4,
+      "unmatched_rows_figures": 2
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t1",
+      "pages": [
+        207
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.42,
+      "error": "",
+      "figures": 104,
+      "found": 0,
+      "rows": 29,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 10,
+      "unmatched_rows_figures": 112
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t1",
+      "pages": [
+        207
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.2,
+      "error": "",
+      "figures": 104,
+      "found": 56,
+      "rows": 29,
+      "rows_complete": 14,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t1",
+      "pages": [
+        207
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.17,
+      "error": "",
+      "figures": 104,
+      "found": 0,
+      "rows": 29,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t1",
+      "pages": [
+        207
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.39,
+      "error": "",
+      "figures": 104,
+      "found": 0,
+      "rows": 29,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 10,
+      "unmatched_rows_figures": 112
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t1",
+      "pages": [
+        207
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.02,
+      "error": "",
+      "figures": 104,
+      "found": 104,
+      "rows": 29,
+      "rows_complete": 29,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t2",
+      "pages": [
+        208,
+        209
+      ],
+      "tool": "pymupdf",
+      "strategy": "lines",
+      "seconds": 0.18,
+      "error": "",
+      "figures": 166,
+      "found": 166,
+      "rows": 46,
+      "rows_complete": 46,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t2",
+      "pages": [
+        208,
+        209
+      ],
+      "tool": "pymupdf",
+      "strategy": "text",
+      "seconds": 0.47,
+      "error": "",
+      "figures": 166,
+      "found": 166,
+      "rows": 46,
+      "rows_complete": 46,
+      "table_complete": true,
+      "wrong": 13,
+      "unmatched_rows_figures": 5
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t2",
+      "pages": [
+        208,
+        209
+      ],
+      "tool": "pdfplumber",
+      "strategy": "lines",
+      "seconds": 0.54,
+      "error": "",
+      "figures": 166,
+      "found": 166,
+      "rows": 46,
+      "rows_complete": 46,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t2",
+      "pages": [
+        208,
+        209
+      ],
+      "tool": "pdfplumber",
+      "strategy": "text",
+      "seconds": 0.63,
+      "error": "",
+      "figures": 166,
+      "found": 166,
+      "rows": 46,
+      "rows_complete": 46,
+      "table_complete": true,
+      "wrong": 13,
+      "unmatched_rows_figures": 5
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t2",
+      "pages": [
+        208,
+        209
+      ],
+      "tool": "camelot",
+      "strategy": "lattice",
+      "seconds": 0.8,
+      "error": "",
+      "figures": 166,
+      "found": 0,
+      "rows": 46,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 10,
+      "unmatched_rows_figures": 194
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t2",
+      "pages": [
+        208,
+        209
+      ],
+      "tool": "camelot",
+      "strategy": "stream",
+      "seconds": 0.34,
+      "error": "",
+      "figures": 166,
+      "found": 166,
+      "rows": 46,
+      "rows_complete": 46,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t2",
+      "pages": [
+        208,
+        209
+      ],
+      "tool": "camelot",
+      "strategy": "network",
+      "seconds": 0.36,
+      "error": "",
+      "figures": 166,
+      "found": 0,
+      "rows": 46,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 0,
+      "unmatched_rows_figures": 73
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t2",
+      "pages": [
+        208,
+        209
+      ],
+      "tool": "camelot",
+      "strategy": "hybrid",
+      "seconds": 0.74,
+      "error": "",
+      "figures": 166,
+      "found": 0,
+      "rows": 46,
+      "rows_complete": 0,
+      "table_complete": false,
+      "wrong": 10,
+      "unmatched_rows_figures": 194
+    },
+    {
+      "issuer": "SLTL",
+      "table": "t2",
+      "pages": [
+        208,
+        209
+      ],
+      "tool": "pdf_tables",
+      "strategy": "project",
+      "seconds": 0.04,
+      "error": "",
+      "figures": 166,
+      "found": 166,
+      "rows": 46,
+      "rows_complete": 46,
+      "table_complete": true,
+      "wrong": 0,
+      "unmatched_rows_figures": 0
+    }
+  ]
+}

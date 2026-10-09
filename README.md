@@ -111,6 +111,8 @@ export FG_SEC_USER_AGENT="FaithGuard research Your Name you@example.com"
 | `faithguard splits build` | Rebuild the split manifest from `manifests/issuers.csv` |
 | `faithguard labelling tasks --items F` | Blinded Label Studio tasks; the key mapping goes to the gold store |
 | `faithguard labelling import --export F` | Convert a Label Studio export into gold labels |
+| `faithguard extraction compare\|all\|evidence` | The automatic-extraction run: PDF table tools against the hand-corrected tables, and the real-world condition's evidence |
+| `faithguard hashes FILES --out F` | Pin files by SHA-256 (answers, evidence, the locked test set) |
 
 ## Kaggle and Colab
 
@@ -168,7 +170,7 @@ Controlled track on development data, made from the project's own templates (pip
 | Corrected tables and questions with gold answers | Format, checker and builder done ([benchmark guide](docs/benchmark-guide.md), [example](benchmark-example/)); all 28 benchmark reports per country downloaded, with checksums in [manifests/lk-reports.csv](manifests/lk-reports.csv) and [manifests/us-reports.csv](manifests/us-reports.csv); test and calibration tables drafted for all 48 reports (income statement and balance sheet: 48 Sri Lankan and 48 US tables, every total adds up; D-060, D-062); all 400 main questions drafted, 250 Sri Lankan (D-064) and 150 US (D-067), every gold answer recomputed from its cells by `faithguard benchmark check`; each awaits a second reader |
 | Pilot: 60 questions, 120 answers, labelled | 60 pilot questions written and built: 33 Sri Lankan, 27 US (D-046, D-051), each awaiting a second reader; 120 answers generated on Kaggle (D-056); all 120 labelled by Claude at the user's request (D-066): 19.2% incorrect, so no harder question types are added, and the US count stays at 150 groups. Results in [runs/pilot/report.md](runs/pilot/report.md). The labels await a person's review in Label Studio: importing `data/benchmark-build/labels/tasks-with-labels.json` (not in git) shows them as pre-annotations to accept or correct; time the review to measure minutes per item |
 | Annotation guide v2 | Drafted from the pilot's hard cases (D-068): [docs/annotation-guide.md](docs/annotation-guide.md); frozen once a person has reviewed the pilot labels. Labelling time goes in [logs/labelling-hours.csv](logs/labelling-hours.csv) |
-| Automatic-extraction run on 20 tables | After the reports are collected |
+| Automatic-extraction run on 20 tables | Done (D-070): PyMuPDF, pdfplumber and camelot on 20 Sri Lankan tables, [runs/extraction/report.md](runs/extraction/report.md); PyMuPDF (text) chosen, 94.2% of figures right on all 48 Sri Lankan main tables ([runs/extraction/all/report.md](runs/extraction/all/report.md)). Real-world evidence for the 400 main questions built in `data/benchmark-build/main-auto/` (not in git) |
 | Future-period set held back | The next annual report of each test issuer, listed with expected dates in [manifests/future-period.csv](manifests/future-period.csv) (D-069); none downloaded |
 
 ### Phase 4: components (built; GPU runs waiting)
