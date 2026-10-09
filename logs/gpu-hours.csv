@@ -3,3 +3,4 @@ date,member,account,platform,gpu,phase,task,session_hours,outcome,notes
 2026-10-09,Sharaf,sharafthawfeek,kaggle,T4 x2,1,detector pilot: v1-large and v2-mmbert at 1024 and 2048,0.20,PASS,hours from the notebook log
 2026-10-09,Sharaf,sharafthawfeek,kaggle,T4 x2,3,pilot answer generation (60 questions),0.02,failed: faithguard.generation not importable inside the notebook,setup cell fixed; hours from the notebook log
 2026-10-09,Sharaf,sharafthawfeek,kaggle,T4 x2,1,generation pilot: Qwen3.5-9B and Gemma-4-12B on llama.cpp b11490,0.16,PASS,prebuilt llama.cpp; hours from the notebook log
+2026-10-09,Sharaf,sharafthawfeek,kaggle,T4 x2,3,pilot answer generation (60 questions; second run after the units fix),0.21,PASS: 120 answers; no thinking leaks or empty answers,hours from the notebook log

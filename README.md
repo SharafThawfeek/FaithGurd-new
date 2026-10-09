@@ -139,7 +139,7 @@ Every notebook starts with `setup/setup_cell.py`, which stops at once if the ses
 | Repository, environment, logs, decision log, risk register, authorship | Done | Review the logs at each weekly check |
 | Adjudicator | Draft: [docs/drafts/adjudicator-request.md](docs/drafts/adjudicator-request.md) | Send to an accounting lecturer or senior student |
 | GPU quota per account | Template: [logs/gpu-quota.csv](logs/gpu-quota.csv) | Record what Kaggle and Colab show |
-| Repair, detector and generation GPU pilots | Notebooks ready in [pilots/notebooks/](pilots/notebooks/), smoke-tested on a laptop; the first Kaggle run (2026-10-09) got no GPU or internet because the account is not phone-verified (risk R-21) | Verify the phone number on Kaggle, then `python pilots/kaggle_run.py push`; log verdicts and timings |
+| Repair, detector and generation GPU pilots | Run on Kaggle T4s (2026-10-09), results in [pilots/results/](pilots/results/): detector PASS (D-054), generation PASS (D-055), repair QLoRA PASS; the fp16 repair runs failed on Kaggle's torchao and are being re-run with the fix (D-053) | Log the fp16 repair verdict and settle the repair training mode (D-003) |
 | Closest prior work per paper | Tables in [docs/related-work/](docs/related-work/) | Open each work and fill in its row (LettuceDetect v2 taxonomy head first) |
 
 ### Phase 2: shared foundation
@@ -166,7 +166,7 @@ Controlled track on development data, made from the project's own templates (pip
 | Exit item | State |
 | --- | --- |
 | Corrected tables and questions with gold answers | Format, checker and builder done ([benchmark guide](docs/benchmark-guide.md), [example](benchmark-example/)); all 33 Sri Lankan reports located on the CSE ([manifests/lk-reports.csv](manifests/lk-reports.csv)) and all 32 US 10-Ks on EDGAR ([manifests/us-reports.csv](manifests/us-reports.csv), D-041); pilot reports downloaded; correct tables next |
-| Pilot: 60 questions, 120 answers, labelled | 60 pilot questions written and built: 33 Sri Lankan, 27 US (D-046, D-051), each awaiting a second reader; answers need the generation notebook on Kaggle ([notebooks/generate_answers.ipynb](notebooks/generate_answers.ipynb)); Label Studio flow ready |
+| Pilot: 60 questions, 120 answers, labelled | 60 pilot questions written and built: 33 Sri Lankan, 27 US (D-046, D-051), each awaiting a second reader; 120 answers generated on Kaggle (D-056), automatic first look in [runs/pilot/report.md](runs/pilot/report.md); 120 blinded Label Studio tasks made (`labelling/tasks.json`, not in git) and Label Studio installed in `.venv-labelstudio` | Label the 120 answers (annotation guide v1); then record minutes per item and the error rate |
 | Annotation guide v2 | After the pilot |
 | Automatic-extraction run on 20 tables | After the reports are collected |
 

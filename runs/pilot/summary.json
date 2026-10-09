@@ -1,0 +1,98 @@
+{
+  "by_country_and_generator": {
+    "LK gemma": {
+      "answers": 33,
+      "empty": 0,
+      "thinking_leaks": 0,
+      "supported_useful": 18,
+      "checker_flagged": 9,
+      "passed_and_auto_right": 20,
+      "unsupported": 9,
+      "flagged_and_auto_wrong": 9,
+      "narrative": 4,
+      "supported_unhelpful": 2,
+      "mean_words": 24.8
+    },
+    "LK qwen": {
+      "answers": 33,
+      "empty": 0,
+      "thinking_leaks": 0,
+      "unsupported": 5,
+      "checker_flagged": 5,
+      "missed_auto_wrong": 2,
+      "supported_useful": 22,
+      "passed_and_auto_right": 22,
+      "supported_unhelpful": 2,
+      "flagged_but_auto_right": 2,
+      "flagged_and_auto_wrong": 3,
+      "narrative": 4,
+      "mean_words": 44.9
+    },
+    "US gemma": {
+      "answers": 27,
+      "empty": 0,
+      "thinking_leaks": 0,
+      "supported_useful": 13,
+      "checker_flagged": 12,
+      "passed_and_auto_right": 10,
+      "unsupported": 10,
+      "flagged_and_auto_wrong": 9,
+      "flagged_but_auto_right": 3,
+      "narrative": 4,
+      "missed_auto_wrong": 1,
+      "mean_words": 25.6
+    },
+    "US qwen": {
+      "answers": 27,
+      "empty": 0,
+      "thinking_leaks": 0,
+      "supported_useful": 13,
+      "checker_flagged": 10,
+      "passed_and_auto_right": 11,
+      "flagged_but_auto_right": 2,
+      "unsupported": 10,
+      "flagged_and_auto_wrong": 8,
+      "narrative": 4,
+      "missed_auto_wrong": 2,
+      "mean_words": 47.9
+    }
+  },
+  "auto_score_by_question_type": {
+    "comparison": {
+      "unsupported": 3,
+      "supported_useful": 1
+    },
+    "difference": {
+      "supported_useful": 12,
+      "unsupported": 2
+    },
+    "growth": {
+      "supported_unhelpful": 1,
+      "supported_useful": 12,
+      "unsupported": 13
+    },
+    "lookup": {
+      "unsupported": 8,
+      "supported_useful": 30
+    },
+    "ratio": {
+      "supported_useful": 2,
+      "unsupported": 2
+    },
+    "share": {
+      "supported_useful": 9,
+      "supported_unhelpful": 3,
+      "unsupported": 6
+    }
+  },
+  "checker_flags_by_slot": {
+    "metric": 20,
+    "value": 13,
+    "period": 11,
+    "sign": 9,
+    "missing_operand": 8,
+    "scale_currency": 5,
+    "entity_scope": 3,
+    "basis": 1
+  }
+}
