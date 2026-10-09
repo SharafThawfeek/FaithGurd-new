@@ -29,6 +29,7 @@ from html.parser import HTMLParser
 
 NUMBER = re.compile(r"^\(?\$?\s?-?[\d,]*\d(\.\d+)?\)?%?$|^[-–—]+$")
 YEAR = re.compile(r"^(19|20)\d{2}$")
+_INVISIBLE = re.compile(r"[​-‏⁠﻿]")
 UNIT_LINE = re.compile(r"(?i)\b(in (thousands|millions|billions)|amounts in|dollars in|except (per[- ]share|share))")
 
 
@@ -100,6 +101,7 @@ class _Reader(HTMLParser):
     def handle_data(self, data):
         if self.hidden:
             return
+        data = _INVISIBLE.sub("", data)  # zero-width spaces fill otherwise empty cells in some filings
         if self.cell is not None:
             self.cell.append(data)
         elif self.depth == 0:
@@ -146,16 +148,22 @@ def to_grid(table: HtmlTable) -> list[list[str]]:
         return []
     first_body = numeric_rows[0]
     edges = sorted({e for r in rows[first_body:] for s, e, t in r if s > 0 and _is_number(t)})
-    # nearby edges belong to one column when no row has numbers at both
-    columns: list[int] = []
+    # Nearby edges belong to one column when no row has numbers at both. A column spans at most
+    # two grid positions from its first edge: merging edge by edge would let 5, 6, 8, 9, 11, 12
+    # (amounts ending at 5, 8, 11; per-share figures at 6, 9, 12) chain into a single column.
+    row_edges = [{x for s, x, t in r if s > 0 and _is_number(t)} for r in rows]
+    groups: list[list[int]] = []
     for e in edges:
-        if columns and all(not ({columns[-1], e} <= {x for s, x, t in r if s > 0 and _is_number(t)}) for r in rows):
-            if e - columns[-1] <= 2:
-                columns[-1] = e
-                continue
-        columns.append(e)
+        if groups and e - groups[-1][0] <= 2 and not any(e in re_ and re_ & set(groups[-1]) for re_ in row_edges):
+            groups[-1].append(e)
+            continue
+        groups.append([e])
+    columns = [g[-1] for g in groups]
 
     def column_of(end: int) -> int | None:
+        for k, g in enumerate(groups):
+            if g[0] - 1 <= end <= g[-1] + 1:
+                return k
         best = min(range(len(columns)), key=lambda k: abs(columns[k] - end))
         return best if abs(columns[best] - end) <= 2 else None
 
@@ -169,6 +177,8 @@ def to_grid(table: HtmlTable) -> list[list[str]]:
                     unit = text
                     continue
                 covered = [k for k, c in enumerate(columns) if start < c <= end]
+                if not covered and re.search(r"(19|20)\d{2}", text):  # a year set just left of its column
+                    covered = [k for k, c in enumerate(columns) if end <= c <= end + 3][:1]
                 if start == 0 and not covered:
                     line[0] = text
                 for k in covered:

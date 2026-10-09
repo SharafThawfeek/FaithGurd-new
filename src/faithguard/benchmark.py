@@ -114,7 +114,8 @@ class Finding:
     message: str
 
 
-_SUBTOTAL = re.compile(r"(?i)^(total|net|profit|gross|operating)(?![a-z])")
+# rows that may be a difference of the two rows above: "Net interest income", "Loans, net of allowance"
+_SUBTOTAL = re.compile(r"(?i)^(total|net|profit|gross|operating)(?![a-z])|,\s*net\b|\bnet of\b")
 
 
 def _amount(text: str) -> Decimal:
@@ -145,17 +146,20 @@ def total_rows(grid: list[list[str]]) -> tuple[list[int], list[int]]:
     active: list[list[Decimal]] = []
     sums: list[int] = []
     failures: list[int] = []
+    in_section = 0  # rows with amounts since the last section heading ("Earnings per share:")
     for i in range(n, len(rows)):
         label = rows[i][0]
         if not columns or not any(rows[i][c] for c in columns):
+            in_section = 0 if label else in_section
             continue
+        in_section += 1
         values = [_amount(rows[i][c]) for c in columns]
         if not any(values):  # a row of nils proves nothing, and would balance any equal pair above it
             active.append(values)
             continue
         repeat = not label or label.lower().startswith("total")
         tries = [(k, (1,) * k) for k in range(1 if repeat else 2, min(len(active), 30) + 1)]
-        if (not label or _SUBTOTAL.match(label)) and len(active) >= 2:
+        if (not label or _SUBTOTAL.search(label)) and len(active) >= 2:
             tries += [(2, (1, -1)), (2, (-1, 1))]
 
         def adds_up(k: int, signs: tuple[int, ...]) -> bool:
@@ -169,8 +173,8 @@ def total_rows(grid: list[list[str]]) -> tuple[list[int], list[int]]:
         if found:
             sums.append(i)
             del active[-found:]
-        elif not label or label.lower().startswith("total"):
-            failures.append(i)
+        elif (not label or label.lower().startswith("total")) and in_section > 2:
+            failures.append(i)  # a total with items above it in its section; a lone "Total basic earnings" proves nothing
         active.append(values)
     return sums, failures
 

@@ -165,7 +165,7 @@ Controlled track on development data, made from the project's own templates (pip
 
 | Exit item | State |
 | --- | --- |
-| Corrected tables and questions with gold answers | Format, checker and builder done ([benchmark guide](docs/benchmark-guide.md), [example](benchmark-example/)); all 28 benchmark reports per country downloaded, with checksums in [manifests/lk-reports.csv](manifests/lk-reports.csv) and [manifests/us-reports.csv](manifests/us-reports.csv); Sri Lankan test and calibration tables drafted for all 24 reports (income statement and balance sheet, 48 tables, every total adds up; D-060); US tables next, then questions |
+| Corrected tables and questions with gold answers | Format, checker and builder done ([benchmark guide](docs/benchmark-guide.md), [example](benchmark-example/)); all 28 benchmark reports per country downloaded, with checksums in [manifests/lk-reports.csv](manifests/lk-reports.csv) and [manifests/us-reports.csv](manifests/us-reports.csv); test and calibration tables drafted for all 48 reports (income statement and balance sheet: 48 Sri Lankan and 48 US tables, every total adds up; D-060, D-062); questions next |
 | Pilot: 60 questions, 120 answers, labelled | 60 pilot questions written and built: 33 Sri Lankan, 27 US (D-046, D-051), each awaiting a second reader; 120 answers generated on Kaggle (D-056), automatic first look in [runs/pilot/report.md](runs/pilot/report.md); 120 blinded Label Studio tasks made (`labelling/tasks.json`, not in git) and Label Studio installed in `.venv-labelstudio` | Label the 120 answers (annotation guide v1); then record minutes per item and the error rate |
 | Annotation guide v2 | After the pilot |
 | Automatic-extraction run on 20 tables | After the reports are collected |

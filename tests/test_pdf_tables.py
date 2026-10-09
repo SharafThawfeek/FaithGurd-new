@@ -219,3 +219,19 @@ def test_totals_allow_rounding_and_a_total_that_repeats_one_row():
     assert failures == [] and sums == [3, 6, 7, 8]
     grid[3][1] = "5,589,706"  # off by 100 is a misread figure, not rounding
     assert 3 in benchmark.total_rows(grid)[1]
+
+
+def test_net_of_rows_may_be_differences_and_lone_totals_are_not_flagged():
+    grid = [
+        ["", "2025", "2024"],
+        ["ASSETS", "", ""],
+        ["Cash", "683", "651"],
+        ["Loans and leases", "60,917", "59,410"],
+        ["Allowance for loan losses", "678", "696"],
+        ["Loans held for investment, net of allowance", "60,239", "58,714"],
+        ["Total assets", "60,922", "59,365"],
+        ["Earnings per share:", "", ""],
+        ["Total basic earnings", "10.08", "10.57"],  # printed without its parts
+    ]
+    sums, failures = benchmark.total_rows(grid)
+    assert failures == [] and 5 in sums and 6 in sums

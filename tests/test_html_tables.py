@@ -57,3 +57,40 @@ def test_listing_skips_tables_without_numbers():
     found = html_tables.list_tables(FILING, "statements of operations")
     assert [(index, rows, columns) for index, _, rows, columns in found] == [(0, 8, 2)]
     assert html_tables.list_tables(FILING, "balance sheet") == []
+
+
+# Amounts end at grid positions 5, 8, 11 and per-share figures at 6, 9, 12: three columns, not one.
+CHAINED = """<table>
+<tr><td colspan="3"></td><td colspan="3">2025</td><td colspan="3">2024</td><td colspan="3">2023</td></tr>
+<tr><td colspan="3">Revenue</td><td colspan="2">7,478</td><td></td><td colspan="2">7,948</td><td></td><td colspan="2">8,489</td><td></td></tr>
+<tr><td colspan="3">Costs</td><td colspan="2">(1,000</td><td>)</td><td colspan="2">(900</td><td>)</td><td colspan="2">(800</td><td>)</td></tr>
+<tr><td colspan="3">Diluted EPS</td><td colspan="3">3.03</td><td colspan="3">2.80</td><td colspan="3">3.13</td></tr>
+</table>"""
+
+# Years printed two positions left of their figures, and zero-width spaces in cells and labels.
+OFFSET = """<table>
+<tr><td colspan="3">(In millions)</td><td colspan="9">December 31,</td></tr>
+<tr><td colspan="3">2025</td><td colspan="3">​</td><td colspan="3">2024</td><td colspan="3"></td></tr>
+<tr><td colspan="3">Cash ​</td><td></td><td>683</td><td colspan="5"></td><td>651</td><td></td></tr>
+<tr><td colspan="3">Total assets</td><td></td><td>60,922</td><td colspan="5"></td><td>59,365</td><td></td></tr>
+</table>"""
+
+
+def test_nearby_column_edges_do_not_chain_into_one_column():
+    grid = html_tables.to_grid(html_tables.read_tables(CHAINED)[0])
+    assert grid == [
+        ["", "2025", "2024", "2023"],
+        ["Revenue", "7,478", "7,948", "8,489"],
+        ["Costs", "(1,000)", "(900)", "(800)"],
+        ["Diluted EPS", "3.03", "2.80", "3.13"],
+    ]
+
+
+def test_years_left_of_their_column_and_zero_width_spaces():
+    grid = html_tables.to_grid(html_tables.read_tables(OFFSET)[0])
+    assert grid == [
+        ["(In millions)", "December 31,", "December 31,"],
+        ["", "2025", "2024"],
+        ["Cash", "683", "651"],
+        ["Total assets", "60,922", "59,365"],
+    ]
