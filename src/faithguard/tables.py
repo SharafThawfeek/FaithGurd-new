@@ -67,7 +67,7 @@ def entity_of(text: str) -> str | None:
 def parse_table_cell(text: str) -> NumberMention | None:
     """A cell's number, if it holds exactly one (FinQA's '-0.3 ( 0.3 )' counts as one)."""
     t = text.strip().replace("$ ", "$").replace("( ", "(").replace(" )", ")")
-    if t.lower() in ("", "-", "—", "–", "n/a", "nil", "none") or _UNIT_MARKER.match(t):
+    if t.lower() in ("", "-", "—", "–", "n/a", "nil", "none") or _UNIT_MARKER.match(t) or _DATE.match(t):
         return None
     fin = _FINQA_NEGATIVE.match(text)
     if fin:
@@ -75,9 +75,16 @@ def parse_table_cell(text: str) -> NumberMention | None:
     return parse_number(t)
 
 
+_DATE = re.compile(r"^\d{1,2}[./-]\d{1,2}[./-](?:19|20)?\d{2}$")  # "31.03.2026" heads a column; it is not a value
+_UNIT_WORDS = {"rs", "lkr", "usd", "us", "mn", "bn", "mln", "million", "billion", "thousand", "thousands", "bps", "pp"}
+
+
 def _numeric(text: str) -> bool:
+    """A cell holding a figure, not a header such as "As at 31 December" that happens to contain a number."""
     m = parse_table_cell(text)
-    return m is not None and m.kind != "year"
+    if m is None or m.kind == "year":
+        return False
+    return all(w.lower() in _UNIT_WORDS for w in re.findall(r"[A-Za-z]{2,}", text))
 
 
 def is_header_row(row: list[str]) -> bool:

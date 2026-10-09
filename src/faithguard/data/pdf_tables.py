@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from statistics import median
 
 NUMBER = re.compile(r"^\(?-?[\d,]+(\.\d+)?\)?%?\*?$|^[-–—]$")  # "10.30*" carries a footnote mark
-YEAR = re.compile(r"^(19|20)\d{2}(/\d{2})?$")
+YEAR = re.compile(r"^(\d{1,2}[./-]\d{1,2}[./-])?(19|20)\d{2}(/\d{2})?\*?$")  # "2025", "2025/26", "2026*", "31.03.2026"
 NOTE_REF = re.compile(r"^\d{1,2}(\.\w{1,2})*$")  # "9", "11.2", "9.B"
 UNIT_000 = re.compile(r"^'?000$")  # the "000" of "Rs 000" is a unit, not a value
 ENTITIES = {"group", "company", "bank", "consolidated"}
@@ -122,15 +122,20 @@ def extract_page(page, label_gap: float = 9.0, min_column_hits: int = 3) -> list
     def nearest(x: float) -> int:
         return min(columns, key=lambda i: abs(centres[i] - x))
 
-    # 2. header lines: the line with the most years, the lines just above it, and the lines down to the first amount
-    top_value_y = min(w.yc for i in value_cols for w in members[i])
-    above = _lines([w for w in words if w.yc < top_value_y - 2 and w.x1 > label_right])
+    # 2. header lines: the line with the most years, the lines just above it, and the lines down to the first amount.
+    # The table starts at the first line with amounts in two or more columns: a page number or navigation bar
+    # above it can line up with one column, never with two.
+    value_words = [w for i in value_cols for w in members[i]]
+    rows_of_values = [line for line in _lines(value_words, gap=3.0) if len({column_of(w) for w in line}) >= 2]
+    top_value_y = min(_y(line) for line in rows_of_values) if rows_of_values else min(w.yc for w in value_words)
+    right_edge = max(anchors[i] for i in value_cols) + 10  # words beyond the last column: side navigation, margins
+    above = _lines([w for w in words if w.yc < top_value_y - 2 and label_right < w.x1 and w.x0 < right_edge])
     year_lines = [line for line in above if any(YEAR.match(w.text) for w in line)]
     if year_lines:
         year_line = max(year_lines, key=lambda line: (sum(bool(YEAR.match(w.text)) for w in line), _y(line)))
         header = [line for line in above if _y(line) >= _y(year_line)]
         for line in reversed([line for line in above if _y(line) < _y(year_line)]):
-            if _y(header[0]) - _y(line) > 16:
+            if _y(header[0]) - _y(line) > 22:
                 break
             header.insert(0, line)
     else:
@@ -140,9 +145,10 @@ def extract_page(page, label_gap: float = 9.0, min_column_hits: int = 3) -> list
         y = _y(line)
         cells = {i: "" for i in columns}
         entities = [w for w in line if w.text.lower().strip(":") in ENTITIES]
-        if entities:  # spanning entity headers: each column takes the nearest one
+        if entities and len(entities) > 0.4 * len(line):
+            # spanning headers ("Group", "Company", "Change"): each column takes the nearest word on the line
             for i in columns:
-                cells[i] = min(entities, key=lambda w: abs(w.xc - centres[i])).text
+                cells[i] = min(line, key=lambda w: abs(w.xc - centres[i])).text
         else:
             for w in line:
                 i = nearest(w.xc)

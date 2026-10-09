@@ -171,3 +171,25 @@ def test_statement_continued_over_two_pdf_pages(tmp_path):
         ["Total equity and liabilities", "4,600", "4,000"],
     ]
     assert benchmark.total_rows(grid) == ([4, 7], [])
+
+
+def test_headers_survive_page_numbers_footnote_years_and_a_wide_gap():
+    words = [word(530, 40, "151")]  # a page number above the last column
+    words += [word(348, 70, "Group", x0=326), word(488, 70, "Company", x0=466)]  # 18 points above the years
+    words += label(88, "For the year ended 31 March") + [word(x1, 88, y) for x1, y in zip(COLUMNS, ("2026", "2025", "2026*", "2025"))]
+    words += label(110, "Revenue") + row(110, ["1,250,400", "1,100,200", "640,300", "590,100"])
+    words += label(122, "Cost of sales") + row(122, ["(800,100)", "(700,050)", "(400,200)", "(380,000)"])
+    words += label(134, "Gross profit") + row(134, ["450,300", "400,150", "240,100", "210,100"])
+    grid = extract_page(Page(words))
+    assert grid[:2] == [["", "Group", "Group", "Company", "Company"], ["For the year ended 31 March", "2026", "2025", "2026*", "2025"]]
+    assert [r[0] for r in grid[2:]] == ["Revenue", "Cost of sales", "Gross profit"]
+
+
+def test_dates_and_as_at_lines_are_headers_not_figures():
+    from faithguard.tables import is_header_row
+
+    assert is_header_row(["(all amounts in Sri Lanka Rupees)", "As at 31", "December"])
+    assert is_header_row(["", "31.03.2026", "31.03.2025"])
+    assert not is_header_row(["Revenue", "Rs. 5,000", "4,000 mn"])
+    table = table_from_grid("t1", [["", "As at", "As at"], ["", "31.03.2026", "31.03.2025"], ["Total assets", "5,000", "4,000"]])
+    assert [c.period for c in table.cells] == ["2026", "2025"]
