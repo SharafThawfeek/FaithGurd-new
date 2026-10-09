@@ -15,6 +15,14 @@ store), run the generation notebook with it attached, then collect the answers:
     python pilots/kaggle_run.py push generate_answers --dataset faithguard-benchmark
     python pilots/kaggle_run.py fetch generate_answers   # answers-*.jsonl -> data/benchmark-build/
 
+The main run does the same with the 400 test and calibration questions, in their own folder
+so the pilot answers stay as they are:
+
+    faithguard benchmark build --splits test,calibration --out data/benchmark-build/main
+    python pilots/kaggle_run.py dataset faithguard-benchmark-main data/benchmark-build/main/questions.jsonl
+    python pilots/kaggle_run.py push generate_answers --dataset faithguard-benchmark-main
+    python pilots/kaggle_run.py fetch generate_answers --out data/benchmark-build/main
+
 Kaggle charges GPU time for the whole session, so take the hours for
 logs/gpu-hours.csv from the notebook's page, not from the scripts.
 """
@@ -97,10 +105,11 @@ def status(names: list[str]) -> None:
         print(out.splitlines()[-1] if out else f"{name}: no answer from Kaggle")
 
 
-def fetch(names: list[str]) -> None:
+def fetch(names: list[str], out: str | None = None) -> None:
     user = username()
     for name in names:
         pattern, dest = NOTEBOOKS[name][2:]
+        dest = Path(out) if out else dest
         dest.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory() as tmp:
             kaggle("kernels", "output", slug(user, name), "-p", tmp, "--file-pattern", f"(^|/){pattern}$", "--page-size", "200", "-q")
@@ -135,6 +144,7 @@ def main() -> None:
     parser.add_argument("names", nargs="*", help=f"notebooks ({', '.join(NOTEBOOKS)}; default: the three pilots), "
                                                  "or for `dataset`: the dataset name, then its files")
     parser.add_argument("--dataset", action="append", default=[], help="push: attach this dataset (repeatable)")
+    parser.add_argument("--out", help="fetch: copy the result files here instead of their usual folder")
     args = parser.parse_args()
     if args.action == "dataset":
         if len(args.names) < 2:
@@ -147,8 +157,10 @@ def main() -> None:
         parser.error(f"unknown notebook: {', '.join(sorted(unknown))}")
     if args.action == "push":
         push(names, args.dataset)
+    elif args.action == "status":
+        status(names)
     else:
-        {"status": status, "fetch": fetch}[args.action](names)
+        fetch(names, args.out)
 
 
 if __name__ == "__main__":

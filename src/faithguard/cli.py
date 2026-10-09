@@ -256,7 +256,10 @@ def cmd_benchmark(args) -> None:
         return
     from faithguard.gold import GoldStore
 
-    questions, built = benchmark.build(paths, manifest, pilot_only=args.pilot_only)
+    splits = set(args.splits.split(",")) if args.splits else None
+    if splits and manifest is None:
+        raise SystemExit("--splits needs the split manifest (--manifest)")
+    questions, built = benchmark.build(paths, manifest, pilot_only=args.pilot_only, splits=splits)
     out = Path(args.out)
     write_jsonl(out / "questions.jsonl", questions)
     gold = GoldStore.load(out / "gold")  # only the gold answers are rebuilt: labels and injections already there stay
@@ -443,6 +446,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--root", default="data/benchmark")
     p.add_argument("--manifest", default="manifests/splits.json")
     p.add_argument("--pilot-only", action="store_true")
+    p.add_argument("--splits", default="", help="build: only issuers in these splits, e.g. test,calibration for the main run")
     p.add_argument("--out", default="data/benchmark-build")
     p.set_defaults(fn=cmd_benchmark)
 

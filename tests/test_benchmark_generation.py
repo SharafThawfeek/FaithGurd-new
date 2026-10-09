@@ -29,6 +29,13 @@ def test_example_checks_clean_and_builds_gold():
     assert questions[0].question.issuer == "LK:DEMO" and questions[0].question.period == "2025"
 
 
+def test_build_can_keep_only_some_splits():
+    manifest = {"splits": {"LK:DEMO": "test"}}
+    questions, gold = benchmark.build(benchmark.report_paths(EXAMPLE), manifest, splits={"test", "calibration"})
+    assert len(questions) == len(gold.questions) == 5 and questions[0].question.split == "test"
+    assert benchmark.build(benchmark.report_paths(EXAMPLE), manifest, splits={"calibration"})[0] == []
+
+
 def test_rebuilding_keeps_the_labels_in_the_gold_store(tmp_path):
     from faithguard.cli import main
     from faithguard.gold import GoldLabel, GoldStore

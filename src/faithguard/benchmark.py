@@ -260,7 +260,10 @@ def gold_for(spec: ReportSpec, q: QuestionSpec, evidence: Evidence) -> GoldQuest
     return GoldQuestion(question_id=q.id, answer_text=q.expect, values=values, cells=cells, program=q.answer, source="team")
 
 
-def build(paths: Iterable[Path], manifest: dict | None = None, pilot_only: bool = False) -> tuple[list[BenchmarkQuestion], GoldStore]:
+def build(
+    paths: Iterable[Path], manifest: dict | None = None, pilot_only: bool = False, splits: set[str] | None = None
+) -> tuple[list[BenchmarkQuestion], GoldStore]:
+    """Questions with their frozen evidence, and their gold; `splits` keeps only issuers in those splits (needs the manifest)."""
     from faithguard.splits import split_of
 
     questions: list[BenchmarkQuestion] = []
@@ -268,6 +271,8 @@ def build(paths: Iterable[Path], manifest: dict | None = None, pilot_only: bool 
     for path in paths:
         spec, evidence = load_report(path)
         split = split_of(manifest, spec.country, spec.issuer) if manifest else None
+        if splits is not None and split not in splits:
+            continue
         for q in spec.questions:
             if pilot_only and not q.pilot:
                 continue
