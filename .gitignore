@@ -24,7 +24,7 @@ llama_work/
 # Run outputs: keep the summaries and reports, not the bulky item files
 runs/**/*.jsonl
 runs/**/gold/
-labelling/tasks.json
+labelling/*tasks*.json
 
 # Fitted models are rebuilt by commands; pickles are never shared (loading one can run code)
 runs/**/*.pkl
