@@ -79,7 +79,7 @@ Then fetch the datasets (about 160 MB; checksums are compared with `manifests/da
 .venv/Scripts/faithguard data download all
 ```
 
-**Adding a package:** add it to `requirements/laptop.txt` with an exact version, reinstall, regenerate the lock with `pip freeze --exclude pip > requirements/laptop.lock.txt`, and log it in the decision log.
+**Adding a package:** add it to `requirements/laptop.txt` with an exact version, reinstall, regenerate the lock with `pip freeze --exclude pip --exclude faithguard > requirements/laptop.lock.txt` (the project itself is installed separately), and log it in the decision log.
 
 **SEC access:** the SEC blocks requests that do not declare a contact. Set this once before any EDGAR command:
 
@@ -99,7 +99,8 @@ export FG_SEC_USER_AGENT="FaithGuard research Your Name you@example.com"
 | `faithguard sft --mode program` (or `rewrite`) | Repairer training data from the controlled track, into `runs/sft/` |
 | `faithguard detector-data` | Channel A training data (controlled track, RAGTruth, XBRL if mined), into `runs/detector/` |
 | `faithguard xbrl-mine` | XBRL-mined wrong-context negatives from training-only US companies (needs `FG_SEC_USER_AGENT`) |
-| `faithguard reports list` / `download --splits dev` | The Sri Lankan annual reports in `manifests/lk-reports.csv`; downloads record checksums |
+| `faithguard reports list` / `download --splits dev` | The annual reports in `manifests/lk-reports.csv` (default) or, with `--country US`, `manifests/us-reports.csv`; downloads record checksums |
+| `faithguard reports locate --country US` | Each US issuer's latest 10-K on EDGAR, into `manifests/us-reports.csv` (needs `FG_SEC_USER_AGENT`) |
 | `faithguard benchmark cells FILE` | Every cell id of a report, for question writers |
 | `faithguard benchmark check` | Recompute every gold answer from its cells and report mistakes ([benchmark guide](docs/benchmark-guide.md)) |
 | `faithguard benchmark build [--pilot-only]` | Questions with frozen evidence, and their gold, into `data/benchmark-build/` |
@@ -111,7 +112,9 @@ export FG_SEC_USER_AGENT="FaithGuard research Your Name you@example.com"
 
 ## Kaggle and Colab
 
-Every notebook starts with `setup/setup_cell.py`, which installs `requirements/gpu.txt` and uses the platform's own torch. After changing `requirements/gpu.txt` or any pilot script, rebuild the notebooks with `python pilots/build_notebooks.py`.
+Every notebook starts with `setup/setup_cell.py`, which stops at once if the session has no internet or GPU, installs `requirements/gpu.txt` and uses the platform's own torch. After changing `requirements/gpu.txt` or any pilot script, rebuild the notebooks with `python pilots/build_notebooks.py`.
+
+**From the command line:** `python pilots/kaggle_run.py push` runs the three pilots on Kaggle as private T4 notebooks, `status` shows their state and `fetch` copies their result files into `pilots/results/`. It needs the Kaggle CLI with an API token in `~/.kaggle/` (never in this folder), and a phone-verified Kaggle account: without one, Kaggle runs notebooks with no GPU and no internet.
 
 **Working rules:** keep runs to a few hours and save a checkpoint at least every hour; save every output as soon as a step finishes; use your own account only; log every GPU session in `logs/gpu-hours.csv` with the session hours the platform shows.
 
@@ -134,7 +137,7 @@ Every notebook starts with `setup/setup_cell.py`, which installs `requirements/g
 | Repository, environment, logs, decision log, risk register, authorship | Done | Review the logs at each weekly check |
 | Adjudicator | Draft: [docs/drafts/adjudicator-request.md](docs/drafts/adjudicator-request.md) | Send to an accounting lecturer or senior student |
 | GPU quota per account | Template: [logs/gpu-quota.csv](logs/gpu-quota.csv) | Record what Kaggle and Colab show |
-| Repair, detector and generation GPU pilots | Notebooks ready in [pilots/notebooks/](pilots/notebooks/), smoke-tested on a laptop | Run each on a Kaggle T4; log verdicts and timings |
+| Repair, detector and generation GPU pilots | Notebooks ready in [pilots/notebooks/](pilots/notebooks/), smoke-tested on a laptop; the first Kaggle run (2026-10-09) got no GPU or internet because the account is not phone-verified (risk R-21) | Verify the phone number on Kaggle, then `python pilots/kaggle_run.py push`; log verdicts and timings |
 | Closest prior work per paper | Tables in [docs/related-work/](docs/related-work/) | Open each work and fill in its row (LettuceDetect v2 taxonomy head first) |
 
 ### Phase 2: shared foundation
@@ -145,7 +148,7 @@ Every notebook starts with `setup/setup_cell.py`, which installs `requirements/g
 | Calculation API and executor | Done, tested (`calc/`, `executor.py`) |
 | FinQA, TAT-QA, RAGTruth loaded with licences and checksums | Done (`manifests/datasets.json`) |
 | XBRL facts | Parser done and tested on a sample filing; live download waits for `FG_SEC_USER_AGENT` (risk R-15) |
-| Split manifest frozen | Built and hashed (`manifests/splits.json`); Sri Lankan tickers verified on the CSE (D-038); US CIKs wait for SEC access |
+| Split manifest frozen | Built and hashed (`manifests/splits.json`); Sri Lankan tickers verified on the CSE (D-038); US tickers and CIKs verified on the SEC, two banks that stopped filing replaced (D-040) |
 | Label Studio with guide v1 | Interface, converters and guide ready; install and start it as in the guide |
 | Thin end-to-end slice on 20–40 items | Done: [runs/slice/report.md](runs/slice/report.md) (32 items, expected action on 29) |
 
@@ -160,7 +163,7 @@ Controlled track on development data, made from the project's own templates (pip
 
 | Exit item | State |
 | --- | --- |
-| Corrected tables and questions with gold answers | Format, checker and builder done ([benchmark guide](docs/benchmark-guide.md), [example](benchmark-example/)); all 33 Sri Lankan reports located on the CSE ([manifests/lk-reports.csv](manifests/lk-reports.csv)); download, then correct tables |
+| Corrected tables and questions with gold answers | Format, checker and builder done ([benchmark guide](docs/benchmark-guide.md), [example](benchmark-example/)); all 33 Sri Lankan reports located on the CSE ([manifests/lk-reports.csv](manifests/lk-reports.csv)) and all 32 US 10-Ks on EDGAR ([manifests/us-reports.csv](manifests/us-reports.csv), D-041); pilot reports downloaded; correct tables next |
 | Pilot: 60 questions, 120 answers, labelled | Generation notebook ready ([notebooks/generate_answers.ipynb](notebooks/generate_answers.ipynb)); Label Studio flow ready |
 | Annotation guide v2 | After the pilot |
 | Automatic-extraction run on 20 tables | After the reports are collected |
@@ -171,7 +174,7 @@ Controlled track on development data, made from the project's own templates (pip
 | --- | --- | --- |
 | Decision policy | Outcome models (LightGBM; TabICLv2 optional), Learn-then-Test certification over a pre-registered grid, five baselines and the oracle, certification-budget curve, issuer-level check, SCoRE comparator, deployable policy: [runs/policy/controlled/report.md](runs/policy/controlled/report.md) | The natural benchmark (phases 3, 5, 6) |
 | Repair | Model repairer with retry, free-rewrite baseline, training data (10,420 examples; basis errors held out), fine-tuning, self-training and evaluation scripts | A Kaggle T4: [notebooks/repair_sft.ipynb](notebooks/repair_sft.ipynb), [repair_baselines.ipynb](notebooks/repair_baselines.ipynb), [repair_self_train.ipynb](notebooks/repair_self_train.ipynb) |
-| Detection | Channel A (span + slot heads), training data (21,157 examples), training and evaluation scripts, A+B fusion with calibration, three baseline detectors, XBRL mining | A Kaggle T4: [notebooks/detector_train.ipynb](notebooks/detector_train.ipynb), [detector_baselines.ipynb](notebooks/detector_baselines.ipynb); SEC access for XBRL (risk R-15) |
+| Detection | Channel A (span + slot heads), training data (21,157 examples), training and evaluation scripts, A+B fusion with calibration, three baseline detectors, XBRL mining | A Kaggle T4: [notebooks/detector_train.ipynb](notebooks/detector_train.ipynb), [detector_baselines.ipynb](notebooks/detector_baselines.ipynb) |
 
 Policy study on the controlled track (rehearsal on template answers; certified at alpha = 0.10):
 

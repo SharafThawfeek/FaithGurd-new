@@ -58,6 +58,7 @@
     "US:EWBC": "test",
     "US:FHN": "calibration",
     "US:FIX": "train",
+    "US:FNB": "test",
     "US:IDA": "test",
     "US:KNSL": "dev",
     "US:LSCC": "test",
@@ -71,13 +72,12 @@
     "US:RLI": "test",
     "US:SIGI": "calibration",
     "US:SLAB": "dev",
-    "US:SNV": "test",
     "US:UFPI": "calibration",
     "US:WAL": "train",
-    "US:WBS": "train",
+    "US:WSFS": "train",
     "US:WSM": "calibration",
     "US:WSO": "train",
     "US:ZION": "calibration"
   },
-  "sha256": "69003d41860a001b4f17e12993156daeb9d0bd93a204901fec43b46e19b3f6ba"
+  "sha256": "db0433453c32632ecd44f6ecaab25b247ec509cdef2a6836673223ef3a03c771"
 }

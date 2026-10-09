@@ -17,6 +17,7 @@ from the filing's facts, so both the right and the wrong cell are visible.
 
 from __future__ import annotations
 
+import random
 import re
 from collections import defaultdict
 from decimal import Decimal
@@ -112,13 +113,20 @@ def _question(company: str, cited: Fact) -> str:
     return f"What was {possessive(company)} {concept_label(cited.concept)}{seg} {when} fiscal {fiscal_year(cited)}?"
 
 
-def mine(facts: list[Fact], company: str, max_per_fact: int = 3, scale_negatives: bool = True) -> Iterator[dict]:
-    """Channel A training examples (same format as data.channel_a_examples): clean answers and wrong-context negatives."""
+def mine(
+    facts: list[Fact], company: str, max_per_fact: int = 3, scale_negatives: bool = True, max_cited: int | None = None
+) -> Iterator[dict]:
+    """Channel A training examples (same format as data.channel_a_examples): clean answers and wrong-context negatives.
+
+    A large filing yields thousands of examples; `max_cited` keeps a fixed random
+    sample of cited facts (seeded by the company), each with all its negatives.
+    """
     usd = [f for f in facts if f.unit == "USD" and abs(f.value) >= 10**6 and len(f.dimensions) <= 1]
-    for cited in usd:
-        sibs = siblings(usd, cited)[:max_per_fact]
-        if not sibs:
-            continue
+    cited_facts = [(cited, sibs[:max_per_fact]) for cited in usd if (sibs := siblings(usd, cited))]
+    if max_cited is not None and len(cited_facts) > max_cited:
+        keep = set(random.Random(f"xbrl:{company}").sample(range(len(cited_facts)), max_cited))
+        cited_facts = [c for i, c in enumerate(cited_facts) if i in keep]
+    for cited, sibs in cited_facts:
         concepts = sorted({cited.concept} | {g.concept for g, _ in sibs})
         evidence = evidence_for(usd, concepts, company)
         prompt = lettuce_prompt(_question(company, cited), evidence_passages(evidence))

@@ -20,6 +20,16 @@ To continue in a later notebook, add this notebook's output as input (*Add Input
 **Afterwards:** download `outputs/*/results.json` and `report.md` files into `runs/` in the repository, and log the session's GPU hours in `logs/gpu-hours.csv`. Checkpoints are saved regularly; re-running the same cell resumes from the latest one."""
 
 
+SESSION_CHECK = """import shutil, socket
+try:
+    socket.gethostbyname("pypi.org")
+except OSError:
+    raise RuntimeError("No internet in this session. Kaggle: verify your phone number (Settings), then switch Internet on in the right-hand panel.")
+if not shutil.which("nvidia-smi"):
+    raise RuntimeError("No GPU in this session. Kaggle: verify your phone number (Settings), then set Accelerator to GPU T4 x2. Colab: Runtime > Change runtime type > T4 GPU.")
+"""
+
+
 def lines(text: str) -> list[str]:
     parts = text.split("\n")
     return [p + "\n" for p in parts[:-1]] + [parts[-1]]
@@ -40,7 +50,8 @@ def setup_cell() -> str:
     ]
     return (
         "# Setup: clone FaithGuard, install it with the pinned GPU packages, fetch the data.\n"
-        "import os, subprocess, sys\n"
+        + SESSION_CHECK
+        + "import os, subprocess, sys\n"
         "WORK = '/kaggle/working' if os.path.exists('/kaggle') else '/content'\n"
         "os.chdir(WORK)\n"
         f"if not os.path.exists('faithguard'):\n    subprocess.check_call(['git', 'clone', '--depth', '1', '{REPO}', 'faithguard'])\n"

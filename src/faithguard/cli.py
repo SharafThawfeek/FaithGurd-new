@@ -210,7 +210,7 @@ def cmd_xbrl_mine(args) -> None:
                 continue
             xml = edgar.fetch(url, cache / f"{filings[0]['accession']}.xml")
             facts = edgar.parse_instance(xml, entity=edgar.cik10(entry["cik_str"]))
-            mined = list(xbrl_mining.mine(facts, entry["title"]))
+            mined = list(xbrl_mining.mine(facts, entry["title"], max_cited=args.facts_per_filing))
             rows += mined
             done += 1
             print(f"{ticker}: {len(facts)} facts, {len(mined)} examples")
@@ -275,9 +275,21 @@ def cmd_items(args) -> None:
 
 
 def cmd_reports(args) -> None:
+    from faithguard import splits
     from faithguard.data import reports
 
-    rows = reports.read_manifest(args.manifest)
+    manifest_path = args.manifest or f"manifests/{args.country.lower()}-reports.csv"
+    if args.action == "locate":
+        if args.country != "US":
+            raise SystemExit("locate finds 10-Ks on SEC EDGAR, so it is for --country US only")
+        split_of = json.loads(Path("manifests/splits.json").read_text(encoding="utf-8"))["splits"]
+        found, problems = reports.locate_us(splits.read_issuers(args.issuers), split_of, Path(args.cache))
+        reports.write_manifest(manifest_path, found)
+        for problem in problems:
+            print(problem)
+        print(f"{len(found)} reports -> {manifest_path}")
+        return
+    rows = reports.read_manifest(manifest_path)
     chosen = [r for r in rows if r["split"] in set(args.splits.split(","))]
     total = sum(int(r["bytes"]) for r in chosen) / 2**20
     if args.action == "list":
@@ -285,7 +297,7 @@ def cmd_reports(args) -> None:
             print(f"{r['issuer']:6} {r['split']:12} {r['period_end']}  {int(r['bytes']) / 2**20:5.1f} MB  {r['report']}  {r['url']}")
         print(f"{len(chosen)} reports, {total:.0f} MB")
         return
-    for issuer, outcome in reports.download(args.manifest, set(args.splits.split(",")), args.root):
+    for issuer, outcome in reports.download(manifest_path, set(args.splits.split(",")), args.root, args.country):
         print(f"{issuer:6} {outcome}")
 
 
@@ -392,6 +404,7 @@ def main(argv: list[str] | None = None) -> None:
     p = sub.add_parser("xbrl-mine", help="XBRL-mined negatives from training-only US companies (needs FG_SEC_USER_AGENT)")
     p.add_argument("--tickers", help="comma-separated; default: FinQA's companies minus benchmark issuers")
     p.add_argument("--limit", type=int, default=150)
+    p.add_argument("--facts-per-filing", type=int, default=25, help="cited facts sampled per filing, each with its negatives")
     p.add_argument("--cache", default="data/raw/edgar")
     p.add_argument("--out", default="runs/detector/xbrl.jsonl")
     p.set_defaults(fn=cmd_xbrl_mine)
@@ -420,11 +433,14 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_items)
 
-    p = sub.add_parser("reports", help="annual report PDFs listed in manifests/lk-reports.csv")
-    p.add_argument("action", choices=["list", "download"])
+    p = sub.add_parser("reports", help="annual reports listed in manifests/lk-reports.csv and manifests/us-reports.csv")
+    p.add_argument("action", choices=["list", "download", "locate"], help="locate: find each US issuer's latest 10-K on EDGAR")
+    p.add_argument("--country", choices=["LK", "US"], default="LK")
     p.add_argument("--splits", default="dev", help="comma-separated: dev (the pilot), calibration, test, train")
-    p.add_argument("--manifest", default="manifests/lk-reports.csv")
+    p.add_argument("--manifest", default=None, help="default: manifests/<country>-reports.csv")
     p.add_argument("--root", default="data/raw/reports")
+    p.add_argument("--issuers", default="manifests/issuers.csv")
+    p.add_argument("--cache", default="data/raw/edgar")
     p.set_defaults(fn=cmd_reports)
 
     p = sub.add_parser("trace")

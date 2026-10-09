@@ -22,6 +22,7 @@ from __future__ import annotations
 import gzip
 import json
 import os
+import re
 import time
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -74,6 +75,15 @@ def fetch(url: str, cache: Path | None = None) -> bytes:
         cache.parent.mkdir(parents=True, exist_ok=True)
         cache.write_bytes(body)
     return body
+
+
+# www.sec.gov adds a bot-check script tag to every HTML page it serves, just before </body>
+_INJECTED_SCRIPT = re.compile(rb'<script type="text/javascript"\s+src="/[^"]+"></script>(?=</body>\s*</html>\s*$)')
+
+
+def fetch_document(url: str, cache: Path | None = None) -> bytes:
+    """A filing document byte for byte as filed: the script tag the SEC's web server adds is removed."""
+    return _INJECTED_SCRIPT.sub(b"", fetch(url, cache), count=1)
 
 
 def cik10(cik: int | str) -> str:
@@ -135,15 +145,50 @@ def annual_filings(cik: int | str, cache_dir: Path | None = None, forms=("10-K",
     return out
 
 
+def company_directory(cache_dir: Path | None = None) -> dict[str, dict]:
+    """Ticker -> {cik_str, ticker, title} for every company that currently files with the SEC."""
+    cache = cache_dir / "company_tickers.json" if cache_dir else None
+    directory: dict[str, dict] = {}
+    for row in json.loads(fetch(f"{SEC_WWW}/files/company_tickers.json", cache)).values():
+        directory.setdefault(row["ticker"].upper(), row)
+    return directory
+
+
+def filing_folder(cik: int | str, accession: str) -> str:
+    return f"{SEC_WWW}/Archives/edgar/data/{int(cik)}/{accession.replace('-', '')}"
+
+
+def filing_files(cik: int | str, accession: str, cache_dir: Path | None = None) -> list[dict]:
+    """The files of one filing (name, size, type), from its EDGAR folder listing."""
+    cache = cache_dir / f"index-{accession}.json" if cache_dir else None
+    return json.loads(fetch(f"{filing_folder(cik, accession)}/index.json", cache))["directory"]["item"]
+
+
 def instance_url(cik: int | str, accession: str, cache_dir: Path | None = None) -> str | None:
     """The extracted XBRL instance (*_htm.xml) of one filing, if EDGAR published one."""
-    folder = f"{SEC_WWW}/Archives/edgar/data/{int(cik)}/{accession.replace('-', '')}"
-    cache = cache_dir / f"index-{accession}.json" if cache_dir else None
-    index = json.loads(fetch(f"{folder}/index.json", cache))
-    for item in index["directory"]["item"]:
+    for item in filing_files(cik, accession, cache_dir):
         if item["name"].endswith("_htm.xml"):
-            return f"{folder}/{item['name']}"
+            return f"{filing_folder(cik, accession)}/{item['name']}"
     return None
+
+
+def latest_annual_report(cik: int | str, cache_dir: Path | None = None) -> dict | None:
+    """The newest 10-K: accession, period end, filing date, and the main document's link and size.
+
+    The filing list is always fetched fresh (a cached copy may predate the newest
+    report); a filing's folder listing never changes, so that is cached.
+    """
+    filings = annual_filings(cik)
+    if not filings:
+        return None
+    latest = max(filings, key=lambda f: f["filed"])
+    files = {item["name"]: item for item in filing_files(cik, latest["accession"], cache_dir)}
+    size = files.get(latest["document"], {}).get("size")
+    return {
+        **latest,
+        "url": f"{filing_folder(cik, latest['accession'])}/{latest['document']}",
+        "bytes": int(size) if size else None,
+    }
 
 
 # ---------------------------------------------------------------------------

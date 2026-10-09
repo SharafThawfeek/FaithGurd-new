@@ -126,6 +126,8 @@ def test_xbrl_mining_produces_labelled_wrong_context_negatives():
     (start, end, slot), = neg["spans"]
     assert slot == "entity_scope" and neg["answer"][start:end].startswith("$")
     assert "Example Industries' revenues" in neg["answer"]
+    capped = list(xbrl_mining.mine(edgar.parse_instance(INSTANCE, entity="1"), "Example Industries", max_cited=1))
+    assert [r["error"] for r in capped].count("none") == 1 and set(capped[0]) == set(rows[0])
 
 
 def test_deployed_outcome_aware_policy_decides():

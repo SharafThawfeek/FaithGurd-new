@@ -1,36 +1,36 @@
 country,issuer,name,sector,cik,status,notes
-US,ZION,Zions Bancorporation,banks,,candidate,
-US,WAL,Western Alliance Bancorporation,banks,,candidate,
-US,EWBC,East West Bancorp,banks,,candidate,
-US,FHN,First Horizon,banks,,candidate,
-US,SNV,Synovus Financial,banks,,candidate,
-US,WBS,Webster Financial,banks,,candidate,
-US,CFG,Citizens Financial Group,banks,,candidate,
-US,AFG,American Financial Group,insurance,,candidate,
-US,RLI,RLI Corp,insurance,,candidate,
-US,KNSL,Kinsale Capital Group,insurance,,candidate,
-US,SIGI,Selective Insurance Group,insurance,,candidate,
-US,AAON,AAON Inc,industrials,,candidate,
-US,WSO,Watsco,industrials,,candidate,
-US,FIX,Comfort Systems USA,industrials,,candidate,
-US,EME,EMCOR Group,industrials,,candidate,
-US,MLI,Mueller Industries,industrials,,candidate,
-US,UFPI,UFP Industries,industrials,,candidate,
-US,LSCC,Lattice Semiconductor,technology,,candidate,
-US,POWI,Power Integrations,technology,,candidate,
-US,SLAB,Silicon Laboratories,technology,,candidate,
-US,AMKR,Amkor Technology,technology,,candidate,
-US,POOL,Pool Corporation,consumer,,candidate,
-US,CHDN,Churchill Downs,consumer,,candidate,
-US,WSM,Williams-Sonoma,consumer,,candidate,
-US,DKS,Dick's Sporting Goods,consumer,,candidate,
-US,OGE,OGE Energy,utilities,,candidate,
-US,IDA,IDACORP,utilities,,candidate,
-US,POR,Portland General Electric,utilities,,candidate,
-US,NJR,New Jersey Resources,utilities,,candidate,
-US,CHE,Chemed,healthcare,,candidate,
-US,ENSG,Ensign Group,healthcare,,candidate,
-US,MEDP,Medpace Holdings,healthcare,,candidate,
+US,ZION,Zions Bancorporation,banks,109380,verified,"SEC CIK 109380 (ZIONS BANCORPORATION, NATIONAL ASSOCIATION /UT/), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,WAL,Western Alliance Bancorporation,banks,1212545,verified,"SEC CIK 1212545 (WESTERN ALLIANCE BANCORPORATION), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,EWBC,East West Bancorp,banks,1069157,verified,"SEC CIK 1069157 (EAST WEST BANCORP INC), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,FHN,First Horizon,banks,36966,verified,"SEC CIK 36966 (FIRST HORIZON CORP), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,FNB,F.N.B. Corporation,banks,37808,verified,"SEC CIK 37808 (FNB CORP/PA/), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09); replaces Synovus Financial (SNV), which merged with Pinnacle Financial Partners and deregistered (Form 15, January 2026)"
+US,WSFS,WSFS Financial,banks,828944,verified,"SEC CIK 828944 (WSFS FINANCIAL CORP), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09); replaces Webster Financial (WBS), which deregistered (Form 15, September 2026)"
+US,CFG,Citizens Financial Group,banks,759944,verified,"SEC CIK 759944 (CITIZENS FINANCIAL GROUP INC/RI), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,AFG,American Financial Group,insurance,1042046,verified,"SEC CIK 1042046 (AMERICAN FINANCIAL GROUP INC), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,RLI,RLI Corp,insurance,84246,verified,"SEC CIK 84246 (RLI CORP), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,KNSL,Kinsale Capital Group,insurance,1669162,verified,"SEC CIK 1669162 (Kinsale Capital Group, Inc.), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,SIGI,Selective Insurance Group,insurance,230557,verified,"SEC CIK 230557 (SELECTIVE INSURANCE GROUP INC), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,AAON,AAON Inc,industrials,824142,verified,"SEC CIK 824142 (AAON, INC.), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,WSO,Watsco,industrials,105016,verified,"SEC CIK 105016 (WATSCO INC), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,FIX,Comfort Systems USA,industrials,1035983,verified,"SEC CIK 1035983 (COMFORT SYSTEMS USA INC), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,EME,EMCOR Group,industrials,105634,verified,"SEC CIK 105634 (EMCOR Group, Inc.), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,MLI,Mueller Industries,industrials,89439,verified,"SEC CIK 89439 (MUELLER INDUSTRIES INC), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,UFPI,UFP Industries,industrials,912767,verified,"SEC CIK 912767 (UFP INDUSTRIES INC), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,LSCC,Lattice Semiconductor,technology,855658,verified,"SEC CIK 855658 (LATTICE SEMICONDUCTOR CORP), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,POWI,Power Integrations,technology,833640,verified,"SEC CIK 833640 (POWER INTEGRATIONS INC), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,SLAB,Silicon Laboratories,technology,1038074,verified,"SEC CIK 1038074 (SILICON LABORATORIES INC.), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,AMKR,Amkor Technology,technology,1047127,verified,"SEC CIK 1047127 (AMKOR TECHNOLOGY, INC.), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,POOL,Pool Corporation,consumer,945841,verified,"SEC CIK 945841 (POOL CORP), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,CHDN,Churchill Downs,consumer,20212,verified,"SEC CIK 20212 (Churchill Downs Inc), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,WSM,Williams-Sonoma,consumer,719955,verified,"SEC CIK 719955 (WILLIAMS SONOMA INC), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,DKS,Dick's Sporting Goods,consumer,1089063,verified,"SEC CIK 1089063 (DICK'S SPORTING GOODS, INC.), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,OGE,OGE Energy,utilities,1021635,verified,"SEC CIK 1021635 (OGE ENERGY CORP.), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,IDA,IDACORP,utilities,1057877,verified,"SEC CIK 1057877 (IDACORP INC), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,POR,Portland General Electric,utilities,784977,verified,"SEC CIK 784977 (PORTLAND GENERAL ELECTRIC CO /OR/), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,NJR,New Jersey Resources,utilities,356309,verified,"SEC CIK 356309 (NEW JERSEY RESOURCES CORP), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,CHE,Chemed,healthcare,19584,verified,"SEC CIK 19584 (CHEMED CORP), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,ENSG,Ensign Group,healthcare,1125376,verified,"SEC CIK 1125376 (ENSIGN GROUP, INC), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
+US,MEDP,Medpace Holdings,healthcare,1668397,verified,"SEC CIK 1668397 (Medpace Holdings, Inc.), files with the SEC (sec.gov/files/company_tickers.json, 2026-10-09)"
 LK,COMB,Commercial Bank of Ceylon PLC,banks,,verified,"CSE symbol COMB.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
 LK,HNB,Hatton National Bank PLC,banks,,verified,"CSE symbol HNB.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"
 LK,SAMP,Sampath Bank PLC,banks,,verified,"CSE symbol SAMP.N0000, active (cse.lk/api/allSecurityCode, 2026-10-08)"

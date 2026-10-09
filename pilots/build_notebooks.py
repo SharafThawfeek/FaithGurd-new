@@ -97,6 +97,16 @@ PILOTS = {
 }
 
 
+SESSION_CHECK = """import shutil, socket
+try:
+    socket.gethostbyname("pypi.org")
+except OSError:
+    raise RuntimeError("No internet in this session. Kaggle: verify your phone number (Settings), then switch Internet on in the right-hand panel.")
+if not shutil.which("nvidia-smi"):
+    raise RuntimeError("No GPU in this session. Kaggle: verify your phone number (Settings), then set Accelerator to GPU T4 x2. Colab: Runtime > Change runtime type > T4 GPU.")
+"""
+
+
 def lines(text: str) -> list[str]:
     parts = text.split("\n")
     return [p + "\n" for p in parts[:-1]] + [parts[-1]]
@@ -118,7 +128,8 @@ def setup_cell() -> str:
     ]
     return (
         "# Setup: pinned GPU packages (requirements/gpu.txt) and a look at the GPU.\n"
-        "import subprocess, sys\n"
+        + SESSION_CHECK
+        + "import subprocess, sys\n"
         f"REQUIREMENTS = {requirements!r}\n"
         'subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", *REQUIREMENTS])\n'
         '!nvidia-smi --query-gpu=name,memory.total,driver_version,compute_cap --format=csv'
