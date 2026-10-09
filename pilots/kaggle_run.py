@@ -128,6 +128,8 @@ def fetch(names: list[str], out: str | None = None) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             kaggle("kernels", "output", slug(user, name), "-p", tmp, "--file-pattern", f"(^|/){pattern}$", "--page-size", "200", "-q")
             found = [p for p in Path(tmp).rglob("*") if p.is_file() and re.fullmatch(pattern, p.name)]
+            under_outputs = [p for p in found if "outputs" in p.relative_to(tmp).parts[:-1]]
+            found = under_outputs or found  # the notebook's clone of this repository holds files of the same names
             for path in found:
                 parts = path.relative_to(tmp).parts  # keep the run folder under outputs/: eval-a/results.json, eval-b/results.json
                 rel = Path(*parts[parts.index("outputs") + 1:]) if "outputs" in parts[:-1] else Path(path.name)
