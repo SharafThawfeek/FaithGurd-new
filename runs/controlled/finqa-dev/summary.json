@@ -1,34 +1,34 @@
 {
   "policy": {
-    "items": 766,
-    "emitted": 468,
-    "emission_coverage": 0.6109660574412533,
-    "residual_risk": 0.008547008547008548,
-    "useful_coverage": 0.6057441253263708,
+    "items": 791,
+    "emitted": 486,
+    "emission_coverage": 0.6144121365360303,
+    "residual_risk": 0.00823045267489712,
+    "useful_coverage": 0.6093552465233881,
     "unsafe_emitted": 4
   },
   "always_send": {
-    "items": 766,
-    "emitted": 766,
+    "items": 791,
+    "emitted": 791,
     "emission_coverage": 1.0,
-    "residual_risk": 0.7715404699738904,
-    "useful_coverage": 0.22845953002610966,
-    "unsafe_emitted": 591
+    "residual_risk": 0.7724399494310998,
+    "useful_coverage": 0.22756005056890014,
+    "unsafe_emitted": 611
   },
   "always_repair": {
-    "items": 766,
-    "emitted": 468,
-    "emission_coverage": 0.6109660574412533,
-    "residual_risk": 0.008547008547008548,
-    "useful_coverage": 0.6057441253263708,
+    "items": 791,
+    "emitted": 486,
+    "emission_coverage": 0.6144121365360303,
+    "residual_risk": 0.00823045267489712,
+    "useful_coverage": 0.6093552465233881,
     "unsafe_emitted": 4
   },
   "flip_matrix": {
     "unsupported": {
       "unsupported": 4,
       "supported_unhelpful": 0,
-      "supported_useful": 291,
-      "abstained": 296
+      "supported_useful": 304,
+      "abstained": 303
     },
     "supported_unhelpful": {
       "unsupported": 0,
@@ -39,37 +39,38 @@
     "supported_useful": {
       "unsupported": 0,
       "supported_unhelpful": 0,
-      "supported_useful": 173,
+      "supported_useful": 178,
       "abstained": 2
     }
   },
-  "action_accuracy": 0.8315926892950392,
+  "action_accuracy": 0.8356510745891277,
   "by_error": {
     "basis": {
-      "repair -> supported_useful": 54
+      "repair -> supported_useful": 58
     },
     "metric": {
-      "repair -> supported_useful": 91,
-      "abstain -> abstained": 71,
+      "repair -> supported_useful": 93,
+      "abstain -> abstained": 72,
       "send -> unsupported": 1,
       "repair -> abstained": 1
     },
     "missing_operand": {
-      "abstain -> abstained": 171
+      "abstain -> abstained": 176
     },
     "none": {
-      "send -> supported_useful": 173,
+      "send -> supported_useful": 178,
       "abstain -> abstained": 2
     },
     "period": {
-      "repair -> supported_useful": 55,
+      "repair -> supported_useful": 58,
       "abstain -> abstained": 53,
+      "repair -> abstained": 1,
       "repair -> unsupported": 1
     },
     "sign": {
-      "repair -> supported_useful": 91,
+      "repair -> supported_useful": 95,
       "send -> unsupported": 2
     }
   },
-  "items": 766
+  "items": 791
 }

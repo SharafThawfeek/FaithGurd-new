@@ -1,0 +1,98 @@
+{
+  "policy": {
+    "items": 16667,
+    "emitted": 12885,
+    "emission_coverage": 0.7730845383092338,
+    "residual_risk": 0.021187427240977882,
+    "useful_coverage": 0.7561648767024659,
+    "unsafe_emitted": 273
+  },
+  "always_send": {
+    "items": 16667,
+    "emitted": 16667,
+    "emission_coverage": 1.0,
+    "residual_risk": 0.7889242215155697,
+    "useful_coverage": 0.2108957820843583,
+    "unsafe_emitted": 13149
+  },
+  "always_repair": {
+    "items": 16667,
+    "emitted": 12885,
+    "emission_coverage": 0.7730845383092338,
+    "residual_risk": 0.021187427240977882,
+    "useful_coverage": 0.7561648767024659,
+    "unsafe_emitted": 273
+  },
+  "flip_matrix": {
+    "unsupported": {
+      "unsupported": 273,
+      "supported_unhelpful": 6,
+      "supported_useful": 9101,
+      "abstained": 3769
+    },
+    "supported_unhelpful": {
+      "unsupported": 0,
+      "supported_unhelpful": 2,
+      "supported_useful": 1,
+      "abstained": 0
+    },
+    "supported_useful": {
+      "unsupported": 0,
+      "supported_unhelpful": 1,
+      "supported_useful": 3501,
+      "abstained": 13
+    }
+  },
+  "action_accuracy": 0.9656206875862483,
+  "by_error": {
+    "basis": {
+      "repair -> supported_useful": 764,
+      "send -> unsupported": 4
+    },
+    "metric": {
+      "repair -> supported_useful": 3138,
+      "abstain -> abstained": 179,
+      "repair -> abstained": 41,
+      "repair -> unsupported": 22,
+      "send -> unsupported": 5,
+      "repair -> supported_unhelpful": 2
+    },
+    "missing_operand": {
+      "abstain -> abstained": 3360,
+      "repair -> unsupported": 63,
+      "send -> unsupported": 33,
+      "repair -> supported_useful": 4,
+      "repair -> abstained": 1
+    },
+    "none": {
+      "send -> supported_useful": 3499,
+      "repair -> abstained": 9,
+      "abstain -> abstained": 4,
+      "send -> unsupported": 2,
+      "repair -> supported_unhelpful": 1
+    },
+    "period": {
+      "repair -> supported_useful": 1985,
+      "abstain -> abstained": 151,
+      "send -> unsupported": 32,
+      "repair -> abstained": 18,
+      "repair -> unsupported": 14
+    },
+    "scale": {
+      "repair -> supported_useful": 1262,
+      "repair -> unsupported": 20,
+      "repair -> supported_unhelpful": 4,
+      "abstain -> abstained": 4,
+      "send -> supported_useful": 2
+    },
+    "sign": {
+      "repair -> supported_useful": 1949,
+      "send -> unsupported": 76,
+      "repair -> abstained": 12,
+      "abstain -> abstained": 3,
+      "send -> supported_unhelpful": 2,
+      "repair -> unsupported": 2
+    }
+  },
+  "items": 16667
+}

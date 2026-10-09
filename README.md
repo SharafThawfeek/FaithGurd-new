@@ -159,13 +159,13 @@ Controlled track on development data, made from the project's own templates (pip
 | Data | Items | Policy v0: sent | Wrong among sent | Useful sent | Send everything: wrong among sent | Expected action |
 | --- | --- | --- | --- | --- | --- | --- |
 | TAT-QA dev | 2,133 | 77.8% | 1.8% | 76.3% | 79.1% | 96.9% |
-| FinQA dev | 766 | 61.1% | 0.9% | 60.6% | 77.2% | 83.2% |
+| FinQA dev | 791 | 61.4% | 0.8% | 60.9% | 77.2% | 83.6% |
 
-### Phase 3: benchmark and pilot (tooling built; reports needed)
+### Phase 3: benchmark and pilot (tables in progress)
 
 | Exit item | State |
 | --- | --- |
-| Corrected tables and questions with gold answers | Format, checker and builder done ([benchmark guide](docs/benchmark-guide.md), [example](benchmark-example/)); all 33 Sri Lankan reports located on the CSE ([manifests/lk-reports.csv](manifests/lk-reports.csv)) and all 32 US 10-Ks on EDGAR ([manifests/us-reports.csv](manifests/us-reports.csv), D-041); pilot reports downloaded; correct tables next |
+| Corrected tables and questions with gold answers | Format, checker and builder done ([benchmark guide](docs/benchmark-guide.md), [example](benchmark-example/)); all 28 benchmark reports per country downloaded, with checksums in [manifests/lk-reports.csv](manifests/lk-reports.csv) and [manifests/us-reports.csv](manifests/us-reports.csv); Sri Lankan test and calibration tables drafted for all 24 reports (income statement and balance sheet, 48 tables, every total adds up; D-060); US tables next, then questions |
 | Pilot: 60 questions, 120 answers, labelled | 60 pilot questions written and built: 33 Sri Lankan, 27 US (D-046, D-051), each awaiting a second reader; 120 answers generated on Kaggle (D-056), automatic first look in [runs/pilot/report.md](runs/pilot/report.md); 120 blinded Label Studio tasks made (`labelling/tasks.json`, not in git) and Label Studio installed in `.venv-labelstudio` | Label the 120 answers (annotation guide v1); then record minutes per item and the error rate |
 | Annotation guide v2 | After the pilot |
 | Automatic-extraction run on 20 tables | After the reports are collected |
@@ -183,9 +183,9 @@ Policy study on the controlled track (rehearsal on template answers; certified a
 | Policy | Answers sent | Wrong among sent | Useful answers |
 | --- | --- | --- | --- |
 | Send everything | 100% | 79.0% (not certifiable) | 21.0% |
-| Send only verified answers | 21.5% | 2.8% | 20.9% |
-| Outcome-aware (LightGBM) | 73.7% | 1.4% | 72.6% |
-| Oracle with hindsight | 72.9% | 0% | 72.8% |
+| Send only verified answers | 21.5% | 2.9% | 20.9% |
+| Outcome-aware (LightGBM) | 73.8% | 1.6% | 72.7% |
+| Oracle with hindsight | 72.9% | 0% | 72.9% |
 
-Certification needs about 200 calibration answers before it reliably passes (80% of random draws at 200, all at 400).
+Certification needs about 200 calibration answers before it reliably passes (75% of random draws at 200, all at 400).
 

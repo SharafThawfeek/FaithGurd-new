@@ -1,0 +1,84 @@
+{
+  "policy": {
+    "items": 5024,
+    "emitted": 3088,
+    "emission_coverage": 0.6146496815286624,
+    "residual_risk": 0.008095854922279792,
+    "useful_coverage": 0.6092754777070064,
+    "unsafe_emitted": 25
+  },
+  "always_send": {
+    "items": 5024,
+    "emitted": 5024,
+    "emission_coverage": 1.0,
+    "residual_risk": 0.7768710191082803,
+    "useful_coverage": 0.2229299363057325,
+    "unsafe_emitted": 3903
+  },
+  "always_repair": {
+    "items": 5024,
+    "emitted": 3088,
+    "emission_coverage": 0.6146496815286624,
+    "residual_risk": 0.008095854922279792,
+    "useful_coverage": 0.6092754777070064,
+    "unsafe_emitted": 25
+  },
+  "flip_matrix": {
+    "unsupported": {
+      "unsupported": 25,
+      "supported_unhelpful": 1,
+      "supported_useful": 1949,
+      "abstained": 1928
+    },
+    "supported_unhelpful": {
+      "unsupported": 0,
+      "supported_unhelpful": 1,
+      "supported_useful": 0,
+      "abstained": 0
+    },
+    "supported_useful": {
+      "unsupported": 0,
+      "supported_unhelpful": 0,
+      "supported_useful": 1112,
+      "abstained": 8
+    }
+  },
+  "action_accuracy": 0.8359872611464968,
+  "by_error": {
+    "basis": {
+      "repair -> supported_useful": 423,
+      "repair -> abstained": 2
+    },
+    "metric": {
+      "repair -> supported_useful": 536,
+      "abstain -> abstained": 482,
+      "repair -> abstained": 14,
+      "repair -> unsupported": 8,
+      "repair -> supported_unhelpful": 1,
+      "send -> unsupported": 1
+    },
+    "missing_operand": {
+      "abstain -> abstained": 1093,
+      "send -> unsupported": 2
+    },
+    "none": {
+      "send -> supported_useful": 1112,
+      "abstain -> abstained": 6,
+      "repair -> abstained": 2,
+      "send -> unsupported": 2
+    },
+    "period": {
+      "repair -> supported_useful": 398,
+      "abstain -> abstained": 330,
+      "repair -> unsupported": 10,
+      "repair -> abstained": 5
+    },
+    "sign": {
+      "repair -> supported_useful": 592,
+      "repair -> abstained": 2,
+      "repair -> unsupported": 2,
+      "send -> supported_unhelpful": 1
+    }
+  },
+  "items": 5024
+}

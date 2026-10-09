@@ -49,14 +49,58 @@ class Word:
         return (self.x0 + self.x1) / 2
 
 
+_GLYPH_CODES = {chr(c) for c in range(32)} - set("\t\n\r\x0b\x0c")  # control codes that are not whitespace
+
+
+def _glyph_text(text: str) -> str:
+    """Text from a font embedded without its character map, where each character is the font's glyph
+    number: in the common TrueType order that is the character's code less 29 ("\\x15\\x16\\x0f\\x13" is
+    "23,0"). Real text never holds control characters, so only such words are decoded."""
+    if not any(c in _GLYPH_CODES for c in text):
+        return text
+    return "".join(chr(ord(c) + 29) if 32 <= ord(c) + 29 <= 126 else c for c in text)
+
+
+def _glyph_words(page) -> list[Word]:
+    """Words in a font embedded without its character map. The usual word extraction reads their
+    control characters as spaces and drops them, so they are rebuilt here from the characters."""
+    try:
+        blocks = page.get_text("rawdict").get("blocks", [])
+    except Exception:  # pages that only offer words (tests)
+        return []
+    out = []
+    for line in (line for block in blocks for line in block.get("lines", [])):
+        for span in line.get("spans", []):
+            chars = span.get("chars", [])
+            if not any(ch["c"] in _GLYPH_CODES for ch in chars):
+                continue
+            word: list[dict] = []
+            for ch in chars + [None]:
+                text = _glyph_text(ch["c"] + "\x00") if ch else " "  # the NUL marks the span as glyph-coded
+                if text[0] == " ":
+                    if word:
+                        boxes = [c["bbox"] for c in word]
+                        decoded = "".join(_glyph_text(c["c"] + "\x00")[0] for c in word)
+                        out.append(Word(min(b[0] for b in boxes), min(b[1] for b in boxes),
+                                        max(b[2] for b in boxes), max(b[3] for b in boxes), decoded))
+                    word = []
+                else:
+                    word.append(ch)
+    return out
+
+
 def _words(page) -> list[Word]:
     clean = {"�": "'", "’": "'", "‘": "'"}
+    glyphs = _glyph_words(page)
     out = []
     for x0, y0, x1, y1, text, *_ in page.get_text("words"):
         for a, b in clean.items():
             text = text.replace(a, b)
-        out.append(Word(x0, y0, x1, y1, text))
-    return out
+        w = Word(x0, y0, x1, y1, text)
+        # the usual extraction keeps the printable part of a glyph-coded word ("$VVHWV" for "Assets"): drop it
+        if not any(g.x0 - 1 <= w.xc <= g.x1 + 1 and abs(g.yc - w.yc) < 2 for g in glyphs):
+            out.append(w)
+    return out + glyphs
 
 
 def _cluster(values: list[float], gap: float) -> list[list[float]]:
@@ -166,16 +210,21 @@ def extract_page(page, label_gap: float = 9.0, min_column_hits: int = 3) -> list
         if w.x1 <= label_right and w.yc > body_top and not (NOTE_REF.match(w.text) and w.x1 > label_right - 40)
     ]
     rows = [{"y": _y(line), "label": " ".join(w.text for w in line), "values": {}} for line in _lines(label_words)]
-    leftovers: list[tuple[Word, int]] = []
-    for w in numbers:
-        col = column_of(w)
-        if col is None or col not in value_cols or w.yc <= body_top:
-            continue
-        candidates = [r for r in rows if abs(r["y"] - w.yc) <= label_gap and col not in r["values"]]
-        if candidates:
-            min(candidates, key=lambda r: abs(r["y"] - w.yc))["values"][col] = w.text
-        else:
-            leftovers.append((w, col))
+    # Closest pairs first, across the page: a figure level with its label is placed before an unlabelled
+    # subtotal a line away can take that label's slot (rows can be only 8 points apart).
+    placing = [(w, column_of(w)) for w in numbers]
+    placing = [(w, col) for w, col in placing if col is not None and col in value_cols and w.yc > body_top]
+    pairs = sorted(
+        ((abs(r["y"] - w.yc), n, k) for n, (w, _) in enumerate(placing) for k, r in enumerate(rows) if abs(r["y"] - w.yc) <= label_gap),
+        key=lambda p: p[0],
+    )
+    placed: set[int] = set()
+    for _, n, k in pairs:
+        w, col = placing[n]
+        if n not in placed and col not in rows[k]["values"]:
+            rows[k]["values"][col] = w.text
+            placed.add(n)
+    leftovers = [(w, col) for n, (w, col) in enumerate(placing) if n not in placed]
     for line in _cluster([w.yc for w, _ in leftovers], gap=4.0):
         y = sum(line) / len(line)
         row = {"y": y, "label": "", "values": {}}
@@ -197,7 +246,11 @@ def extract_page(page, label_gap: float = 9.0, min_column_hits: int = 3) -> list
             prev["values"] = prev["values"] or r["values"]
             continue
         merged.append(r)
-    while merged and not merged[-1]["values"]:  # page footers below the table
+    def footer(r: dict) -> bool:  # sign-off text below the table: "... Companies Act No. 07 of 2007"
+        values = list(r["values"].values())
+        return not values or (len(values) == 1 and re.fullmatch(r"\d{1,2}", values[0]) and len(r["label"].split()) >= 6)
+
+    while merged and footer(merged[-1]):
         merged.pop()
     grid += [[r["label"]] + [r["values"].get(c, "") for c in value_cols] for r in merged]
     return grid

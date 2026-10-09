@@ -129,8 +129,11 @@ def total_rows(grid: list[list[str]]) -> tuple[list[int], list[int]]:
     above it; those rows are then replaced by it, so totals of subtotals add up too. A
     "Net ...", "Profit ..." or "Total ..." row may also be the difference of the two rows
     above it ("Net interest income" = interest income less interest expense), and an
-    unlabelled row may repeat the one row above it. Percentage columns are left out.
-    A statement whose totals all add up has its figures in the right rows and columns.
+    unlabelled or "Total ..." row may repeat the one row above it ("Total equity" under
+    "Total shareholders' equity"). Reports round each figure on its own, so a sum of k
+    figures of a thousand or more may be off by up to min(k, 3) in its last printed digit.
+    Percentage columns are left out. A statement whose totals all add up has its figures
+    in the right rows and columns.
     """
     rows = [[str(c).strip() for c in r] for r in grid]
     width = max((len(r) for r in rows), default=0)
@@ -150,14 +153,19 @@ def total_rows(grid: list[list[str]]) -> tuple[list[int], list[int]]:
         if not any(values):  # a row of nils proves nothing, and would balance any equal pair above it
             active.append(values)
             continue
-        tries = [(k, (1,) * k) for k in range(1 if not label else 2, min(len(active), 30) + 1)]
+        repeat = not label or label.lower().startswith("total")
+        tries = [(k, (1,) * k) for k in range(1 if repeat else 2, min(len(active), 30) + 1)]
         if (not label or _SUBTOTAL.match(label)) and len(active) >= 2:
             tries += [(2, (1, -1)), (2, (-1, 1))]
-        found = next(
-            (k for k, signs in tries
-             if all(sum(s * a[j] for s, a in zip(signs, active[-k:])) == values[j] for j in range(len(columns)))),
-            0,
-        )
+
+        def adds_up(k: int, signs: tuple[int, ...]) -> bool:
+            for j in range(len(columns)):
+                gap = abs(sum(s * a[j] for s, a in zip(signs, active[-k:])) - values[j])
+                if gap > (min(k, 3) if abs(values[j]) >= 1000 and k > 1 else 0):
+                    return False
+            return True
+
+        found = next((k for k, signs in tries if adds_up(k, signs)), 0)
         if found:
             sums.append(i)
             del active[-found:]

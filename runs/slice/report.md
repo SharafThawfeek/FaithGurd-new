@@ -5,8 +5,8 @@ Every item runs the full pipeline: Channel B rule checker, threshold policy v0, 
 These items were made by the project's own templates, so the numbers show the pipeline works end to end; they are not results.
 
 - Expected action taken: 29 of 32
-- Answers sent (original or fixed): 24 of 32; unsupported among them: 1
-- Useful answers sent: 23 of 32
+- Answers sent (original or fixed): 24 of 32; unsupported among them: 0
+- Useful answers sent: 24 of 32
 
 | # | Source | Planted error | Expected | Action | Outcome | Answer | Output or reason |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -28,17 +28,17 @@ These items were made by the project's own templates, so the numbers show the pi
 | 16 | tatqa | period | repair | repair | supported_useful | In 2017, Total other income, net was -$2,935 thousand. | In 2017, Total other income, net was $1,758 thousand. |
 | 17 | tatqa | scale | repair | repair | supported_useful | Other was 8.10 billion in 2018. | Other was 0.008 billion in 2018. |
 | 18 | tatqa | scale | repair | repair | supported_useful | Total EMEA was 294,954 million in 2018. | Total EMEA was 295 million in 2018. |
-| 19 | tatqa | sign | repair | repair | supported_useful | Basic increased by $1.32 million from $1.75 million in 2017 to $0.430 million in 2018. | Basic decreased by $1.32 million from $1.75 million in 2017 to $0.430 million in 2018. |
+| 19 | tatqa | sign | repair | repair | supported_useful | Basic increased by $1.32 from $1.75 in 2017 to $0.430 in 2018. | Basic decreased by $1.32 from $1.75 in 2017 to $0.430 in 2018. |
 | 20 | tatqa | sign | repair | repair | supported_useful | Software delivery, support and maintenance increased by $1,508 thousand from $10,949 thousand in 2017 to $9,441 thousand in 2018. | Software delivery, support and maintenance decreased by $1,508 thousand from $10,949 thousand in 2017 to $9,441 thousand in 2018. |
-| 21 | finqa | basis | repair | repair | supported_useful | Net earnings for basic and diluted eps fell 15.4% from $6,948 in 2016 to $6,021 in 2017. | Net earnings for basic and diluted eps fell 13.3% from $6,948 in 2016 to $6,021 in 2017. |
+| 21 | finqa | basis | repair | repair | supported_useful | Lkq corporation rose 51.0% from $100 in 2011 to $204 in 2016. | Lkq corporation rose 104.0% from $100 in 2011 to $204 in 2016. |
 | 22 | finqa | basis | repair | repair | supported_useful | Commodities net was 47.0% in 2017, down 55.3% from 73.0% in 2016. | Commodities net was 47.0% in 2017, down 35.6% from 73.0% in 2016. |
-| 23 | finqa | metric | repair | abstain | abstained | Other revenues was 95.3% of total in 2008. | ABSTAIN: no rule can confirm or fix this answer. The report shows: freight revenues 2008: $17,118 million; total 2008: $17,970 million |
-| 24 | finqa | metric | repair | abstain | abstained | Operating profit was 185.0% of net sales in 2014. | ABSTAIN: the evidence lacks a value the answer needs |
-| 25 | finqa | missing_operand | abstain | abstain | abstained | Interest cost was 44.9% of service cost in 2018. | ABSTAIN: the evidence lacks a value the answer needs |
-| 26 | finqa | missing_operand | abstain | abstain | abstained | Credit net fell 98.1% from 2,504.0% in 2016 to 47.0% in 2017. | ABSTAIN: the evidence lacks a value the answer needs. The report shows: commodities net 2017: 47.0% |
-| 27 | finqa | none | send | send | supported_useful | Total long-term debt net changed from $6,142 million in 2014 to $15,261 million in 2015, a change of $9,119 million. | Total long-term debt net changed from $6,142 million in 2014 to $15,261 million in 2015, a change of $9,119 million. |
-| 28 | finqa | none | send | send | supported_useful | Ending balance rose 13.4% from $172,945 thousand in 2017 to $196,152 thousand in 2018. | Ending balance rose 13.4% from $172,945 thousand in 2017 to $196,152 thousand in 2018. |
-| 29 | finqa | period | repair | repair | unsupported | Henry hub natural gas rose 31.8% from $6.86 in 2007 to $9.04 in 2009. | Henry hub natural gas fell 41.8% from $6.86 in 2007 to $9.04 in 2009. |
-| 30 | finqa | period | repair | abstain | abstained | Agricultural was 16.6% of total freight revenues in 2012. | ABSTAIN: the evidence lacks a value the answer needs |
+| 23 | finqa | metric | repair | repair | supported_useful | Inventories net increased by $126.7 million from $257.6 million in 2002 to $384.3 million in 2003. | Inventories net increased by $270.1 million from $257.6 million in 2002 to $527.7 million in 2003. |
+| 24 | finqa | metric | repair | abstain | abstained | Total africa was 2.0% of total in 2017. | ABSTAIN: no rule can confirm or fix this answer. The report shows: u s 2017: $89.0 thousand; other africa 2017: $4,352 thousand |
+| 25 | finqa | missing_operand | abstain | abstain | abstained | Raw materials and supplies rose 102.1% from $488.8 in 2017 to $988.1 in 2018. | ABSTAIN: the evidence lacks a value the answer needs. The report shows: finished products 2018: $988 |
+| 26 | finqa | missing_operand | abstain | abstain | abstained | Cabinets fell 9.4% from $2,397.8 million in 2016 to $2,173.4 million in 2017. | ABSTAIN: no rule can confirm or fix this answer. The report shows: cabinets 2016: $2,398 million; cabinets 2015: $2,173 million; cabinets 2015: $2,173 million |
+| 27 | finqa | none | send | send | supported_useful | Total was $412 million in 2017, down 42.5% from $716 million in 2016. | Total was $412 million in 2017, down 42.5% from $716 million in 2016. |
+| 28 | finqa | none | send | send | supported_useful | Other revenues was 4.7% of total in 2008. | Other revenues was 4.7% of total in 2008. |
+| 29 | finqa | period | repair | abstain | abstained | Total africa was 4.2% of total in 2017. | ABSTAIN: no rule can confirm or fix this answer. The report shows: e g 2018: $36.0 thousand; other africa 2018: $854 thousand |
+| 30 | finqa | period | repair | abstain | abstained | Risk solutions was 56.9% of total revenue in 2011. | ABSTAIN: the evidence lacks a value the answer needs |
 | 31 | finqa | sign | repair | repair | supported_useful | Total redeemable stock of subsidiaries decreased by $244 million from $538 million in 2015 to $782 million in 2016. | Total redeemable stock of subsidiaries increased by $244 million from $538 million in 2015 to $782 million in 2016. |
-| 32 | finqa | sign | repair | repair | supported_useful | Fair value of forward exchange contracts asset rose 65.9% from $7,256 in 2010 to $2,472 in 2011. | Fair value of forward exchange contracts asset fell 65.9% from $7,256 in 2010 to $2,472 in 2011. |
+| 32 | finqa | sign | repair | repair | supported_useful | Finished goods decreased by $177.6 million from $206.7 million in 2002 to $384.3 million in 2003. | Finished goods increased by $177.6 million from $206.7 million in 2002 to $384.3 million in 2003. |

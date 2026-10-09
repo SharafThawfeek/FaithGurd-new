@@ -49,6 +49,7 @@ def cmd_data(args) -> None:
 
 
 def cmd_controlled(args) -> None:
+    from faithguard.controlled import track_split
     from faithguard.replay import replay, summary
 
     items, gold = _controlled(args.source, args.split)
@@ -57,6 +58,8 @@ def cmd_controlled(args) -> None:
     gold.save()
     write_jsonl(out / "items.jsonl", items)
     records = list(replay(items, gold))
+    for r in records:  # the policy study reads these files too, and needs each record's split (D-023)
+        r.split = track_split(r.issuer)
     write_jsonl(out / "replay.jsonl", records)
     s = summary(records)
     by_error = collections.defaultdict(collections.Counter)

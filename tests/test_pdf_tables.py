@@ -193,3 +193,29 @@ def test_dates_and_as_at_lines_are_headers_not_figures():
     assert not is_header_row(["Revenue", "Rs. 5,000", "4,000 mn"])
     table = table_from_grid("t1", [["", "As at", "As at"], ["", "31.03.2026", "31.03.2025"], ["Total assets", "5,000", "4,000"]])
     assert [c.period for c in table.cells] == ["2026", "2025"]
+
+
+def test_glyph_coded_figures_are_decoded_and_whitespace_is_not():
+    from faithguard.data.pdf_tables import _glyph_text
+
+    assert _glyph_text("\x03\x15\x16\x0f\x13\x15\x15\x0f\x17\x1b\x16\x03").strip() == "23,022,483"
+    assert _glyph_text("$V\x03DW\x03\x16\x14VW\x030DUFK\x0f").strip() == "As at 31st March,"
+    assert _glyph_text("Figures\tin brackets") == "Figures\tin brackets"  # tabs are ordinary whitespace
+
+
+def test_totals_allow_rounding_and_a_total_that_repeats_one_row():
+    grid = [
+        ["", "2026", "2025"],
+        ["Non-current liabilities", "2,425,077", "2,491,939"],
+        ["Current liabilities", "3,164,528", "2,473,971"],
+        ["Total liabilities", "5,589,606", "4,965,910"],  # the report's own rounding: off by one
+        ["Stated capital", "511,848", "511,848"],
+        ["Retained earnings", "2,498,590", "3,235,391"],
+        ["Total shareholders' equity", "3,010,438", "3,747,239"],
+        ["Total equity", "3,010,438", "3,747,239"],  # repeats the row above
+        ["Total equity and liabilities", "8,600,044", "8,713,149"],
+    ]
+    sums, failures = benchmark.total_rows(grid)
+    assert failures == [] and sums == [3, 6, 7, 8]
+    grid[3][1] = "5,589,706"  # off by 100 is a misread figure, not rounding
+    assert 3 in benchmark.total_rows(grid)[1]
