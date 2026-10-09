@@ -3,7 +3,10 @@
 from decimal import Decimal
 from types import SimpleNamespace
 
-from faithguard.data.pdf_tables import extract_page
+import pytest
+
+from faithguard import benchmark
+from faithguard.data.pdf_tables import extract, extract_page
 from faithguard.tables import table_from_grid
 
 
@@ -85,3 +88,86 @@ def test_unit_rows_without_an_apostrophe_are_headers():
     gross = next(c for c in table.cells if c.period == "2025")
     assert gross.value == Decimal("218780329000") and gross.entity == "bank"
     assert next(c for c in table.cells if c.col == 3).kind == "percent"
+
+
+BALANCE_SHEET = [
+    ["", "Group", "Group", "Change"],
+    ["As at 31 March", "2026", "2025", "%"],
+    ["Rs. '000", "", "", ""],
+    ["ASSETS", "", "", ""],
+    ["Cash", "1,200", "1,100", "9"],
+    ["Loans", "3,400", "2,900", "17"],
+    ["Total assets", "4,600", "4,000", "15"],
+    ["Interest income", "900", "800", "13"],
+    ["Less: interest expense", "300", "250", "20"],
+    ["Net interest income", "600", "550", "9"],
+    ["Fees", "(100)", "-", "-"],
+    ["", "500", "550", "(9)"],
+    ["Non-controlling interest", "-", "-", "-"],
+    ["Total", "500", "550", "(9)"],
+]
+
+
+def test_totals_add_up_and_misplaced_figures_are_caught():
+    sums, failures = benchmark.total_rows(BALANCE_SHEET)
+    assert sums == [6, 9, 11, 13] and failures == []
+    broken = [list(r) for r in BALANCE_SHEET]
+    broken[5][1] = "3,500"  # a misread figure
+    broken[10][2] = "(100)"  # a figure read into the wrong column
+    assert benchmark.total_rows(broken)[1] == [6, 11]
+
+
+def test_check_warns_when_a_table_total_does_not_add_up(tmp_path):
+    folder = tmp_path / "LK" / "TEST"
+    (folder / "2026").mkdir(parents=True)
+    (folder / "2026.yaml").write_text(
+        'issuer: TEST\ncountry: LK\nname: Test PLC\nfiscal_year: "2026"\n'
+        "tables:\n  t1:\n    title: Statement of financial position\n    page: 12\nquestions: []\n",
+        encoding="utf-8",
+    )
+    rows = [list(r) for r in BALANCE_SHEET]
+    rows[6][2] = "4,100"
+    (folder / "2026" / "t1.csv").write_text("\n".join(",".join(f'"{c}"' for c in r) for r in rows), encoding="utf-8")
+    findings, _ = benchmark.check(benchmark.report_paths(tmp_path))
+    assert [(f.question, f.level) for f in findings] == [("t1r6", "warning")]
+    assert "Total assets is not the sum of the rows above it" in findings[0].message and "page 12" in findings[0].message
+
+
+def test_statement_continued_over_two_pdf_pages(tmp_path):
+    pymupdf = pytest.importorskip("pymupdf")
+
+    def put(page, y, text, right=None, x=40):
+        if right is not None:
+            x = right - pymupdf.get_text_length(text, fontname="helv", fontsize=8)
+        page.insert_text((x, y), text, fontsize=8, fontname="helv")
+
+    doc = pymupdf.open()
+    for lines in (
+        [("Cash", "1,200", "1,100"), ("Loans", "3,400", "2,900"), ("Total assets", "4,600", "4,000")],
+        [("Deposits", "3,000", "2,700"), ("Equity", "1,600", "1,300"), ("Total equity and liabilities", "4,600", "4,000")],
+    ):
+        page = doc.new_page(width=595, height=842)
+        put(page, 100, "As at 31 March")
+        put(page, 100, "2026", right=400)
+        put(page, 100, "2025", right=480)
+        put(page, 112, "Rs. '000", right=400)
+        put(page, 112, "Rs. '000", right=480)
+        for k, (label, now, before) in enumerate(lines):
+            put(page, 130 + 12 * k, label)
+            put(page, 130 + 12 * k, now, right=400)
+            put(page, 130 + 12 * k, before, right=480)
+        put(page, 820, "Annual Report 2025/26")
+    pdf = tmp_path / "report.pdf"
+    doc.save(pdf)
+    grid = extract(str(pdf), [1, 2])
+    assert grid == [
+        ["As at 31 March", "2026", "2025"],
+        ["", "Rs. '000", "Rs. '000"],
+        ["Cash", "1,200", "1,100"],
+        ["Loans", "3,400", "2,900"],
+        ["Total assets", "4,600", "4,000"],
+        ["Deposits", "3,000", "2,700"],
+        ["Equity", "1,600", "1,300"],
+        ["Total equity and liabilities", "4,600", "4,000"],
+    ]
+    assert benchmark.total_rows(grid) == ([4, 7], [])

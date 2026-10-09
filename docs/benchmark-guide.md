@@ -41,6 +41,14 @@ For each table a question will use, make one CSV that copies the table **exactly
 
 Usually the income statement and the statement of financial position are enough; add segment or ratio tables when a question needs them. Check every CSV against the PDF, cell by cell. That correction is what makes the main test free of table-reading errors.
 
+Don't type the tables: draft each CSV from the PDF, then correct the draft. Give the page numbers a PDF viewer shows (not the folio printed on the page). A statement that runs over two pages is one table, so give both pages:
+
+```bash
+python -m faithguard.data.pdf_tables data/raw/reports/LK/SAMP/2025-12-31.pdf 374,375 data/benchmark/LK/SAMP/2025/t2.csv
+```
+
+The reader takes the figures from the PDF's own text, so the digits are exact. What can still go wrong is a figure in the wrong row or column, or a label that wraps onto a second line starting with a capital letter ("Impact on restructuring of Sri Lanka / International Sovereign Bonds"): join such labels by hand. It also reports how many subtotals add up. In a full statement every "Total ..." row equals the rows above it, so a total that does not add up points at a misplaced or misread figure. Scanned reports have no text to read; type those tables.
+
 Name tables `t1`, `t2`, ... in the report file:
 
 ```yaml
@@ -103,7 +111,7 @@ A rough mix per issuer: lookups 30%, growth 20%, differences 15%, shares and rat
 faithguard benchmark check
 ```
 
-It recomputes every gold answer from its cells and compares it with `expect`. Errors (must fix): a mismatch (wrong cell, wrong row, misread number), an expression that fails, a duplicate id, a pilot question from a non-development issuer. Warnings (should fix): a question not yet cross-checked, or checked by its own author, or a type that does not match its expression.
+It recomputes every gold answer from its cells and compares it with `expect`. Errors (must fix): a mismatch (wrong cell, wrong row, misread number), an expression that fails, a duplicate id, a pilot question from a non-development issuer. Warnings (should fix): a question not yet cross-checked, or checked by its own author, or a type that does not match its expression, or a table row labelled "Total ..." (or left unlabelled) that is not the sum of the rows above it. Tables where no subtotal adds up at all are taken to be extracts and are not summed.
 
 Run it until there are no errors.
 

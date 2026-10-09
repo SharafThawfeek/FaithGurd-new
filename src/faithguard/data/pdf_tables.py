@@ -197,9 +197,61 @@ def extract_page(page, label_gap: float = 9.0, min_column_hits: int = 3) -> list
     return grid
 
 
-def extract(pdf_path: str, page_number: int) -> list[list[str]]:
-    """The table on a page (numbered from 1, as in a PDF viewer)."""
+def header_count(grid: list[list[str]]) -> int:
+    """How many header lines a grid from `extract_page` starts with."""
+    from faithguard.tables import is_header_row
+
+    n = 0
+    while n < len(grid) and is_header_row(grid[n]) and not (grid[n][0] and not any(grid[n][1:])):
+        n += 1
+    return n
+
+
+def extract(pdf_path: str, pages: int | list[int]) -> list[list[str]]:
+    """The table on a page, or a statement continued over several pages (numbered from 1, as in a PDF viewer).
+
+    A continuation page must repeat the first page's header lines; they are kept once.
+    """
     import pymupdf
 
+    pages = [pages] if isinstance(pages, int) else list(pages)
+    grid: list[list[str]] = []
     with pymupdf.open(pdf_path) as doc:
-        return extract_page(doc[page_number - 1])
+        for number in pages:
+            part = extract_page(doc[number - 1])
+            n = header_count(part)
+            if grid and part[:n] != grid[: header_count(grid)]:
+                raise ValueError(f"page {number} does not repeat the header lines of page {pages[0]}")
+            grid += part[n:] if grid else part
+    return grid
+
+
+def main(argv: list[str] | None = None) -> None:
+    """Write a draft benchmark CSV: python -m faithguard.data.pdf_tables REPORT.pdf 374,375 t2.csv"""
+    import argparse
+    import csv
+    from pathlib import Path
+
+    from faithguard.benchmark import total_rows
+
+    parser = argparse.ArgumentParser(description="Read a statement table from a report PDF into a draft benchmark CSV.")
+    parser.add_argument("pdf")
+    parser.add_argument("pages", help="page numbers as a PDF viewer shows them, e.g. 374 or 374,375")
+    parser.add_argument("csv", help="where to write the table, e.g. data/benchmark/LK/SAMP/2025/t2.csv")
+    args = parser.parse_args(argv)
+    grid = extract(args.pdf, [int(p) for p in args.pages.split(",")])
+    if not grid:
+        raise SystemExit(f"no table found on page(s) {args.pages}")
+    out = Path(args.csv)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with open(out, "w", encoding="utf-8", newline="") as f:
+        csv.writer(f).writerows(grid)
+    sums, failures = total_rows(grid)
+    print(f"{out}: {len(grid) - header_count(grid)} rows x {len(grid[0]) - 1} columns; {len(sums)} subtotals add up")
+    for r in failures:
+        print(f"  row {r} ({grid[r][0] or 'unlabelled'}) is not the sum of the rows above it")
+    print("This is a draft: compare every row with the page, and join labels that wrap onto a capitalised second line.")
+
+
+if __name__ == "__main__":
+    main()

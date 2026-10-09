@@ -11,3 +11,5 @@ pyyaml==6.0.3
 tqdm==4.70.1
 pytest==9.1.1
 score-select==0.1.1
+pymupdf==1.28.2
+kaggle==2.2.4

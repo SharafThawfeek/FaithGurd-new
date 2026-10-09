@@ -15,6 +15,7 @@ id, a wrong row, or a misread number shows up as a mismatch (the plan's cross-ch
 from __future__ import annotations
 
 import csv
+import re
 from collections import Counter
 from dataclasses import dataclass
 from decimal import Decimal
@@ -28,7 +29,7 @@ from faithguard.calc.numbers import find_numbers, matches
 from faithguard.data.example import base_value, classify
 from faithguard.gold import GoldQuestion, GoldStore, GoldValue
 from faithguard.records import Country, Evidence, Question, QuestionType, Record
-from faithguard.tables import table_from_grid
+from faithguard.tables import is_header_row, parse_table_cell, table_from_grid
 
 
 class TableSpec(Record):
@@ -113,6 +114,59 @@ class Finding:
     message: str
 
 
+_SUBTOTAL = re.compile(r"(?i)^(total|net|profit|gross|operating)(?![a-z])")
+
+
+def _amount(text: str) -> Decimal:
+    m = parse_table_cell(text)
+    return m.raw if m is not None and m.raw is not None else Decimal(0)
+
+
+def total_rows(grid: list[list[str]]) -> tuple[list[int], list[int]]:
+    """Rows that add up, and "Total ..." or unlabelled rows that do not (as grid row numbers).
+
+    A row adds up when, in every amount column, it equals the sum of the rows directly
+    above it; those rows are then replaced by it, so totals of subtotals add up too. A
+    "Net ...", "Profit ..." or "Total ..." row may also be the difference of the two rows
+    above it ("Net interest income" = interest income less interest expense), and an
+    unlabelled row may repeat the one row above it. Percentage columns are left out.
+    A statement whose totals all add up has its figures in the right rows and columns.
+    """
+    rows = [[str(c).strip() for c in r] for r in grid]
+    width = max((len(r) for r in rows), default=0)
+    rows = [r + [""] * (width - len(r)) for r in rows]
+    n = 0
+    while n < len(rows) and is_header_row(rows[n]):
+        n += 1
+    columns = [c for c in range(1, width) if not any("%" in r[c] or "change" in r[c].lower() for r in rows[:n])]
+    active: list[list[Decimal]] = []
+    sums: list[int] = []
+    failures: list[int] = []
+    for i in range(n, len(rows)):
+        label = rows[i][0]
+        if not columns or not any(rows[i][c] for c in columns):
+            continue
+        values = [_amount(rows[i][c]) for c in columns]
+        if not any(values):  # a row of nils proves nothing, and would balance any equal pair above it
+            active.append(values)
+            continue
+        tries = [(k, (1,) * k) for k in range(1 if not label else 2, min(len(active), 30) + 1)]
+        if (not label or _SUBTOTAL.match(label)) and len(active) >= 2:
+            tries += [(2, (1, -1)), (2, (-1, 1))]
+        found = next(
+            (k for k, signs in tries
+             if all(sum(s * a[j] for s, a in zip(signs, active[-k:])) == values[j] for j in range(len(columns)))),
+            0,
+        )
+        if found:
+            sums.append(i)
+            del active[-found:]
+        elif not label or label.lower().startswith("total"):
+            failures.append(i)
+        active.append(values)
+    return sums, failures
+
+
 def _expect_matches(expect: str, value: Decimal, kind: str, program: str, evidence: Evidence) -> bool:
     found = find_numbers(expect)
     if not found:
@@ -143,6 +197,13 @@ def check(paths: Iterable[Path], manifest: dict | None = None) -> tuple[list[Fin
         split = split_of(manifest, spec.country, spec.issuer) if manifest else None
         if manifest and f"{spec.country}:{spec.issuer}" not in manifest["splits"]:
             findings.append(Finding(str(path), "-", "warning", f"{spec.issuer} is not in the split manifest (treated as training data)"))
+        for table_id, t in spec.tables.items():
+            grid = read_grid(path.with_suffix("") / f"{table_id}.csv")
+            sums, failures = total_rows(grid)
+            for r in failures if sums else []:  # where nothing adds up the table is an extract, not a full statement
+                findings.append(Finding(str(path), f"{table_id}r{r}", "warning", (
+                    f"{grid[r][0] or 'the unlabelled row'} is not the sum of the rows above it: "
+                    f"check the table against page {t.page}")))
         for q in spec.questions:
             where = (str(path), q.id)
             if q.id in seen:

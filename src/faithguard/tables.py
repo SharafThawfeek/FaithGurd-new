@@ -78,7 +78,8 @@ def _numeric(text: str) -> bool:
     return m is not None and m.kind != "year"
 
 
-def _is_header_row(row: list[str]) -> bool:
+def is_header_row(row: list[str]) -> bool:
+    """True if no cell after the label holds a number (years and units are not numbers here)."""
     return not any(_numeric(c) for c in row[1:])
 
 
@@ -102,7 +103,7 @@ def table_from_grid(
     rows = [r + [""] * (width - len(r)) for r in rows]
 
     n_header, n_text_rows = 0, 0
-    while n_header < len(rows) and _is_header_row(rows[n_header]) and n_text_rows < 4:
+    while n_header < len(rows) and is_header_row(rows[n_header]) and n_text_rows < 4:
         n_text_rows += any(rows[n_header])  # blank rows do not count towards the limit
         n_header += 1
     if n_header == len(rows):  # a table with no numbers at all
