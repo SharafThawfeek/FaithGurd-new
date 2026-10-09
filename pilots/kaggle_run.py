@@ -23,6 +23,11 @@ so the pilot answers stay as they are:
     python pilots/kaggle_run.py push generate_answers --dataset faithguard-benchmark-main
     python pilots/kaggle_run.py fetch generate_answers --out data/benchmark-build/main
 
+Phase-4 training runs the same way, for example the detector (results -> runs/detector/kaggle/):
+
+    python pilots/kaggle_run.py push detector_train
+    python pilots/kaggle_run.py fetch detector_train
+
 Kaggle charges GPU time for the whole session, so take the hours for
 logs/gpu-hours.csv from the notebook's page, not from the scripts.
 """
@@ -47,6 +52,8 @@ NOTEBOOKS = {
     "detector_pilot": (HERE / "notebooks", "FaithGuard detector pilot", r"detector-(?!tiny-).*[.]json", HERE / "results"),
     "generation_pilot": (HERE / "notebooks", "FaithGuard generation pilot", r"generation-.*[.]json", HERE / "results"),
     "generate_answers": (ROOT / "notebooks", "FaithGuard answer generation", r"answers-.*[.]jsonl", ROOT / "data" / "benchmark-build"),
+    "detector_train": (ROOT / "notebooks", "FaithGuard detector training", r"(train_log|results)[.]json|fusion[.]jsonl",
+                       ROOT / "runs" / "detector" / "kaggle"),
 }
 PILOTS = ["repair_pilot", "detector_pilot", "generation_pilot"]
 
@@ -115,8 +122,11 @@ def fetch(names: list[str], out: str | None = None) -> None:
             kaggle("kernels", "output", slug(user, name), "-p", tmp, "--file-pattern", f"(^|/){pattern}$", "--page-size", "200", "-q")
             found = [p for p in Path(tmp).rglob("*") if p.is_file() and re.fullmatch(pattern, p.name)]
             for path in found:
-                shutil.copy(path, dest / path.name)
-                print(f"{name}: {path.name} -> {dest}")
+                parts = path.relative_to(tmp).parts  # keep the run folder under outputs/: eval-a/results.json, eval-b/results.json
+                rel = Path(*parts[parts.index("outputs") + 1:]) if "outputs" in parts[:-1] else Path(path.name)
+                (dest / rel).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy(path, dest / rel)
+                print(f"{name}: {rel} -> {dest}")
             if not found:
                 print(f"{name}: no result files (see the log on the notebook's Kaggle page)")
 
