@@ -1,0 +1,143 @@
+{
+  "summary": {
+    "items": 500,
+    "needing_repair": 411,
+    "correction_rate": 0.5182,
+    "abstained_when_needed": 0.2822,
+    "still_wrong_when_sent": 0.278,
+    "new_error_rate": 0.1536,
+    "damage_rate": 0.0,
+    "valid_program_rate": 0.2864,
+    "gate_pass_rate": 1.0,
+    "mean_attempts": 1.0,
+    "status": {
+      "repaired": 289,
+      "nothing_to_fix": 95,
+      "cannot_fix": 116
+    }
+  },
+  "by_error": {
+    "basis": {
+      "items": 26,
+      "needing_repair": 26,
+      "correction_rate": 0.0769,
+      "abstained_when_needed": 0.0,
+      "still_wrong_when_sent": 0.9231,
+      "new_error_rate": 0.2692,
+      "damage_rate": null,
+      "valid_program_rate": 0.0,
+      "gate_pass_rate": 1.0,
+      "mean_attempts": 1.0,
+      "status": {
+        "repaired": 26
+      }
+    },
+    "metric": {
+      "items": 112,
+      "needing_repair": 112,
+      "correction_rate": 0.7054,
+      "abstained_when_needed": 0.0,
+      "still_wrong_when_sent": 0.2946,
+      "new_error_rate": 0.2946,
+      "damage_rate": null,
+      "valid_program_rate": 0.0,
+      "gate_pass_rate": 1.0,
+      "mean_attempts": 1.0,
+      "status": {
+        "repaired": 112
+      }
+    },
+    "missing_operand": {
+      "items": 121,
+      "needing_repair": 121,
+      "correction_rate": 0.0,
+      "abstained_when_needed": 0.9587,
+      "still_wrong_when_sent": 1.0,
+      "new_error_rate": 0.6,
+      "damage_rate": null,
+      "valid_program_rate": 0.9748,
+      "gate_pass_rate": 1.0,
+      "mean_attempts": 1.0,
+      "status": {
+        "cannot_fix": 116,
+        "repaired": 3,
+        "nothing_to_fix": 2
+      }
+    },
+    "none": {
+      "items": 89,
+      "needing_repair": 0,
+      "correction_rate": null,
+      "abstained_when_needed": null,
+      "still_wrong_when_sent": null,
+      "new_error_rate": 0.0,
+      "damage_rate": 0.0,
+      "valid_program_rate": null,
+      "gate_pass_rate": null,
+      "mean_attempts": 0.0,
+      "status": {
+        "nothing_to_fix": 89
+      }
+    },
+    "period": {
+      "items": 61,
+      "needing_repair": 61,
+      "correction_rate": 0.7541,
+      "abstained_when_needed": 0.0,
+      "still_wrong_when_sent": 0.2459,
+      "new_error_rate": 0.2459,
+      "damage_rate": null,
+      "valid_program_rate": 0.0,
+      "gate_pass_rate": 1.0,
+      "mean_attempts": 1.0,
+      "status": {
+        "repaired": 61
+      }
+    },
+    "scale": {
+      "items": 28,
+      "needing_repair": 28,
+      "correction_rate": 1.0,
+      "abstained_when_needed": 0.0,
+      "still_wrong_when_sent": 0.0,
+      "new_error_rate": 0.0,
+      "damage_rate": null,
+      "valid_program_rate": 0.0,
+      "gate_pass_rate": 1.0,
+      "mean_attempts": 1.0,
+      "status": {
+        "repaired": 28
+      }
+    },
+    "sign": {
+      "items": 63,
+      "needing_repair": 63,
+      "correction_rate": 0.9206,
+      "abstained_when_needed": 0.0,
+      "still_wrong_when_sent": 0.0794,
+      "new_error_rate": 0.0159,
+      "damage_rate": null,
+      "valid_program_rate": 0.0,
+      "gate_pass_rate": 1.0,
+      "mean_attempts": 1.0,
+      "status": {
+        "repaired": 59,
+        "nothing_to_fix": 4
+      }
+    }
+  },
+  "seconds": 1244.0,
+  "settings": {
+    "out": "/kaggle/working/outputs/eval-rewrite-sft",
+    "mode": "rewrite",
+    "model": "Qwen/Qwen3.5-2B",
+    "adapter": "/kaggle/working/outputs/rewrite-sft/adapter",
+    "load": "fp16",
+    "server": null,
+    "sources": "tatqa,finqa",
+    "track": "tune",
+    "limit": 500,
+    "seed": 13,
+    "tiny": false
+  }
+}

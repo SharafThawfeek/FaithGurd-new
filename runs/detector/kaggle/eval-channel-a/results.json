@@ -23,7 +23,7 @@
     "wrong_context_recall": 0.9972375690607734
   },
   "settings": {
-    "model_dir": "/kaggle/working/outputs/channel-a/model",
+    "model_dir": "/kaggle/working/prev/channel-a/model",
     "out": "/kaggle/working/outputs/eval-channel-a",
     "sources": "tatqa,finqa",
     "track": "tune",

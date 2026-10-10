@@ -1,0 +1,34 @@
+{
+  "items": 2000,
+  "threshold": 0.5,
+  "channel_a": {
+    "auroc": 0.9314214317557897,
+    "false_alarm_clean": 0.5458715596330275,
+    "wrong_context_recall": 0.9972375690607734,
+    "span_precision": 0.868325443135528,
+    "span_recall": 0.9897515268133523,
+    "span_f1": 0.9250708630632392,
+    "span_recall_by_slot": {
+      "basis": 1.0,
+      "metric": 1.0,
+      "period": 0.9942678478374153,
+      "scale_currency": 0.9906213364595545,
+      "sign": 0.9515326172386691
+    },
+    "slot_accuracy": 0.0
+  },
+  "channel_b": {
+    "auroc": 0.9965977615617448,
+    "false_alarm_clean": 0.009174311926605505,
+    "wrong_context_recall": 0.9972375690607734
+  },
+  "settings": {
+    "model_dir": "/kaggle/working/prev/channel-a-noslot/model",
+    "out": "/kaggle/working/outputs/eval-channel-a-noslot",
+    "sources": "tatqa,finqa",
+    "track": "tune",
+    "limit": 2000,
+    "threshold": 0.5,
+    "seed": 13
+  }
+}
