@@ -168,8 +168,13 @@ NOTEBOOKS = {
                  "against Channel B on the same 2,000 development items. Expect about 4 GPU hours.",
         "cells": [
             ("Models from the detector_train notebook, and the training data",
-             "import glob\nA = sorted(glob.glob('/kaggle/input/**/channel-a/model', recursive=True))[0]\n"
-             "NOSLOT = sorted(glob.glob('/kaggle/input/**/channel-a-noslot/model', recursive=True))[0]\nprint(A, NOSLOT)\n"
+             "import glob, os\nfound = {name: sorted(glob.glob(f'/kaggle/input/**/{name}/model', recursive=True)) for name in ('channel-a', 'channel-a-noslot')}\n"
+             "if not all(found.values()):\n"
+             "    for root, dirs, files in os.walk('/kaggle/input'):\n"
+             "        if root.count(os.sep) <= 5:\n"
+             "            print(root, sorted(dirs)[:8], sorted(files)[:8])\n"
+             "    raise RuntimeError('Attach the detector_train notebook\\'s output as an input; its models were not found under /kaggle/input')\n"
+             "A, NOSLOT = found['channel-a'][0], found['channel-a-noslot'][0]\nprint(A, NOSLOT)\n"
              "CHECKPOINT = 'KRLabsOrg/lettucedect-v2-mmbert-base'\n!faithguard detector-data"),
             ("Ablation: without XBRL negatives", "!python -m faithguard.train.detector --data runs/detector/train.jsonl --checkpoint $CHECKPOINT --exclude xbrl --out {OUT}/channel-a-noxbrl"),
             ("Evaluate all three (also writes per-claim rows for the A+B fusion)",
