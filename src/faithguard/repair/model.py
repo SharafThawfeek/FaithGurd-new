@@ -31,7 +31,7 @@ class ModelRepairer:
         editable = editable_claims(det)
         if not editable:
             return RepairOutput(item_id=item.id, repairer=self.name, status="nothing_to_fix", text=item.answer.text)
-        prompt = build_prompt(item, det.claims, editable)
+        prompt = build_prompt(item, det.claims, editable, det)
         index = EvidenceIndex(item)
         feedback, reason, program = "", "", None
         for attempt in range(1, self.max_attempts + 1):

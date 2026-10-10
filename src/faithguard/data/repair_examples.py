@@ -74,7 +74,7 @@ def examples(
         target = target_for(editable, injection.target_program)
         if target is None:
             continue
-        prompt = build_prompt(item, det.claims, editable)
+        prompt = build_prompt(item, det.claims, editable, det)
         if mode == "program":
             system, reply = SYSTEM, program_json(target)
         else:

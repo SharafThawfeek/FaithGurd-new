@@ -105,7 +105,7 @@ def main(argv: list[str] | None = None) -> None:
             if not editable:
                 continue
             attempted += 1
-            prompt = build_prompt(item, det.claims, editable)
+            prompt = build_prompt(item, det.claims, editable, det)
             program = accepted_program(item, det, gen.sample(prompt, n=args.samples, temperature=args.temperature))
             if program is not None:
                 kept.append({"id": item.id, "error": "self-train", "messages": [

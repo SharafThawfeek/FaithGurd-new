@@ -13,6 +13,7 @@ import re
 
 from pydantic import ValidationError
 
+from faithguard.focus import FOCUS_ABOVE_ROWS, focus_rows  # noqa: F401 (FOCUS_ABOVE_ROWS re-exported)
 from faithguard.records import Claim, DetectorOutput, EditProgram, Evidence, Item
 
 SYSTEM = (
@@ -35,19 +36,26 @@ MAX_PASSAGE_CHARS = 400
 MAX_EVIDENCE_CHARS = 7000
 
 
-def render_evidence(evidence: Evidence) -> str:
+def render_evidence(evidence: Evidence, focus: dict[str, set[int]] | None = None) -> str:
     lines: list[str] = []
+    left_out = 0
     for t in evidence.tables:
-        unit = f", amounts in {SCALE_WORDS[t.scale]}" if t.scale in SCALE_WORDS else ""
-        lines.append(f"Table {t.id}{': ' + t.title if t.title else ''}{unit}")
         rows: dict[int, list] = {}
         for c in t.cells:
             rows.setdefault(c.row, []).append(c)
-        for r in sorted(rows):
+        shown = sorted(r for r in rows if focus is None or r in focus.get(t.id, set()))
+        left_out += len(rows) - len(shown)
+        if not shown:
+            continue
+        unit = f", amounts in {SCALE_WORDS[t.scale]}" if t.scale in SCALE_WORDS else ""
+        lines.append(f"Table {t.id}{': ' + t.title if t.title else ''}{unit}")
+        for r in shown:
             cells = rows[r]
             label = cells[0].row_label or cells[0].metric or f"row {r}"
             parts = [f"{c.id} {c.column_label}: {c.text}" for c in cells]
             lines.append(f"- {label} | " + " | ".join(parts))
+    if left_out:
+        lines.append(f"({left_out} other rows of these statements are not shown: only rows related to the answer's numbers and the question.)")
     used = sum(len(x) for x in lines)
     for p in evidence.passages:
         if used > MAX_EVIDENCE_CHARS:
@@ -80,9 +88,11 @@ def editable_claims(det: DetectorOutput) -> list[str]:
     return [c.id for c in det.claims if c.id in flagged]
 
 
-def build_prompt(item: Item, claims: list[Claim], editable: list[str]) -> str:
+def build_prompt(item: Item, claims: list[Claim], editable: list[str], det: DetectorOutput | None = None) -> str:
+    """The repair prompt; with the detector's output, large evidence is focused (focus_rows)."""
+    focus = focus_rows(item.evidence, det, item.question.text)
     return (
-        f"EVIDENCE\n{render_evidence(item.evidence)}\n\n"
+        f"EVIDENCE\n{render_evidence(item.evidence, focus)}\n\n"
         f"QUESTION\n{item.question.text}\n\n"
         f"ANSWER\n{mark_claims(item.answer.text, claims)}\n\n"
         f"FLAGGED CLAIMS: {', '.join(editable)}\n\n"

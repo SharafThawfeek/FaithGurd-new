@@ -29,15 +29,19 @@ QA_TEMPLATE = (
 SCALE_WORDS = {3: "thousands", 6: "millions", 9: "billions"}
 
 
-def evidence_passages(evidence: Evidence, max_passage_chars: int = 600) -> list[str]:
+def evidence_passages(evidence: Evidence, max_passage_chars: int = 600, focus: dict[str, set[int]] | None = None) -> list[str]:
+    """One passage per table (and the text passages); with `focus`, only those rows (faithguard.focus)."""
     out = []
     for t in evidence.tables:
         unit = f" (amounts in {SCALE_WORDS[t.scale]})" if t.scale in SCALE_WORDS else ""
         rows: dict[int, list] = {}
         for c in t.cells:
             rows.setdefault(c.row, []).append(c)
+        shown = [r for r in sorted(rows) if focus is None or r in focus.get(t.id, set())]
+        if not shown:
+            continue
         lines = [f"Table {t.id}{': ' + t.title if t.title else ''}{unit}"]
-        for r in sorted(rows):
+        for r in shown:
             cells = rows[r]
             label = cells[0].row_label or cells[0].metric or ""
             lines.append(f"{label} | " + " | ".join(f"{c.column_label}: {c.text}" for c in cells))
@@ -51,8 +55,8 @@ def lettuce_prompt(question: str, passages: list[str]) -> str:
     return QA_TEMPLATE.format(question=question, n=len(passages), context=context)
 
 
-def item_prompt(item: Item) -> str:
-    return lettuce_prompt(item.question.text, evidence_passages(item.evidence))
+def item_prompt(item: Item, focus: dict[str, set[int]] | None = None) -> str:
+    return lettuce_prompt(item.question.text, evidence_passages(item.evidence, focus=focus))
 
 
 def encode(tokenizer, prompt: str, answer: str, spans: list[tuple[int, int, str | None]], max_len: int = 2048) -> dict:
@@ -164,9 +168,14 @@ class ChannelA:
         self.slot_head.to(self.device).eval()
         self.threshold, self.max_len = threshold, max_len
 
-    def token_probs(self, item: Item) -> list[tuple[int, int, float, int]]:
-        """(answer char start, end, P(unsupported), slot index) for every answer token."""
-        enc = encode(self.tokenizer, item_prompt(item), item.answer.text, [], self.max_len)
+    def token_probs(self, item: Item, det: DetectorOutput | None = None) -> list[tuple[int, int, float, int]]:
+        """(answer char start, end, P(unsupported), slot index) for every answer token.
+
+        With the rule checker's output, large evidence is focused on the rows the claims need (faithguard.focus)."""
+        from faithguard.focus import focus_rows
+
+        focus = focus_rows(item.evidence, det, item.question.text)
+        enc = encode(self.tokenizer, item_prompt(item, focus), item.answer.text, [], self.max_len)
         ids = self.torch.tensor([enc["input_ids"]], device=self.device)
         mask = self.torch.tensor([enc["attention_mask"]], device=self.device)
         with self.torch.no_grad():
@@ -202,7 +211,11 @@ def span_flags(channel_a: ChannelA, threshold: float | None = None):
     from faithguard.detect import detect
 
     cut = channel_a.threshold if threshold is None else threshold
-    return lambda item: flag_claims(detect(item), channel_a.token_probs(item), cut)
+    def run(item: Item) -> DetectorOutput:
+        det = detect(item)
+        return flag_claims(det, channel_a.token_probs(item, det), cut)
+
+    return run
 
 
 def flag_claims(det: DetectorOutput, tokens: list[tuple[int, int, float, int]], threshold: float) -> DetectorOutput:

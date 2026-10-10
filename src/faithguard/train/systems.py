@@ -29,7 +29,7 @@ def run_systems(items: Iterable[Item], channel_a, repairer: Callable[[Item, Dete
 
     for item in items:
         det_b = detect(item)
-        tokens = channel_a.token_probs(item)
+        tokens = channel_a.token_probs(item, det_b)
         det_a = flag_claims(det_b, tokens, threshold)
         yield {
             "detector": {"item_id": item.id, "risk_b": det_b.risk, "threshold": threshold,

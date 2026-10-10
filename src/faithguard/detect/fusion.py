@@ -121,7 +121,7 @@ class FusedDetector:
 
     def __call__(self, item: Item) -> DetectorOutput:
         det = self.channel_b(item)
-        tokens = self.channel_a.token_probs(item)
-        spans: list[Span] = self.channel_a.spans(item)
+        tokens = self.channel_a.token_probs(item, det)
+        spans: list[Span] = self.channel_a.spans(item, tokens)
         risk = self.fusion.item_risk(claim_features(det, tokens))
         return det.model_copy(update={"spans": spans, "risk": risk, "detector": "fused-a+b-v1"})

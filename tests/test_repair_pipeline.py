@@ -97,7 +97,7 @@ def test_channel_a_spans_decide_which_claims_reach_the_repairer():
     class FakeChannelA:  # flags only the first figure, which is correct
         threshold = 0.5
 
-        def token_probs(self, _item):
+        def token_probs(self, _item, det=None):
             start = text.index("14,213")
             return [(start, start + 6, 0.9, 0), (text.index("12,450"), text.index("12,450") + 6, 0.1, 0)]
 
@@ -118,7 +118,7 @@ def test_systems_runner_stores_both_repairs_and_the_detector_record():
     item = bank_item(text)
 
     class FakeChannelA:  # flags nothing
-        def token_probs(self, _item):
+        def token_probs(self, _item, det=None):
             return [(0, 5, 0.1, 0)]
 
         def spans(self, _item, tokens=None):
@@ -155,3 +155,21 @@ def test_stored_system_outputs_are_scored_against_gold():
     assert summary["trained repairer, rule_spans"]["correction_rate"] == 1.0
     assert summary["rule repairer, channel_a_spans"]["needing_repair"] == 1  # Channel A flagged the wrong figure too
     assert "| trained repairer, rule_spans |" in systems.report(summary)
+
+
+def test_large_evidence_is_focused_on_the_rows_the_claims_need():
+    from faithguard.focus import FOCUS_ABOVE_ROWS, focus_rows
+    from faithguard.records import Evidence
+    from faithguard.repair.prompting import build_prompt, editable_claims
+    from faithguard.tables import table_from_grid
+    from fixtures import BANK_GRID
+
+    small = bank_item("Group profit after tax was Rs. 12,450 million.")
+    assert focus_rows(small.evidence, detect(small), small.question.text) is None  # small evidence is shown whole
+    filler = [[f"Other line item {i}", f"{1000 + i:,}", "900", "800", "700"] for i in range(FOCUS_ABOVE_ROWS)]
+    big = small.model_copy(update={"evidence": Evidence(tables=[table_from_grid("t1", BANK_GRID + filler, currency="LKR")])})
+    det = detect(big)
+    focus = focus_rows(big.evidence, det, big.question.text)
+    assert focus == {"t1": {3}}  # the profit after tax row: the claim's cell and the question's line item
+    prompt = build_prompt(big, det.claims, editable_claims(det), det)
+    assert "t1r3c1" in prompt and "Other line item" not in prompt and "rows of these statements are not shown" in prompt

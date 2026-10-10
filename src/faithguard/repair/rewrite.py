@@ -27,7 +27,7 @@ class RewriteRepairer:
         editable = editable_claims(det)
         if det.claims and not editable:
             return RepairOutput(item_id=item.id, repairer=self.name, status="nothing_to_fix", text=item.answer.text)
-        prompt = build_prompt(item, det.claims, editable).rsplit("Write a JSON edit program", 1)[0] + REWRITE_INSTRUCTIONS
+        prompt = build_prompt(item, det.claims, editable, det).rsplit("Write a JSON edit program", 1)[0] + REWRITE_INSTRUCTIONS
         reply = self.generate(prompt).strip()
         if not reply or reply.upper().startswith("CANNOT_FIX"):
             return RepairOutput(item_id=item.id, repairer=self.name, status="cannot_fix", reason="the model declined", attempts=1)
