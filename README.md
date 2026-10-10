@@ -182,6 +182,14 @@ Controlled track on development data, made from the project's own templates (pip
 | Detector, repairer v1 and all variants frozen | After phase 4's GPU runs |
 | Pre-registration filed | Drafted (D-071): [docs/preregistration.md](docs/preregistration.md); filed at lock |
 
+### Phase 6: label the benchmark (tooling ready; dry run on the pilot)
+
+| Step | State |
+| --- | --- |
+| Run every frozen system on the items | `python -m faithguard.train.systems` (GPU) stores Channel A's spans and the trained repairer's outputs; large evidence is focused first (D-084). Dry run on the 120 pilot answers done (D-085) |
+| Code checks on every repair | `faithguard systems` scores the stored outputs against gold, counts only: [runs/pilot/systems/report.md](runs/pilot/systems/report.md). On the pilot no correct answer was damaged, but the trained repairer corrected 21.7% of wrong answers against 43.5% for the rules |
+| Label the 800 main answers | Blinded tasks ready in `labelling/main-tasks.json` (not in git); waits for the pre-registration |
+
 ### Phase 4: components (built and trained; development-data runs done)
 
 | Part | Built and tested on CPU | Waiting for |
