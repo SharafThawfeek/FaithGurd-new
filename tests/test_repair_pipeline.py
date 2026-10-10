@@ -86,3 +86,25 @@ def test_repair_reports_nothing_to_fix():
 def test_bank_cell_constant_is_the_bank():
     item = bank_item("x")
     assert item.evidence.cell(BANK_PAT_2025).entity == "bank"
+
+
+def test_channel_a_spans_decide_which_claims_reach_the_repairer():
+    from faithguard.detect.channel_a import span_flags
+
+    text = "Group profit after tax was Rs. 14,213 million, against Rs. 12,450 million for the Bank."
+    item = bank_item(text)
+
+    class FakeChannelA:  # flags only the first figure, which is correct
+        threshold = 0.5
+
+        def token_probs(self, _item):
+            start = text.index("14,213")
+            return [(start, start + 6, 0.9, 0), (text.index("12,450"), text.index("12,450") + 6, 0.1, 0)]
+
+    det = span_flags(FakeChannelA())(item)
+    verdicts = {c.text: det.check(c.id).verdict for c in det.claims}
+    assert verdicts["Rs. 14,213 million"] == "unsupported"  # a false positive reaches the repairer
+    assert verdicts["Rs. 12,450 million"] == "supported"  # unflagged claims pass through
+    assert det.detector == "channel-a-spans@0.5"
+    # the rule repairer withholds rather than rewrite a correct figure: the false positive costs coverage, not correctness
+    assert repair(item, det).status == "cannot_fix"

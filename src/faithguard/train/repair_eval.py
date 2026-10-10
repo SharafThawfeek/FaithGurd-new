@@ -34,6 +34,10 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--track", default="tune")
     parser.add_argument("--limit", type=int, default=500)
     parser.add_argument("--seed", type=int, default=13)
+    parser.add_argument("--spans", default="rules",
+                        help="which claims the repairer edits: 'rules' (the rule checker's flags) or a Channel A model folder "
+                             "(its predicted spans, for repair RQ3)")
+    parser.add_argument("--span-threshold", type=float, default=0.5, help="Channel A probability that flags a claim")
     parser.add_argument("--tiny", action="store_true")
     args = parser.parse_args(argv)
     if args.tiny:
@@ -72,7 +76,14 @@ def main(argv: list[str] | None = None) -> None:
 
             generate, name = Generator(args.model, args.load, adapter=args.adapter), f"{args.model}{' + ' + args.adapter if args.adapter else ' (zero-shot)'}"
         repairer = ModelRepairer(generate, name=name) if args.mode == "program" else RewriteRepairer(generate, name=name)
-    result = evaluate_repairer(items, gold, repairer)
+    if args.spans == "rules":
+        from faithguard.detect import detect as detector
+    else:
+        from faithguard.detect.channel_a import ChannelA, span_flags
+
+        detector = span_flags(ChannelA(args.spans), threshold=args.span_threshold)
+        name += f", Channel A spans at {args.span_threshold}"
+    result = evaluate_repairer(items, gold, repairer, detector=detector)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     title = f"{args.mode} repairer, {name}, {args.track} track"

@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from faithguard.records import SLOTS, Evidence, Item, Span
+from faithguard.records import SLOTS, DetectorOutput, Evidence, Item, Span
 
 SLOT_NAMES: tuple[str, ...] = tuple(SLOTS)
 SLOT_INDEX = {s: i for i, s in enumerate(SLOT_NAMES)}
@@ -189,3 +189,31 @@ class ChannelA:
                 spans.append(Span(start=current[0][0], end=current[-1][1], score=max(p for _, _, p, _ in current), slot=SLOT_NAMES[slot]))
             current = [tok] if tok[2] >= self.threshold else []
         return spans
+
+
+def span_flags(channel_a: ChannelA, threshold: float | None = None):
+    """A detector whose flagged claims are the ones Channel A marks: repair with predicted spans (repair RQ3).
+
+    Claims and their checks come from the rule checker. A claim is flagged (verdict "unsupported") when
+    Channel A's probability over its characters, or over its direction word, reaches the threshold, and
+    passed as supported otherwise. So errors Channel A misses go unrepaired, and correct claims it flags
+    reach the repairer as false positives, which KEEP training is meant to leave alone.
+    """
+    from faithguard.detect import detect
+
+    cut = channel_a.threshold if threshold is None else threshold
+
+    def run(item: Item) -> DetectorOutput:
+        det = detect(item)
+        tokens = channel_a.token_probs(item)
+        checks = []
+        for claim in det.claims:
+            check = det.check(claim.id)
+            ranges = [(claim.start, claim.end)] + ([claim.direction_span] if claim.direction_span else [])
+            p = max((prob for s, e, prob, _ in tokens for a, b in ranges if s < b and e > a), default=0.0)
+            flagged = p >= cut
+            checks.append(check.model_copy(update={"verdict": "unsupported" if flagged else "supported",
+                                                   "slots": check.slots if flagged else []}))
+        return det.model_copy(update={"checks": checks, "detector": f"channel-a-spans@{cut}"})
+
+    return run

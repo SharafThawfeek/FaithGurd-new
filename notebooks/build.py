@@ -161,6 +161,33 @@ NOTEBOOKS = {
             ("Evaluate (also writes per-claim rows for the A+B fusion)", "!python -m faithguard.train.detector_eval --model-dir {OUT}/channel-a/model --out {OUT}/eval-channel-a\n!python -m faithguard.train.detector_eval --model-dir {OUT}/channel-a-noslot/model --out {OUT}/eval-channel-a-noslot"),
         ],
     },
+    "repair_spans": {
+        "title": "Repair RQ3: predicted spans, and stage A with and without KEEP training",
+        "about": "How much does repair degrade when Channel A, not the rule checker, decides which claims to edit, and does KEEP "
+                 "training (stage A's falsely flagged items) limit the harm? Trains stage A again without KEEP items, then evaluates "
+                 "both models and the rule repairer with Channel A's spans on the same 500 tune-track items. Attach the stage A "
+                 "notebook's output and the faithguard-detector-models dataset. Expect about 7.5 GPU hours.",
+        "cells": [
+            ("Stage A's adapter and Channel A's model",
+             "import glob, os\n"
+             "for flat in glob.glob('/kaggle/input/**/*__model__*', recursive=True):  # the models dataset, folders flattened\n"
+             "    target = os.path.join(WORK, 'prev', *os.path.basename(flat).split('__'))\n"
+             "    os.makedirs(os.path.dirname(target), exist_ok=True)\n"
+             "    if not os.path.exists(target):\n"
+             "        os.symlink(flat, target)\n"
+             "CHANNEL_A = os.path.join(WORK, 'prev', 'channel-a', 'model')\n"
+             "ADAPTER = sorted(glob.glob('/kaggle/input/**/repair-sft/adapter', recursive=True))[0]\n"
+             "print(CHANNEL_A, os.path.exists(CHANNEL_A), ADAPTER)\nMODE = 'fp16'"),
+            ("Stage A without KEEP items (no falsely flagged claims in training)",
+             "!faithguard sft --mode program --false-flags 0 --out runs/sft-nokeep\n"
+             "!python -m faithguard.train.repair_sft --data runs/sft-nokeep/repair-program-train.jsonl --out {OUT}/repair-sft-nokeep --mode $MODE"),
+            ("Evaluate with Channel A's spans (and the no-KEEP model with the rule checker's, for reference)",
+             "!python -m faithguard.train.repair_eval --adapter $ADAPTER --load $MODE --spans $CHANNEL_A --out {OUT}/eval-sft-channel-a-spans\n"
+             "!python -m faithguard.train.repair_eval --adapter {OUT}/repair-sft-nokeep/adapter --load $MODE --spans $CHANNEL_A --out {OUT}/eval-nokeep-channel-a-spans\n"
+             "!python -m faithguard.train.repair_eval --adapter {OUT}/repair-sft-nokeep/adapter --load $MODE --out {OUT}/eval-nokeep-rule-spans\n"
+             "!python -m faithguard.train.repair_eval --mode rules --spans $CHANNEL_A --out {OUT}/eval-rules-channel-a-spans"),
+        ],
+    },
     "repair_zero_shot_9b": {
         "title": "Repair baseline: zero-shot edit programs from Qwen3.5-9B",
         "about": "Is training needed at all? The answer generator itself (Qwen3.5-9B, 4-bit on llama.cpp, thinking off) writes edit "
