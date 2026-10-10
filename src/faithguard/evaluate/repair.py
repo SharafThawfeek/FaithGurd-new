@@ -19,6 +19,7 @@ from faithguard.detect import detect as default_detect
 from faithguard.evaluate.score import score_text, wrong_numbers
 from faithguard.gold import GoldStore
 from faithguard.records import DetectorOutput, Item, RepairOutput
+from faithguard.repair.prompting import program_json
 
 
 def evaluate_repairer(
@@ -44,6 +45,8 @@ def evaluate_repairer(
             "attempts": out.attempts,
             "new_errors": [w for w in after_wrong if w not in before_wrong],
             "program": out.program is not None,
+            "reason": out.reason,  # why a repair was withheld (the gate's failure, CANNOT_FIX's reason)
+            "program_text": program_json(out.program) if out.program is not None else None,
         })
     seconds = time.time() - t0
     return {"summary": summarise(rows), "by_error": by_error(rows), "seconds": round(seconds, 1), "rows": rows}

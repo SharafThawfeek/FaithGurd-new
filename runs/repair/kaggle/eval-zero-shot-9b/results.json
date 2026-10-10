@@ -1,0 +1,141 @@
+{
+  "summary": {
+    "items": 500,
+    "needing_repair": 411,
+    "correction_rate": 0.0,
+    "abstained_when_needed": 0.9854,
+    "still_wrong_when_sent": 1.0,
+    "new_error_rate": 0.0,
+    "damage_rate": 0.0,
+    "valid_program_rate": 1.0,
+    "gate_pass_rate": 0.0,
+    "mean_attempts": 2.0,
+    "status": {
+      "gate_failed": 405,
+      "nothing_to_fix": 95
+    }
+  },
+  "by_error": {
+    "basis": {
+      "items": 26,
+      "needing_repair": 26,
+      "correction_rate": 0.0,
+      "abstained_when_needed": 1.0,
+      "still_wrong_when_sent": null,
+      "new_error_rate": null,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 0.0,
+      "mean_attempts": 2.0,
+      "status": {
+        "gate_failed": 26
+      }
+    },
+    "metric": {
+      "items": 112,
+      "needing_repair": 112,
+      "correction_rate": 0.0,
+      "abstained_when_needed": 1.0,
+      "still_wrong_when_sent": null,
+      "new_error_rate": null,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 0.0,
+      "mean_attempts": 2.0,
+      "status": {
+        "gate_failed": 112
+      }
+    },
+    "missing_operand": {
+      "items": 121,
+      "needing_repair": 121,
+      "correction_rate": 0.0,
+      "abstained_when_needed": 0.9835,
+      "still_wrong_when_sent": 1.0,
+      "new_error_rate": 0.0,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 0.0,
+      "mean_attempts": 2.0,
+      "status": {
+        "gate_failed": 119,
+        "nothing_to_fix": 2
+      }
+    },
+    "none": {
+      "items": 89,
+      "needing_repair": 0,
+      "correction_rate": null,
+      "abstained_when_needed": null,
+      "still_wrong_when_sent": null,
+      "new_error_rate": 0.0,
+      "damage_rate": 0.0,
+      "valid_program_rate": null,
+      "gate_pass_rate": null,
+      "mean_attempts": 0.0,
+      "status": {
+        "nothing_to_fix": 89
+      }
+    },
+    "period": {
+      "items": 61,
+      "needing_repair": 61,
+      "correction_rate": 0.0,
+      "abstained_when_needed": 1.0,
+      "still_wrong_when_sent": null,
+      "new_error_rate": null,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 0.0,
+      "mean_attempts": 2.0,
+      "status": {
+        "gate_failed": 61
+      }
+    },
+    "scale": {
+      "items": 28,
+      "needing_repair": 28,
+      "correction_rate": 0.0,
+      "abstained_when_needed": 1.0,
+      "still_wrong_when_sent": null,
+      "new_error_rate": null,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 0.0,
+      "mean_attempts": 2.0,
+      "status": {
+        "gate_failed": 28
+      }
+    },
+    "sign": {
+      "items": 63,
+      "needing_repair": 63,
+      "correction_rate": 0.0,
+      "abstained_when_needed": 0.9365,
+      "still_wrong_when_sent": 1.0,
+      "new_error_rate": 0.0,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 0.0,
+      "mean_attempts": 2.0,
+      "status": {
+        "gate_failed": 59,
+        "nothing_to_fix": 4
+      }
+    }
+  },
+  "seconds": 1828.5,
+  "settings": {
+    "out": "/kaggle/working/outputs/eval-zero-shot-9b",
+    "mode": "program",
+    "model": "Qwen/Qwen3.5-2B",
+    "adapter": null,
+    "load": "fp16",
+    "server": "http://127.0.0.1:8080",
+    "sources": "tatqa,finqa",
+    "track": "tune",
+    "limit": 500,
+    "seed": 13,
+    "tiny": false
+  }
+}
