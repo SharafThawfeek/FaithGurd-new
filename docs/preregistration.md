@@ -66,6 +66,7 @@ From `faithguard.policy` and `faithguard.stats` at the code version named at fil
 - **Procedure:** Learn-then-Test. Order each family's grid on the tune split, most cautious first; on the calibration split compute each setting's Hoeffding–Bentkus p-value for H0: P(unsafe | sent) > α; certify in fixed sequence until the first p > δ; among certified settings choose the highest useful coverage on calibration; report that setting once on test.
 - **Issuer-level sensitivity check (risk R-14):** the same certification with each issuer as one draw; reported next to the main certificate.
 - **Comparator:** SCoRE (`score-select`), whose guarantee is on expected risk, not a high-probability bound.
+- **Fallback when repair becomes unsafe. Open (Sharaf):** the grid has no setting that never repairs, so in the transfer study recalibration with v0's models cannot fall back to send-or-abstain; adding never-repair settings to the fixed-sequence chain blocks certification on smaller calibration sets (D-082). Proposed: keep the grid, and add a separate send-or-abstain fallback family certified with half of δ, used only when no outcome-aware setting certifies.
 - **Outcome models:** LightGBM for P(unsafe) and P(fix), from pre-action features only; TabICLv2 as the one challenger.
 
 ## 5. Metrics

@@ -72,3 +72,20 @@ def test_cluster_pvalue_is_a_probability():
     rs = [r for r in records(400) if r.split == "calibration"]
     p = cluster_pvalue(rs, ["send" if r.risk == 0 else "abstain" for r in rs], 0.10)
     assert 0 <= p <= 1
+
+
+def test_transfer_study_scores_the_v0_policy_on_a_changed_repairer():
+    from faithguard.policy import transfer
+
+    v0 = records(2000)
+    random.seed(3)
+    v1 = []  # the new repairer breaks half of the repairs the old one got right
+    for r in v0:
+        broken = r.outcomes["send"] == "unsupported" and r.outcomes["repair"] == "supported_useful" and random.random() < 0.5
+        v1.append(r.model_copy(update={"outcomes": r.outcomes | {"repair": "unsupported"}}) if broken else r)
+    result = transfer.run(v0, v1, sizes=(50, 200), repeats=5)
+    assert result["v0_on_v0_test"]["risk_within_alpha"]
+    assert not result["as_is"]["risk_within_alpha"]  # repairing with the new repairer sends wrong answers
+    assert result["refitted"] and result["refitted"]["risk_within_alpha"]  # refitting learns to abstain instead
+    assert [r["labels"] for r in result["recalibrated"]][:2] == [50, 200]
+    assert "# Transfer study" in transfer.report(result)
