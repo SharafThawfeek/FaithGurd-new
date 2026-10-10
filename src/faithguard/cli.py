@@ -419,6 +419,35 @@ def cmd_extraction(args) -> None:
     print(f"best: {summary['best']} -> {out / 'report.md'}")
 
 
+def cmd_systems(args) -> None:
+    from faithguard.evaluate import systems
+    from faithguard.evaluate.pilot import label_of
+    from faithguard.gold import GoldStore
+
+    items = list(read_jsonl(args.items, Item))
+    gold = GoldStore.load(args.gold)
+    folder = Path(args.outputs)
+
+    def rows(name: str) -> dict[str, dict]:
+        path = folder / f"{name}.jsonl"
+        if not path.exists():
+            return {}
+        return {r["item_id"]: r for r in (json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip())}
+
+    states = {}
+    for item in items:
+        label = label_of(gold, item.id)
+        if label and label.status in systems.LABEL_STATE:
+            states[item.id] = systems.LABEL_STATE[label.status]
+    summary = systems.score(items, gold, rows("detector"), {"rule_spans": rows("repair-rule-spans"),
+                                                            "channel_a_spans": rows("repair-channel-a-spans")}, states)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    (out / "report.md").write_text(systems.report(summary, args.title), encoding="utf-8")
+    print(systems.report(summary, args.title))
+
+
 def cmd_hashes(args) -> None:
     """SHA-256, size and line count of each file, so a run's inputs and outputs can be pinned (phase 5)."""
     import datetime
@@ -576,6 +605,14 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--strategy", default="")
     p.add_argument("--out", default="runs/extraction")
     p.set_defaults(fn=cmd_extraction)
+
+    p = sub.add_parser("systems", help="score the stored outputs of the GPU systems against the gold store (counts only)")
+    p.add_argument("--items", default="data/benchmark-build/items.jsonl")
+    p.add_argument("--gold", default="data/benchmark-build/gold")
+    p.add_argument("--outputs", default="data/benchmark-build/systems-pilot", help="folder with detector.jsonl and the repair files")
+    p.add_argument("--title", default="Repair on the pilot's natural answers")
+    p.add_argument("--out", default="runs/pilot/systems")
+    p.set_defaults(fn=cmd_systems)
 
     p = sub.add_parser("hashes", help="SHA-256 of files, to pin a run's inputs and outputs")
     p.add_argument("files", nargs="+")

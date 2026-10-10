@@ -134,3 +134,24 @@ def test_systems_runner_stores_both_repairs_and_the_detector_record():
     assert seen == [["unsupported"], ["supported"]]  # rule spans first, then Channel A's (which flag nothing)
     assert row["detector"]["item_id"] == item.id and row["detector"]["claims"][0]["b_unsupported"] == 1.0
     assert row["repair_rule_spans"]["status"] == row["repair_channel_a_spans"]["status"] == "nothing_to_fix"
+
+
+def test_stored_system_outputs_are_scored_against_gold():
+    from decimal import Decimal
+
+    from faithguard.evaluate import systems
+    from faithguard.gold import GoldQuestion, GoldStore, GoldValue
+
+    item = bank_item("Group profit after tax was Rs. 12,450 million.")  # the Bank's figure
+    gold = GoldStore("unused")
+    gold.add_question(GoldQuestion(question_id="q-bank", answer_text="Rs. 14,213 million", cells=["t1r3c1"],
+                                   values=[GoldValue(value=Decimal("14212560000"), kind="amount")], source="test"))
+    det = detect(item)
+    claim = det.claims[0]
+    detector_rows = {item.id: {"item_id": item.id, "threshold": 0.5, "claims": [{"claim_id": claim.id, "a_max": 0.9}]}}
+    fixed = {"item_id": item.id, "repairer": "trained", "status": "repaired", "text": "Group profit after tax was Rs. 14,213 million."}
+    summary = systems.score([item], gold, detector_rows, {"rule_spans": {item.id: fixed}, "channel_a_spans": {item.id: fixed}},
+                            {item.id: "unsupported"})
+    assert summary["trained repairer, rule_spans"]["correction_rate"] == 1.0
+    assert summary["rule repairer, channel_a_spans"]["needing_repair"] == 1  # Channel A flagged the wrong figure too
+    assert "| trained repairer, rule_spans |" in systems.report(summary)
