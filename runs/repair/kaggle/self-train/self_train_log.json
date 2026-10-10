@@ -1,0 +1,18 @@
+[
+  {
+    "round": 1,
+    "items": 767,
+    "kept": 496,
+    "acceptance": 0.6467,
+    "replayed": 248,
+    "sampling_seconds": 3935.8
+  },
+  {
+    "round": 2,
+    "items": 767,
+    "kept": 465,
+    "acceptance": 0.6063,
+    "replayed": 232,
+    "sampling_seconds": 3637.0
+  }
+]

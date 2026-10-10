@@ -1,0 +1,16 @@
+{
+  "detector": "lettuce-v2-mmbert",
+  "items": 2000,
+  "auroc": 0.5549637485628476,
+  "false_alarm_clean": 0.7064220183486238,
+  "wrong_context_recall": 0.8204419889502762,
+  "seconds_per_item": 0.105,
+  "settings": {
+    "detector": "lettuce-v2-mmbert",
+    "out": "/kaggle/working/outputs/base-lettuce-v2",
+    "sources": "tatqa,finqa",
+    "track": "tune",
+    "limit": 2000,
+    "seed": 13
+  }
+}

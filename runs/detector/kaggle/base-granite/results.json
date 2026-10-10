@@ -1,0 +1,16 @@
+{
+  "detector": "granite",
+  "items": 1000,
+  "auroc": 0.8062085593731163,
+  "false_alarm_clean": 0.2761904761904762,
+  "wrong_context_recall": 0.9585585585585585,
+  "seconds_per_item": 2.654,
+  "settings": {
+    "detector": "granite",
+    "out": "/kaggle/working/outputs/base-granite",
+    "sources": "tatqa,finqa",
+    "track": "tune",
+    "limit": 1000,
+    "seed": 13
+  }
+}
