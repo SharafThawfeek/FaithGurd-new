@@ -115,6 +115,27 @@ def test_fusion_learns_and_calibrates():
     assert 0 <= fusion.item_risk(rows[:3]) <= 1
 
 
+def test_fusion_study_compares_channels_on_held_out_items():
+    import random
+
+    from faithguard.train import fusion_study
+
+    random.seed(1)
+    rows = []
+    for i in range(800):
+        wrong = random.random() < 0.4
+        a = min(1.0, max(0.0, (0.8 if wrong else 0.2) + random.uniform(-0.25, 0.25)))
+        row = {f: 0.0 for f in FEATURES}
+        caught = wrong and random.random() < 0.6  # Channel B misses 40% of the wrong claims
+        row.update(b_unsupported=float(caught), b_supported=float(not caught), a_max=a, a_mean=a,
+                   a_any=float(a >= 0.5), label=int(wrong), item_id=f"item-{i}")
+        rows.append(row)
+    both, b_only = (fusion_study.evaluate(rows, fusion_study.FEATURE_SETS[k]) for k in ("A + B", "B only"))
+    assert sum(both["claims"].values()) == 800 and both["items_evaluated"] == both["claims"]["evaluate"]
+    assert both["item_auroc"] > b_only["item_auroc"]  # Channel A carries signal that Channel B misses here
+    assert "| x | A + B |" in fusion_study.report({"x": {"A + B": both}})
+
+
 def test_xbrl_mining_produces_labelled_wrong_context_negatives():
     from faithguard.data import edgar, xbrl_mining
     from test_edgar import INSTANCE

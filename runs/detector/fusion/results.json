@@ -1,0 +1,134 @@
+{
+  "full": {
+    "B only": {
+      "claims": {
+        "fit": 2216,
+        "calibrate": 1063,
+        "evaluate": 1037
+      },
+      "items_evaluated": 475,
+      "claim_auroc": 0.9958209343847642,
+      "item_auroc": 0.9928957528957529,
+      "item_brier": 0.0080279288793517,
+      "item_ece": 0.0037407565789473315,
+      "false_alarm_clean": 0.009523809523809525,
+      "recall_wrong": 0.9918918918918919
+    },
+    "A only": {
+      "claims": {
+        "fit": 2216,
+        "calibrate": 1063,
+        "evaluate": 1037
+      },
+      "items_evaluated": 475,
+      "claim_auroc": 0.9879854188364826,
+      "item_auroc": 0.9197425997425998,
+      "item_brier": 0.08515656256227011,
+      "item_ece": 0.040712672847053294,
+      "false_alarm_clean": 0.49523809523809526,
+      "recall_wrong": 0.9675675675675676
+    },
+    "A + B": {
+      "claims": {
+        "fit": 2216,
+        "calibrate": 1063,
+        "evaluate": 1037
+      },
+      "items_evaluated": 475,
+      "claim_auroc": 0.9989938253236125,
+      "item_auroc": 0.994954954954955,
+      "item_brier": 0.006626667331355286,
+      "item_ece": 0.0055647871103921935,
+      "false_alarm_clean": 0.009523809523809525,
+      "recall_wrong": 0.9918918918918919
+    }
+  },
+  "no-XBRL": {
+    "B only": {
+      "claims": {
+        "fit": 2216,
+        "calibrate": 1063,
+        "evaluate": 1037
+      },
+      "items_evaluated": 475,
+      "claim_auroc": 0.9958209343847642,
+      "item_auroc": 0.9928957528957529,
+      "item_brier": 0.0080279288793517,
+      "item_ece": 0.0037407565789473315,
+      "false_alarm_clean": 0.009523809523809525,
+      "recall_wrong": 0.9918918918918919
+    },
+    "A only": {
+      "claims": {
+        "fit": 2216,
+        "calibrate": 1063,
+        "evaluate": 1037
+      },
+      "items_evaluated": 475,
+      "claim_auroc": 0.9878924267222139,
+      "item_auroc": 0.9226254826254827,
+      "item_brier": 0.08510990593373459,
+      "item_ece": 0.03793159063933264,
+      "false_alarm_clean": 0.5619047619047619,
+      "recall_wrong": 1.0
+    },
+    "A + B": {
+      "claims": {
+        "fit": 2216,
+        "calibrate": 1063,
+        "evaluate": 1037
+      },
+      "items_evaluated": 475,
+      "claim_auroc": 0.9989231513167683,
+      "item_auroc": 0.9944401544401544,
+      "item_brier": 0.006057461226419543,
+      "item_ece": 0.00335392404692665,
+      "false_alarm_clean": 0.009523809523809525,
+      "recall_wrong": 0.9945945945945946
+    }
+  },
+  "no-slot": {
+    "B only": {
+      "claims": {
+        "fit": 2216,
+        "calibrate": 1063,
+        "evaluate": 1037
+      },
+      "items_evaluated": 475,
+      "claim_auroc": 0.9958209343847642,
+      "item_auroc": 0.9928957528957529,
+      "item_brier": 0.0080279288793517,
+      "item_ece": 0.0037407565789473315,
+      "false_alarm_clean": 0.009523809523809525,
+      "recall_wrong": 0.9918918918918919
+    },
+    "A only": {
+      "claims": {
+        "fit": 2216,
+        "calibrate": 1063,
+        "evaluate": 1037
+      },
+      "items_evaluated": 475,
+      "claim_auroc": 0.9885322124683826,
+      "item_auroc": 0.9225997425997426,
+      "item_brier": 0.08581279861020005,
+      "item_ece": 0.030076277159743016,
+      "false_alarm_clean": 0.5428571428571428,
+      "recall_wrong": 0.9918918918918919
+    },
+    "A + B": {
+      "claims": {
+        "fit": 2216,
+        "calibrate": 1063,
+        "evaluate": 1037
+      },
+      "items_evaluated": 475,
+      "claim_auroc": 0.9989770867430442,
+      "item_auroc": 0.9948391248391248,
+      "item_brier": 0.006769929494828322,
+      "item_ece": 0.003970212459725411,
+      "false_alarm_clean": 0.009523809523809525,
+      "recall_wrong": 0.9918918918918919
+    }
+  }
+}
