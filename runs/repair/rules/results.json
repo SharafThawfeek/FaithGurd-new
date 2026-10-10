@@ -1,0 +1,145 @@
+{
+  "summary": {
+    "items": 500,
+    "needing_repair": 411,
+    "correction_rate": 0.5961,
+    "abstained_when_needed": 0.382,
+    "still_wrong_when_sent": 0.0354,
+    "new_error_rate": 0.0087,
+    "damage_rate": 0.0,
+    "valid_program_rate": 1.0,
+    "gate_pass_rate": 1.0,
+    "mean_attempts": 1.002,
+    "status": {
+      "repaired": 248,
+      "nothing_to_fix": 95,
+      "cannot_fix": 157
+    }
+  },
+  "by_error": {
+    "basis": {
+      "items": 26,
+      "needing_repair": 26,
+      "correction_rate": 1.0,
+      "abstained_when_needed": 0.0,
+      "still_wrong_when_sent": 0.0,
+      "new_error_rate": 0.0,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 1.0,
+      "mean_attempts": 1.0,
+      "status": {
+        "repaired": 26
+      }
+    },
+    "metric": {
+      "items": 112,
+      "needing_repair": 112,
+      "correction_rate": 0.7589,
+      "abstained_when_needed": 0.2321,
+      "still_wrong_when_sent": 0.0116,
+      "new_error_rate": 0.0116,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 1.0,
+      "mean_attempts": 1.0,
+      "status": {
+        "repaired": 86,
+        "cannot_fix": 26
+      }
+    },
+    "missing_operand": {
+      "items": 121,
+      "needing_repair": 121,
+      "correction_rate": 0.0,
+      "abstained_when_needed": 0.9835,
+      "still_wrong_when_sent": 1.0,
+      "new_error_rate": 0.0,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": null,
+      "mean_attempts": 1.0,
+      "status": {
+        "cannot_fix": 119,
+        "nothing_to_fix": 2
+      }
+    },
+    "none": {
+      "items": 89,
+      "needing_repair": 0,
+      "correction_rate": null,
+      "abstained_when_needed": null,
+      "still_wrong_when_sent": null,
+      "new_error_rate": 0.0,
+      "damage_rate": 0.0,
+      "valid_program_rate": null,
+      "gate_pass_rate": null,
+      "mean_attempts": 0.0,
+      "status": {
+        "nothing_to_fix": 89
+      }
+    },
+    "period": {
+      "items": 61,
+      "needing_repair": 61,
+      "correction_rate": 0.8033,
+      "abstained_when_needed": 0.1803,
+      "still_wrong_when_sent": 0.02,
+      "new_error_rate": 0.02,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 1.0,
+      "mean_attempts": 1.016,
+      "status": {
+        "repaired": 50,
+        "cannot_fix": 11
+      }
+    },
+    "scale": {
+      "items": 28,
+      "needing_repair": 28,
+      "correction_rate": 0.9286,
+      "abstained_when_needed": 0.0357,
+      "still_wrong_when_sent": 0.037,
+      "new_error_rate": 0.037,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 1.0,
+      "mean_attempts": 1.0,
+      "status": {
+        "repaired": 27,
+        "cannot_fix": 1
+      }
+    },
+    "sign": {
+      "items": 63,
+      "needing_repair": 63,
+      "correction_rate": 0.9365,
+      "abstained_when_needed": 0.0,
+      "still_wrong_when_sent": 0.0635,
+      "new_error_rate": 0.0,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 1.0,
+      "mean_attempts": 1.0,
+      "status": {
+        "repaired": 59,
+        "nothing_to_fix": 4
+      }
+    }
+  },
+  "seconds": 3.1,
+  "settings": {
+    "out": "runs/repair/rules",
+    "mode": "rules",
+    "model": "Qwen/Qwen3.5-2B",
+    "adapter": null,
+    "load": "fp16",
+    "server": null,
+    "sources": "tatqa,finqa",
+    "track": "tune",
+    "limit": 500,
+    "seed": 13,
+    "tiny": false
+  }
+}

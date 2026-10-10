@@ -24,7 +24,8 @@ from pathlib import Path
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out", required=True)
-    parser.add_argument("--mode", choices=["program", "rewrite"], default="program")
+    parser.add_argument("--mode", choices=["program", "rewrite", "rules"], default="program",
+                        help="rules: the rule-only COPY and CALCULATE repairer (repairer v0; no model, runs on CPU)")
     parser.add_argument("--model", default="Qwen/Qwen3.5-2B")
     parser.add_argument("--adapter")
     parser.add_argument("--load", choices=["fp16", "qlora", "tiny"], default="fp16")
@@ -57,15 +58,20 @@ def main(argv: list[str] | None = None) -> None:
     random.Random(args.seed).shuffle(items)
     items = items[: args.limit]
 
-    if args.server:
-        from faithguard.repair.backends import openai_chat
+    if args.mode == "rules":
+        from faithguard.repair import rules
 
-        generate, name = openai_chat(args.server), f"server:{args.server}"
+        repairer, name = rules.repair, "rules only (COPY and CALCULATE)"
     else:
-        from faithguard.train.generation import Generator
+        if args.server:
+            from faithguard.repair.backends import openai_chat
 
-        generate, name = Generator(args.model, args.load, adapter=args.adapter), f"{args.model}{' + ' + args.adapter if args.adapter else ' (zero-shot)'}"
-    repairer = ModelRepairer(generate, name=name) if args.mode == "program" else RewriteRepairer(generate, name=name)
+            generate, name = openai_chat(args.server), f"server:{args.server}"
+        else:
+            from faithguard.train.generation import Generator
+
+            generate, name = Generator(args.model, args.load, adapter=args.adapter), f"{args.model}{' + ' + args.adapter if args.adapter else ' (zero-shot)'}"
+        repairer = ModelRepairer(generate, name=name) if args.mode == "program" else RewriteRepairer(generate, name=name)
     result = evaluate_repairer(items, gold, repairer)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
