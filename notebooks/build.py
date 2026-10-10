@@ -161,6 +161,20 @@ NOTEBOOKS = {
             ("Evaluate (also writes per-claim rows for the A+B fusion)", "!python -m faithguard.train.detector_eval --model-dir {OUT}/channel-a/model --out {OUT}/eval-channel-a\n!python -m faithguard.train.detector_eval --model-dir {OUT}/channel-a-noslot/model --out {OUT}/eval-channel-a-noslot"),
         ],
     },
+    "repair_zero_shot_9b": {
+        "title": "Repair baseline: zero-shot edit programs from Qwen3.5-9B",
+        "about": "Is training needed at all? The answer generator itself (Qwen3.5-9B, 4-bit on llama.cpp, thinking off) writes edit "
+                 "programs zero-shot, its replies constrained to the program schema, on the same 500 tune-track items as the trained "
+                 "2B repairer. Expect about 1 GPU hour.",
+        "cells": [
+            ("Start llama.cpp with Qwen3.5-9B on one T4 (downloads 5.4 GB the first time)",
+             "from faithguard.generation import llama\nSERVER = llama.prepare(os.path.join(WORK, 'llama_work'))\n"
+             "server = llama.LlamaServer(SERVER, llama.model_path('qwen'), port=8080, gpu='0', log=f'{OUT}/server-qwen.log')\n"
+             "print('ready in', round(server.wait_ready()), 's')"),
+            ("Zero-shot programs on the tune track", "!python -m faithguard.train.repair_eval --server http://127.0.0.1:8080 --out {OUT}/eval-zero-shot-9b"),
+            ("Stop the server", "server.stop()"),
+        ],
+    },
     "detector_ablation": {
         "title": "Detection: the no-XBRL ablation, and all three Channel A variants evaluated",
         "about": "RQ1's main ablation: Channel A trained without the XBRL-mined negatives. It reuses the full and no-slot models from the "

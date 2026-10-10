@@ -63,6 +63,8 @@ NOTEBOOKS = {
                    ROOT / "runs" / "repair" / "kaggle"),
     "repair_self_train": (ROOT / "notebooks", "FaithGuard repair stage B", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl|round[.]json",
                           ROOT / "runs" / "repair" / "kaggle"),
+    "repair_zero_shot_9b": (ROOT / "notebooks", "FaithGuard repair zero-shot 9B", r"results[.]json|report[.]md|rows[.]jsonl",
+                            ROOT / "runs" / "repair" / "kaggle"),
     "repair_baselines": (ROOT / "notebooks", "FaithGuard repair baselines", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl",
                          ROOT / "runs" / "repair" / "kaggle"),
     "detector_baselines": (ROOT / "notebooks", "FaithGuard detector baselines", r"results[.]json|scores[.]jsonl",
