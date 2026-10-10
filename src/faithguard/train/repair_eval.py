@@ -30,6 +30,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--adapter")
     parser.add_argument("--load", choices=["fp16", "qlora", "tiny"], default="fp16")
     parser.add_argument("--server", help="OpenAI-compatible URL (llama.cpp) instead of a local model")
+    parser.add_argument("--unconstrained", action="store_true", help="server: do not constrain replies to the program schema")
     parser.add_argument("--sources", default="tatqa,finqa")
     parser.add_argument("--track", default="tune")
     parser.add_argument("--limit", type=int, default=500)
@@ -70,7 +71,8 @@ def main(argv: list[str] | None = None) -> None:
         if args.server:
             from faithguard.repair.backends import openai_chat
 
-            generate, name = openai_chat(args.server), f"server:{args.server}"
+            generate = openai_chat(args.server, constrained=not args.unconstrained)
+            name = f"server:{args.server}{' (unconstrained)' if args.unconstrained else ' (schema-constrained)'}"
         else:
             from faithguard.train.generation import Generator
 

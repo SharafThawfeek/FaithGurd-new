@@ -219,7 +219,9 @@ NOTEBOOKS = {
              "from faithguard.generation import llama\nSERVER = llama.prepare(os.path.join(WORK, 'llama_work'))\n"
              "server = llama.LlamaServer(SERVER, llama.model_path('qwen'), port=8080, gpu='0', log=f'{OUT}/server-qwen.log')\n"
              "print('ready in', round(server.wait_ready()), 's')"),
-            ("Zero-shot programs on the tune track", "!python -m faithguard.train.repair_eval --server http://127.0.0.1:8080 --out {OUT}/eval-zero-shot-9b"),
+            ("Zero-shot programs on the tune track: free replies (as the 2B zero-shot run), then schema-constrained (D-083)",
+             "!python -m faithguard.train.repair_eval --server http://127.0.0.1:8080 --unconstrained --out {OUT}/eval-zero-shot-9b-free\n"
+             "!python -m faithguard.train.repair_eval --server http://127.0.0.1:8080 --out {OUT}/eval-zero-shot-9b"),
             ("Stop the server", "server.stop()"),
         ],
     },
