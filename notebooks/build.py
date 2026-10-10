@@ -161,6 +161,27 @@ NOTEBOOKS = {
             ("Evaluate (also writes per-claim rows for the A+B fusion)", "!python -m faithguard.train.detector_eval --model-dir {OUT}/channel-a/model --out {OUT}/eval-channel-a\n!python -m faithguard.train.detector_eval --model-dir {OUT}/channel-a-noslot/model --out {OUT}/eval-channel-a-noslot"),
         ],
     },
+    "systems_pilot": {
+        "title": "Phase 6 dry run: the GPU systems on the pilot answers",
+        "about": "Runs Channel A and the trained repairer on the 120 pilot answers (development issuers) and stores every output: "
+                 "Channel A's spans and fusion features, and the repair of each answer with the rule checker's spans and with "
+                 "Channel A's. Attach the pilot items dataset (no gold), the faithguard-detector-models dataset and the stage A "
+                 "notebook's output. The outputs are scored on a laptop against the gold store. Expect under 1 GPU hour.",
+        "cells": [
+            ("Inputs: the pilot items, Channel A's model and stage A's adapter",
+             "import glob, os\n"
+             "for flat in glob.glob('/kaggle/input/**/*__model__*', recursive=True):  # the models dataset, folders flattened\n"
+             "    target = os.path.join(WORK, 'prev', *os.path.basename(flat).split('__'))\n"
+             "    os.makedirs(os.path.dirname(target), exist_ok=True)\n"
+             "    if not os.path.exists(target):\n"
+             "        os.symlink(flat, target)\n"
+             "CHANNEL_A = os.path.join(WORK, 'prev', 'channel-a', 'model')\n"
+             "ADAPTER = sorted(glob.glob('/kaggle/input/**/repair-sft/adapter', recursive=True))[0]\n"
+             "ITEMS = sorted(glob.glob('/kaggle/input/**/items.jsonl', recursive=True))[0]\n"
+             "print(ITEMS, CHANNEL_A, os.path.exists(CHANNEL_A), ADAPTER)"),
+            ("Run the systems on every item", "!python -m faithguard.train.systems --items $ITEMS --channel-a $CHANNEL_A --adapter $ADAPTER --out {OUT}/systems-pilot"),
+        ],
+    },
     "repair_spans": {
         "title": "Repair RQ3: predicted spans, and stage A with and without KEEP training",
         "about": "How much does repair degrade when Channel A, not the rule checker, decides which claims to edit, and does KEEP "

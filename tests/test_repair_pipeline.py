@@ -108,3 +108,29 @@ def test_channel_a_spans_decide_which_claims_reach_the_repairer():
     assert det.detector == "channel-a-spans@0.5"
     # the rule repairer withholds rather than rewrite a correct figure: the false positive costs coverage, not correctness
     assert repair(item, det).status == "cannot_fix"
+
+
+def test_systems_runner_stores_both_repairs_and_the_detector_record():
+    from faithguard.records import RepairOutput
+    from faithguard.train.systems import run_systems
+
+    text = "Group profit after tax was Rs. 12,450 million."  # the Bank's figure: the rule checker flags it
+    item = bank_item(text)
+
+    class FakeChannelA:  # flags nothing
+        def token_probs(self, _item):
+            return [(0, 5, 0.1, 0)]
+
+        def spans(self, _item, tokens=None):
+            return []
+
+    seen = []
+
+    def repairer(it, det):
+        seen.append([det.check(c.id).verdict for c in det.claims])
+        return RepairOutput(item_id=it.id, repairer="fake", status="nothing_to_fix", text=it.answer.text)
+
+    (row,) = run_systems([item], FakeChannelA(), repairer)
+    assert seen == [["unsupported"], ["supported"]]  # rule spans first, then Channel A's (which flag nothing)
+    assert row["detector"]["item_id"] == item.id and row["detector"]["claims"][0]["b_unsupported"] == 1.0
+    assert row["repair_rule_spans"]["status"] == row["repair_channel_a_spans"]["status"] == "nothing_to_fix"

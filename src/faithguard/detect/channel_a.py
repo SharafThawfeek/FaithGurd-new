@@ -175,8 +175,8 @@ class ChannelA:
             slots = self.slot_head(out.hidden_states[-1])[0].argmax(-1).tolist()
         return [(s, e, p, k) for (s, e), seq, p, k in zip(enc["offsets"], enc["sequence_ids"], probs, slots) if seq == 1 and s != e]
 
-    def spans(self, item: Item) -> list[Span]:
-        tokens = self.token_probs(item)
+    def spans(self, item: Item, tokens: list[tuple[int, int, float, int]] | None = None) -> list[Span]:
+        tokens = self.token_probs(item) if tokens is None else tokens
         spans: list[Span] = []
         current: list[tuple[int, int, float, int]] = []
         for tok in tokens + [(10**9, 10**9, 0.0, 0)]:
@@ -202,18 +202,17 @@ def span_flags(channel_a: ChannelA, threshold: float | None = None):
     from faithguard.detect import detect
 
     cut = channel_a.threshold if threshold is None else threshold
+    return lambda item: flag_claims(detect(item), channel_a.token_probs(item), cut)
 
-    def run(item: Item) -> DetectorOutput:
-        det = detect(item)
-        tokens = channel_a.token_probs(item)
-        checks = []
-        for claim in det.claims:
-            check = det.check(claim.id)
-            ranges = [(claim.start, claim.end)] + ([claim.direction_span] if claim.direction_span else [])
-            p = max((prob for s, e, prob, _ in tokens for a, b in ranges if s < b and e > a), default=0.0)
-            flagged = p >= cut
-            checks.append(check.model_copy(update={"verdict": "unsupported" if flagged else "supported",
-                                                   "slots": check.slots if flagged else []}))
-        return det.model_copy(update={"checks": checks, "detector": f"channel-a-spans@{cut}"})
 
-    return run
+def flag_claims(det: DetectorOutput, tokens: list[tuple[int, int, float, int]], threshold: float) -> DetectorOutput:
+    """The rule checker's output, with each claim flagged or passed by Channel A's token probabilities (see span_flags)."""
+    checks = []
+    for claim in det.claims:
+        check = det.check(claim.id)
+        ranges = [(claim.start, claim.end)] + ([claim.direction_span] if claim.direction_span else [])
+        p = max((prob for s, e, prob, _ in tokens for a, b in ranges if s < b and e > a), default=0.0)
+        flagged = p >= threshold
+        checks.append(check.model_copy(update={"verdict": "unsupported" if flagged else "supported",
+                                               "slots": check.slots if flagged else []}))
+    return det.model_copy(update={"checks": checks, "detector": f"channel-a-spans@{threshold}"})
