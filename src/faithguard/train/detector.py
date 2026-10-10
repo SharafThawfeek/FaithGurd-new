@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import shutil
 import time
 from pathlib import Path
 
@@ -73,7 +74,7 @@ def main(argv: list[str] | None = None) -> None:
     targs = TrainingArguments(
         output_dir=str(out), per_device_train_batch_size=args.batch, gradient_accumulation_steps=args.grad_accum,
         learning_rate=args.lr, num_train_epochs=args.epochs, max_steps=args.max_steps, lr_scheduler_type="linear",
-        warmup_steps=max(1, int(0.05 * steps)), logging_steps=10, save_steps=args.save_steps, save_total_limit=2,
+        warmup_steps=max(1, int(0.05 * steps)), logging_steps=10, save_steps=args.save_steps, save_total_limit=1,
         fp16=torch.cuda.is_available() and not args.tiny, report_to="none", remove_unused_columns=False,
         dataloader_num_workers=0, seed=args.seed, use_cpu=args.tiny,
     )
@@ -82,6 +83,8 @@ def main(argv: list[str] | None = None) -> None:
     trainer.train(resume_from_checkpoint=latest_checkpoint(out))
     model.save(out / "model")
     tokenizer.save_pretrained(out / "model" / "encoder")
+    for checkpoint in out.glob("checkpoint-*"):  # only for resuming; each holds the optimizer too (about 3.6 GB), and
+        shutil.rmtree(checkpoint)                # Kaggle's 20 GB disk filled with them during the third run (D-075)
     log = {"examples": len(encoded), "sources": sources, "seconds": round(time.time() - started, 1), "settings": vars(args), "history": trainer.state.log_history}
     (out / "train_log.json").write_text(json.dumps(log, indent=2, default=str), encoding="utf-8")
     print(f"model saved to {out / 'model'}", flush=True)

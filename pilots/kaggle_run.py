@@ -27,6 +27,7 @@ Phase-4 training runs the same way, for example the detector (results -> runs/de
 
     python pilots/kaggle_run.py push detector_train
     python pilots/kaggle_run.py fetch detector_train
+    python pilots/kaggle_run.py push detector_ablation --kernel detector_train   # the no-XBRL ablation, then all three evaluated
     python pilots/kaggle_run.py push repair_sft         # stage A repair training (results -> runs/repair/kaggle/)
     python pilots/kaggle_run.py push repair_self_train --kernel repair_sft   # stage B starts from stage A's adapter
 
@@ -56,6 +57,8 @@ NOTEBOOKS = {
     "generate_answers": (ROOT / "notebooks", "FaithGuard answer generation", r"answers-.*[.]jsonl", ROOT / "data" / "benchmark-build"),
     "detector_train": (ROOT / "notebooks", "FaithGuard detector training", r"(train_log|results)[.]json|fusion[.]jsonl",
                        ROOT / "runs" / "detector" / "kaggle"),
+    "detector_ablation": (ROOT / "notebooks", "FaithGuard detector ablation", r"(train_log|results)[.]json|fusion[.]jsonl",
+                          ROOT / "runs" / "detector" / "kaggle"),
     "repair_sft": (ROOT / "notebooks", "FaithGuard repair stage A", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl",
                    ROOT / "runs" / "repair" / "kaggle"),
     "repair_self_train": (ROOT / "notebooks", "FaithGuard repair stage B", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl|round[.]json",

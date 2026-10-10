@@ -151,15 +151,31 @@ NOTEBOOKS = {
     "detector_train": {
         "title": "Detection: train Channel A and its ablations",
         "about": "Trains the span head and relation-slot head on the LettuceDetect encoder chosen in the phase-1 pilot (set CHECKPOINT), "
-                 "then the no-slot ablation, and evaluates both against Channel B on 2,000 development items. The repository ships the "
-                 "XBRL-mined examples (runs/detector/xbrl.jsonl.gz, from `faithguard xbrl-mine`), so the no-XBRL ablation runs too. "
-                 "Expect roughly 3-5 GPU hours.",
+                 "then the no-slot ablation, and evaluates both against Channel B on 2,000 development items. Each training run takes "
+                 "about 4.3 hours on a T4, so the no-XBRL ablation runs in the detector_ablation notebook (all three do not fit one "
+                 "12-hour session). Expect about 10 GPU hours.",
         "cells": [
             ("Training data (controlled track, RAGTruth and XBRL-mined examples)", "CHECKPOINT = 'KRLabsOrg/lettucedect-v2-mmbert-base'  # or KRLabsOrg/lettucedect-large-modernbert-en-v1\n!faithguard detector-data"),
             ("Channel A, full model", "!python -m faithguard.train.detector --data runs/detector/train.jsonl --checkpoint $CHECKPOINT --out {OUT}/channel-a"),
             ("Ablation: without the slot head", "!python -m faithguard.train.detector --data runs/detector/train.jsonl --checkpoint $CHECKPOINT --no-slot --out {OUT}/channel-a-noslot"),
-            ("Ablation: without XBRL negatives (only if XBRL examples were mined)", "import os\nif os.path.exists('runs/detector/xbrl.jsonl') or os.path.exists('runs/detector/xbrl.jsonl.gz'):\n    !python -m faithguard.train.detector --data runs/detector/train.jsonl --checkpoint $CHECKPOINT --exclude xbrl --out {OUT}/channel-a-noxbrl"),
             ("Evaluate (also writes per-claim rows for the A+B fusion)", "!python -m faithguard.train.detector_eval --model-dir {OUT}/channel-a/model --out {OUT}/eval-channel-a\n!python -m faithguard.train.detector_eval --model-dir {OUT}/channel-a-noslot/model --out {OUT}/eval-channel-a-noslot"),
+        ],
+    },
+    "detector_ablation": {
+        "title": "Detection: the no-XBRL ablation, and all three Channel A variants evaluated",
+        "about": "RQ1's main ablation: Channel A trained without the XBRL-mined negatives. It reuses the full and no-slot models from the "
+                 "detector_train notebook (attach that notebook's output as an input), trains the no-XBRL model, and evaluates all three "
+                 "against Channel B on the same 2,000 development items. Expect about 4 GPU hours.",
+        "cells": [
+            ("Models from the detector_train notebook, and the training data",
+             "import glob\nA = sorted(glob.glob('/kaggle/input/**/channel-a/model', recursive=True))[0]\n"
+             "NOSLOT = sorted(glob.glob('/kaggle/input/**/channel-a-noslot/model', recursive=True))[0]\nprint(A, NOSLOT)\n"
+             "CHECKPOINT = 'KRLabsOrg/lettucedect-v2-mmbert-base'\n!faithguard detector-data"),
+            ("Ablation: without XBRL negatives", "!python -m faithguard.train.detector --data runs/detector/train.jsonl --checkpoint $CHECKPOINT --exclude xbrl --out {OUT}/channel-a-noxbrl"),
+            ("Evaluate all three (also writes per-claim rows for the A+B fusion)",
+             "!python -m faithguard.train.detector_eval --model-dir $A --out {OUT}/eval-channel-a\n"
+             "!python -m faithguard.train.detector_eval --model-dir $NOSLOT --out {OUT}/eval-channel-a-noslot\n"
+             "!python -m faithguard.train.detector_eval --model-dir {OUT}/channel-a-noxbrl/model --out {OUT}/eval-channel-a-noxbrl"),
         ],
     },
     "detector_baselines": {
