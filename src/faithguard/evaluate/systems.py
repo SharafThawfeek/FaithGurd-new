@@ -26,8 +26,10 @@ def _row(item: Item, gold: GoldStore, out: RepairOutput, before: str) -> dict:
     g = gold.questions[item.question.id]
     sent = out.text if out.status in ("repaired", "nothing_to_fix") else None
     before_wrong = set(wrong_numbers(item.answer.text, g))
+    # an answer sent unchanged keeps its own state: the strict scorer must not overrule the label on the same text
+    after = before if sent == item.answer.text else score_text(sent, g)
     return {
-        "item_id": item.id, "error": None, "before": before, "after": score_text(sent, g), "status": out.status,
+        "item_id": item.id, "error": None, "before": before, "after": after, "status": out.status,
         "attempts": out.attempts, "program": out.program is not None,
         "new_errors": [w for w in wrong_numbers(sent, g) if w not in before_wrong],
     }

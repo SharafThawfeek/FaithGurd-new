@@ -1,0 +1,73 @@
+{
+  "rule repairer, channel_a_spans": {
+    "items": 104,
+    "needing_repair": 23,
+    "correction_rate": 0.2174,
+    "abstained_when_needed": 0.6957,
+    "still_wrong_when_sent": 0.2857,
+    "new_error_rate": 0.0,
+    "damage_rate": 0.0,
+    "valid_program_rate": 1.0,
+    "gate_pass_rate": 0.8571,
+    "mean_attempts": 1.015,
+    "status": {
+      "cannot_fix": 59,
+      "nothing_to_fix": 38,
+      "repaired": 6,
+      "gate_failed": 1
+    }
+  },
+  "rule repairer, rule_spans": {
+    "items": 104,
+    "needing_repair": 23,
+    "correction_rate": 0.4348,
+    "abstained_when_needed": 0.3913,
+    "still_wrong_when_sent": 0.2857,
+    "new_error_rate": 0.0,
+    "damage_rate": 0.0,
+    "valid_program_rate": 1.0,
+    "gate_pass_rate": 1.0,
+    "mean_attempts": 0.973,
+    "status": {
+      "nothing_to_fix": 67,
+      "cannot_fix": 14,
+      "repaired": 23
+    }
+  },
+  "trained repairer, channel_a_spans": {
+    "items": 104,
+    "needing_repair": 23,
+    "correction_rate": 0.2609,
+    "abstained_when_needed": 0.4783,
+    "still_wrong_when_sent": 0.5,
+    "new_error_rate": 0.0141,
+    "damage_rate": 0.0,
+    "valid_program_rate": 0.9848,
+    "gate_pass_rate": 0.5077,
+    "mean_attempts": 1.47,
+    "status": {
+      "gate_failed": 32,
+      "nothing_to_fix": 38,
+      "cannot_fix": 1,
+      "repaired": 33
+    }
+  },
+  "trained repairer, rule_spans": {
+    "items": 104,
+    "needing_repair": 23,
+    "correction_rate": 0.2174,
+    "abstained_when_needed": 0.6087,
+    "still_wrong_when_sent": 0.4444,
+    "new_error_rate": 0.0,
+    "damage_rate": 0.0,
+    "valid_program_rate": 1.0,
+    "gate_pass_rate": 0.2222,
+    "mean_attempts": 1.73,
+    "status": {
+      "nothing_to_fix": 67,
+      "cannot_fix": 1,
+      "gate_failed": 28,
+      "repaired": 8
+    }
+  }
+}
