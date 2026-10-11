@@ -65,6 +65,26 @@ def test_gate_rejects_a_program_that_copies_the_wrong_cell():
     assert any(f.startswith("provenance") for f in verdict.failures)
 
 
+def test_gate_accepts_a_share_of_two_line_items_the_question_names():
+    # The claim's own context names one line item; the share's whole is the other one the question names (D-087)
+    from faithguard.detect.rules import EvidenceIndex
+    from faithguard.repair.gate import gate
+
+    item = us_item("Operating income of $1,104.7 million was 14.2% of revenue of $8,432.5 million in FY2025.",
+                   question="What share of Example Industries' revenue in FY2025 was operating income?")
+    det = detect(item)
+
+    def verdict(expression):
+        program = EditProgram(edits=[Calculate(claim="k2", expr=expression)])
+        result = execute(item, det.claims, program)
+        return gate(item, det, program, result, EvidenceIndex(item)), result.text
+
+    passed, text = verdict("share(t1r2c1, t1r1c1)")  # operating income over revenue
+    assert passed.passed and "13.1% of revenue" in text
+    failed, _ = verdict("share(t1r3c1, t1r1c1)")  # net income, which the question does not name
+    assert any(f.startswith("provenance: k2 uses t1r3c1") for f in failed.failures)
+
+
 def test_executor_rejects_unknown_cells_and_type_mismatches():
     item = bank_item("Group profit after tax rose 7.0% to Rs. 12,450 million.")
     claims = detect(item).claims

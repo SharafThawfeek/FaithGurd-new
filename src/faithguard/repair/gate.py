@@ -1,6 +1,7 @@
 """The hard gate: a repaired answer is only released if it passes every check.
 
     provenance  each copied or calculated number comes from cells of the intended metric, entity and period
+                (a share or ratio may also use a line item the question names)
     closure     growth rates and changes built on a changed number were recomputed too
     envelope    nothing outside the edited claims (and their direction words) changed
     recheck     the rule checker supports every claim in the repaired answer
@@ -14,18 +15,33 @@ from faithguard.detect.rules import EvidenceIndex, context_slots, detect
 from faithguard.executor import ExecResult, apply
 from faithguard.records import Calculate, Context, Copy, DetectorOutput, EditProgram, GateResult, Item
 
+# Functions whose operands are two different line items by nature (a part and its whole, or two amounts)
+TWO_ITEM_FUNCTIONS = ("share", "ratio")
+
+
+def relates_two_items(expression: str) -> bool:
+    """True for share(part, whole) or ratio(a, b) at the top of the expression."""
+    node = expr.parse(expression)
+    return isinstance(node, expr.Call) and node.fn in TWO_ITEM_FUNCTIONS
+
 
 def gate(item: Item, det: DetectorOutput, program: EditProgram, result: ExecResult, index: EvidenceIndex) -> GateResult:
     failures: list[str] = []
     edited = {e.claim: e for e in program.edits if isinstance(e, (Copy, Calculate))}
+    named = index.vocab.metrics_named(item.question.text)
 
     for claim_id, edit in edited.items():
         intended = det.check(claim_id).intended
         cell_ids = [edit.cell] if isinstance(edit, Copy) else expr.refs(expr.parse(edit.expr))
+        two_items = isinstance(edit, Calculate) and relates_two_items(edit.expr)
         for cell_id in cell_ids:
             cell = item.evidence.cell(cell_id)
             found = Context(metric=cell.metric, entity=cell.entity, period=None if isinstance(edit, Calculate) else cell.period)
             wrong = context_slots(found, intended)
+            if two_items and cell.metric in named:
+                # a share or ratio may use the other line item the question names: the claim's own context
+                # names only one of the two (natural answers put the share beside either amount)
+                wrong.discard("metric")
             if wrong:
                 failures.append(f"provenance: {claim_id} uses {cell_id} ({', '.join(sorted(wrong))})")
 
