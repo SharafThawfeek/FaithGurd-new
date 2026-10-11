@@ -83,6 +83,8 @@ def test_gate_accepts_a_share_of_two_line_items_the_question_names():
     assert passed.passed and "13.1% of revenue" in text
     failed, _ = verdict("share(t1r3c1, t1r1c1)")  # net income, which the question does not name
     assert any(f.startswith("provenance: k2 uses t1r3c1") for f in failed.failures)
+    last_year, _ = verdict("share(t1r2c2, t1r1c2)")  # the right line items, but FY2024's
+    assert any(f.startswith("provenance: k2 uses t1r2c2 (period)") for f in last_year.failures)
 
 
 def test_executor_rejects_unknown_cells_and_type_mismatches():

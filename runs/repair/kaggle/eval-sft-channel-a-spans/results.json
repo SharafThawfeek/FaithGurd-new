@@ -1,0 +1,150 @@
+{
+  "summary": {
+    "items": 500,
+    "needing_repair": 411,
+    "correction_rate": 0.6326,
+    "abstained_when_needed": 0.3528,
+    "still_wrong_when_sent": 0.0226,
+    "new_error_rate": 0.0057,
+    "damage_rate": 0.0,
+    "valid_program_rate": 1.0,
+    "gate_pass_rate": 0.9027,
+    "mean_attempts": 1.071,
+    "status": {
+      "repaired": 297,
+      "gate_failed": 32,
+      "cannot_fix": 119,
+      "nothing_to_fix": 52
+    }
+  },
+  "by_error": {
+    "basis": {
+      "items": 26,
+      "needing_repair": 26,
+      "correction_rate": 1.0,
+      "abstained_when_needed": 0.0,
+      "still_wrong_when_sent": 0.0,
+      "new_error_rate": 0.0,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 1.0,
+      "mean_attempts": 1.0,
+      "status": {
+        "repaired": 26
+      }
+    },
+    "metric": {
+      "items": 112,
+      "needing_repair": 112,
+      "correction_rate": 0.8125,
+      "abstained_when_needed": 0.1518,
+      "still_wrong_when_sent": 0.0421,
+      "new_error_rate": 0.0105,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 0.844,
+      "mean_attempts": 1.156,
+      "status": {
+        "repaired": 92,
+        "gate_failed": 17,
+        "nothing_to_fix": 3
+      }
+    },
+    "missing_operand": {
+      "items": 121,
+      "needing_repair": 121,
+      "correction_rate": 0.0,
+      "abstained_when_needed": 0.9917,
+      "still_wrong_when_sent": 1.0,
+      "new_error_rate": 0.0,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 0.0,
+      "mean_attempts": 1.008,
+      "status": {
+        "cannot_fix": 119,
+        "gate_failed": 1,
+        "nothing_to_fix": 1
+      }
+    },
+    "none": {
+      "items": 89,
+      "needing_repair": 0,
+      "correction_rate": null,
+      "abstained_when_needed": null,
+      "still_wrong_when_sent": null,
+      "new_error_rate": 0.0,
+      "damage_rate": 0.0,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 0.8537,
+      "mean_attempts": 1.146,
+      "status": {
+        "gate_failed": 6,
+        "repaired": 35,
+        "nothing_to_fix": 48
+      }
+    },
+    "period": {
+      "items": 61,
+      "needing_repair": 61,
+      "correction_rate": 0.8525,
+      "abstained_when_needed": 0.1311,
+      "still_wrong_when_sent": 0.0189,
+      "new_error_rate": 0.0189,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 0.8689,
+      "mean_attempts": 1.131,
+      "status": {
+        "repaired": 53,
+        "gate_failed": 8
+      }
+    },
+    "scale": {
+      "items": 28,
+      "needing_repair": 28,
+      "correction_rate": 1.0,
+      "abstained_when_needed": 0.0,
+      "still_wrong_when_sent": 0.0,
+      "new_error_rate": 0.0,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 1.0,
+      "mean_attempts": 1.0,
+      "status": {
+        "repaired": 28
+      }
+    },
+    "sign": {
+      "items": 63,
+      "needing_repair": 63,
+      "correction_rate": 1.0,
+      "abstained_when_needed": 0.0,
+      "still_wrong_when_sent": 0.0,
+      "new_error_rate": 0.0,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 1.0,
+      "mean_attempts": 1.0,
+      "status": {
+        "repaired": 63
+      }
+    }
+  },
+  "seconds": 1755.4,
+  "settings": {
+    "out": "/kaggle/working/outputs/eval-sft-channel-a-spans",
+    "mode": "program",
+    "model": "Qwen/Qwen3.5-2B",
+    "adapter": "/kaggle/input/notebooks/sharafthawfeek/faithguard-repair-stage-a/outputs/repair-sft/adapter",
+    "load": "fp16",
+    "server": null,
+    "sources": "tatqa,finqa",
+    "track": "tune",
+    "limit": 500,
+    "seed": 13,
+    "spans": "/kaggle/working/prev/channel-a/model",
+    "span_threshold": 0.5,
+    "tiny": false
+  }
+}

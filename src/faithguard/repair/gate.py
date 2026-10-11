@@ -1,7 +1,7 @@
 """The hard gate: a repaired answer is only released if it passes every check.
 
     provenance  each copied or calculated number comes from cells of the intended metric, entity and period
-                (a share or ratio may also use a line item the question names)
+                (a share or ratio may also use a line item the question names, but only from the claim's period)
     closure     growth rates and changes built on a changed number were recomputed too
     envelope    nothing outside the edited claims (and their direction words) changed
     recheck     the rule checker supports every claim in the repaired answer
@@ -36,7 +36,9 @@ def gate(item: Item, det: DetectorOutput, program: EditProgram, result: ExecResu
         two_items = isinstance(edit, Calculate) and relates_two_items(edit.expr)
         for cell_id in cell_ids:
             cell = item.evidence.cell(cell_id)
-            found = Context(metric=cell.metric, entity=cell.entity, period=None if isinstance(edit, Calculate) else cell.period)
+            # a copied cell and both operands of a share or ratio belong to the claim's period; growth and differences span two
+            dated = isinstance(edit, Copy) or two_items
+            found = Context(metric=cell.metric, entity=cell.entity, period=cell.period if dated else None)
             wrong = context_slots(found, intended)
             if two_items and cell.metric in named:
                 # a share or ratio may use the other line item the question names: the claim's own context
