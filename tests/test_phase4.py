@@ -65,6 +65,27 @@ def test_every_target_program_fixes_its_answer():
             assert inj.target_program.edits == []
 
 
+def test_arithmetic_slips_are_repair_only_and_fixed_by_recalculation():
+    from faithguard.detect import detect
+    from faithguard.inject import ERRORS, REPAIR_ONLY_ERRORS
+
+    assert "arithmetic" in REPAIR_ONLY_ERRORS and "arithmetic" not in ERRORS  # the controlled track is unchanged
+    assert all(inj.error != "arithmetic" for _, inj in injected()[0])
+    example, gold = growth_example()
+    [(item, inj)] = inject(example, errors=("arithmetic",))
+    gold.add_injection(inj)
+    g = gold.questions["q-growth"]
+    assert item.id == "q-growth:arithmetic" and inj.expected_action == "repair"
+    assert score_text(item.answer.text, g) == "unsupported"  # true growth 9.29%; the answer misstates it
+    assert [(e.op, e.expr) for e in inj.target_program.edits] == [("CALCULATE", "growth(t1r3c1, t1r3c2)")]
+    claims = extract_claims(item.answer.text)
+    fixed = execute(item, claims, inj.target_program).text
+    assert score_text(fixed, g) == "supported_useful" and fixed == inj.correct_text
+    # the rule checker flags the slip, so the item reaches the repairer in training (repair_examples)
+    slipped = next(c for c in claims if c.kind == "percent")
+    assert detect(item).check(slipped.id).verdict != "supported"
+
+
 def test_channel_a_labels_name_the_slot():
     pairs, gold = injected()
     by_error = {inj.error: item for item, inj in pairs}

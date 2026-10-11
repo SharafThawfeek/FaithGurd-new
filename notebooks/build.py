@@ -163,12 +163,13 @@ NOTEBOOKS = {
     },
     "systems_pilot": {
         "title": "Phase 6 dry run: the GPU systems on the pilot answers",
-        "about": "Runs Channel A and the trained repairer on the 120 pilot answers (development issuers) and stores every output: "
+        "about": "Runs Channel A and each trained repairer on the 120 pilot answers (development issuers) and stores every output: "
                  "Channel A's spans and fusion features, and the repair of each answer with the rule checker's spans and with "
-                 "Channel A's. Attach the pilot items dataset (no gold), the faithguard-detector-models dataset and the stage A "
-                 "notebook's output. The outputs are scored on a laptop against the gold store. Expect under 1 GPU hour.",
+                 "Channel A's. Attach the pilot items dataset (no gold), the faithguard-detector-models dataset and the notebooks "
+                 "whose repairer adapters should run: stage A (repair-sft), the RQ3 run (repair-sft-nokeep), repair v1 (repair-v1). "
+                 "The outputs are scored on a laptop against the gold store. Expect about 0.25 GPU hours per repairer.",
         "cells": [
-            ("Inputs: the pilot items, Channel A's model and stage A's adapter",
+            ("Inputs: the pilot items, Channel A's model and the repairers' adapters",
              "import glob, os\n"
              "for flat in glob.glob('/kaggle/input/**/*__model__*', recursive=True):  # the models dataset, folders flattened\n"
              "    target = os.path.join(WORK, 'prev', *os.path.basename(flat).split('__'))\n"
@@ -176,10 +177,33 @@ NOTEBOOKS = {
              "    if not os.path.exists(target):\n"
              "        os.symlink(flat, target)\n"
              "CHANNEL_A = os.path.join(WORK, 'prev', 'channel-a', 'model')\n"
-             "ADAPTER = sorted(glob.glob('/kaggle/input/**/repair-sft/adapter', recursive=True))[0]\n"
+             "ADAPTERS = {}\n"
+             "for path in sorted(glob.glob('/kaggle/input/**/adapter', recursive=True)):\n"
+             "    name = os.path.basename(os.path.dirname(path))\n"
+             "    if name in ('repair-sft', 'repair-sft-nokeep', 'repair-v1'):\n"
+             "        ADAPTERS.setdefault(name, path)\n"
              "ITEMS = sorted(glob.glob('/kaggle/input/**/items.jsonl', recursive=True))[0]\n"
-             "print(ITEMS, CHANNEL_A, os.path.exists(CHANNEL_A), ADAPTER)"),
-            ("Run the systems on every item", "!python -m faithguard.train.systems --items $ITEMS --channel-a $CHANNEL_A --adapter $ADAPTER --out {OUT}/systems-pilot"),
+             "print(ITEMS, CHANNEL_A, os.path.exists(CHANNEL_A), ADAPTERS)"),
+            ("Run the systems on every item, once per repairer",
+             "for name, adapter in ADAPTERS.items():\n"
+             "    !python -m faithguard.train.systems --items $ITEMS --channel-a $CHANNEL_A --adapter {adapter} --out {OUT}/systems-pilot-{name}"),
+        ],
+    },
+    "repair_v1": {
+        "title": "Repair v1: stage A with arithmetic slips",
+        "about": "Repairer v1's candidate (D-088): stage A's recipe with the repair-only arithmetic slips added to training (a growth "
+                 "rate or share misstated from the right figures, the commonest natural error in the pilot). Evaluated on the same "
+                 "500 tune-track items as stage A, and with stage A on the tune track's arithmetic slips. Attach the stage A "
+                 "notebook's output. Expect about 8 GPU hours.",
+        "cells": [
+            ("Stage A's adapter, for the comparison on arithmetic slips",
+             "import glob\nADAPTER = sorted(glob.glob('/kaggle/input/**/repair-sft/adapter', recursive=True))[0]\nprint(ADAPTER)\nMODE = 'fp16'"),
+            ("Training data with arithmetic slips (about 3 minutes on CPU)", "!faithguard sft --mode program --arithmetic --out runs/sft-v1"),
+            ("Fine-tune (resumable)", "!python -m faithguard.train.repair_sft --data runs/sft-v1/repair-program-train.jsonl --out {OUT}/repair-v1 --mode $MODE"),
+            ("Evaluate v1 on the tune track and its arithmetic slips; stage A on the slips",
+             "!python -m faithguard.train.repair_eval --adapter {OUT}/repair-v1/adapter --load $MODE --out {OUT}/eval-v1\n"
+             "!python -m faithguard.train.repair_eval --adapter {OUT}/repair-v1/adapter --load $MODE --arithmetic --out {OUT}/eval-v1-arithmetic\n"
+             "!python -m faithguard.train.repair_eval --adapter $ADAPTER --load $MODE --arithmetic --out {OUT}/eval-sft-arithmetic"),
         ],
     },
     "repair_spans": {

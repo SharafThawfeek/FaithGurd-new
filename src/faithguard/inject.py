@@ -14,6 +14,12 @@ correct answer from a template, then variants with one planted error:
 Errors propagate the way real ones do: a wrong figure changes the growth rate
 computed from it. Every item records the action it should receive (send, repair
 or abstain), so outcomes can be scored automatically.
+
+One more type is made only for repair training and evaluation, outside the controlled
+track (so the track's items, models and results stay as they are):
+
+    arithmetic       a growth rate or share computed from the right figures but misstated
+                     by a slip of 1 to 30 units in its last printed digit (D-088)
 """
 
 from __future__ import annotations
@@ -31,6 +37,9 @@ from faithguard.records import Answer, Calculate, CannotFix, Cell, Copy, EditPro
 from faithguard.tables import parse_table_cell
 
 ERRORS = ("none", "period", "metric", "entity", "scale", "sign", "basis", "missing_operand")
+REPAIR_ONLY_ERRORS = ("arithmetic",)
+# Arithmetic slips, in units of the last printed digit: the pilot's natural answers were off by 1 to about 30 (D-087)
+SLIP_UNITS = (1, 1, 2, 3, 5, 10, 30)
 
 
 @dataclass
@@ -109,8 +118,10 @@ def _in(period: str | None) -> str:
     return f" in {period}" if period else ""
 
 
-def _pct(value: Decimal) -> str:
-    return render(value, default_style("percent", decimals=2 if abs(value) < 1 else 1))
+def _pct(value: Decimal, decimals: int | None = None) -> str:
+    if decimals is None:
+        decimals = 2 if abs(value) < 1 else 1
+    return render(value, default_style("percent", decimals=decimals))
 
 
 def _sibling(cells: list[Cell], a: Cell, same: tuple[str, ...], differ: str, exclude: set[str]) -> Cell | None:
@@ -136,7 +147,9 @@ def _wrong_cell(cells: list[Cell], s: Shape, error: str) -> Cell | None:
 
 
 def _write(s: Shape, a_value: Decimal, b_value: Decimal | None, variant: int, a_text: str | None = None,
-           flip: bool = False, basis: bool = False) -> str | None:
+           flip: bool = False, basis: bool = False, slip: Decimal = Decimal(0), decimals: int | None = None) -> str | None:
+    """The template answer. slip is added to the printed growth rate or share (percentage points);
+    decimals fixes how many decimals it is printed with."""
     A = a_text or render(a_value, _style(s.a))
     label = _label(s.a)
     if s.kind == "lookup":
@@ -147,7 +160,7 @@ def _write(s: Shape, a_value: Decimal, b_value: Decimal | None, variant: int, a_
             share = ops.share(a_value, b_value)
         except ops.CalcError:
             return None
-        return f"{_cap(label)} was {_pct(share)} of {_label(s.b)}{_in(s.a.period)}."
+        return f"{_cap(label)} was {_pct(share + slip if slip else share, decimals)} of {_label(s.b)}{_in(s.a.period)}."
     if not (s.a.period and s.b.period):
         return None
     if s.kind == "difference":
@@ -161,9 +174,10 @@ def _write(s: Shape, a_value: Decimal, b_value: Decimal | None, variant: int, a_
     except ops.CalcError:
         return None
     up = (g >= 0) != flip
+    shown = _pct(abs(g) + slip if slip else abs(g), decimals)  # no arithmetic unless slipped: other texts stay byte-identical
     if variant == 0:
-        return f"{_cap(label)} {'rose' if up else 'fell'} {_pct(abs(g))} from {B} in {s.b.period} to {A} in {s.a.period}."
-    return f"{_cap(label)} was {A} in {s.a.period}, {'up' if up else 'down'} {_pct(abs(g))} from {B} in {s.b.period}."
+        return f"{_cap(label)} {'rose' if up else 'fell'} {shown} from {B} in {s.b.period} to {A} in {s.a.period}."
+    return f"{_cap(label)} was {A} in {s.a.period}, {'up' if up else 'down'} {shown} from {B} in {s.b.period}."
 
 
 def _roles(s: Shape, variant: int, directional_difference: bool) -> list[str]:
@@ -253,6 +267,17 @@ def inject(example: Example, errors: tuple[str, ...] = ERRORS, seed: int = 13) -
             text = _write(s, a, b, variant, flip=True) if s.kind in ("growth", "difference") else None
         elif error == "basis":
             text = _write(s, a, b, variant, basis=True) if s.kind == "growth" else None
+        elif error == "arithmetic":
+            role = {"growth": "G", "share": "S"}.get(s.kind)
+            truth = _true_values(s)
+            if role not in truth:
+                continue
+            decimals = rng.choice((1, 2))
+            slip = Decimal(rng.choice(SLIP_UNITS)).scaleb(-decimals) * rng.choice((1, -1))
+            shown = abs(truth[role][0]) if role == "G" else truth[role][0]
+            if shown + slip <= 0:
+                slip = -slip
+            text = _write(s, a, b, variant, slip=slip, decimals=decimals)
         elif error == "missing_operand":
             wrong, detail = _wrong_cell(cells, s, "period"), "period"
             if wrong is None:
@@ -274,7 +299,10 @@ def inject(example: Example, errors: tuple[str, ...] = ERRORS, seed: int = 13) -
             program = target_program(text, s, roles)
             if program is None:
                 continue
-            correct_text = _write(s, a, b, 1 if directional else variant)
+            if error == "arithmetic":
+                correct_text = _write(s, a, b, variant, decimals=decimals)  # printed as precisely as the slip
+            else:
+                correct_text = _write(s, a, b, 1 if directional else variant)
         item_id = f"{example.question.id}:{error}"
         question = example.question.model_copy(update={"question_type": "growth" if s.kind == "growth" else s.kind})
         item = Item(

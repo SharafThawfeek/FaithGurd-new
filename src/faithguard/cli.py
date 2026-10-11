@@ -142,7 +142,7 @@ def cmd_policy(args) -> None:
 
 
 def cmd_sft(args) -> None:
-    from faithguard.controlled import load_or_build
+    from faithguard.controlled import load_or_build, repair_only, track_split
     from faithguard.data import repair_examples as sft
 
     hold_out = tuple(x for x in args.hold_out.split(",") if x)
@@ -156,6 +156,10 @@ def cmd_sft(args) -> None:
                 chosen = [i for i in items if by_track.get(i.id) == track]
                 # held-out error types stay out of training but remain in the dev file for evaluation
                 rows += list(sft.examples(chosen, gold, mode=args.mode, hold_out=hold_out if name == "train" else (), false_flag_rate=args.false_flags))
+                if args.arithmetic:
+                    extra, extra_gold = repair_only(source, split)
+                    chosen = [i for i in extra if track_split(i.question.issuer) == track]
+                    rows += list(sft.examples(chosen, extra_gold, mode=args.mode, false_flag_rate=args.false_flags))
         counts = sft.write(out / f"repair-{args.mode}-{name}.jsonl", rows)
         print(f"{name}: {sum(counts.values())} examples {dict(sorted(counts.items()))}")
 
@@ -520,6 +524,8 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--sources", default="tatqa,finqa")
     p.add_argument("--hold-out", default="basis", help="error types kept out of training (RQ2); empty for none")
     p.add_argument("--false-flags", type=float, default=0.3, help="share of items with one correct claim flagged by mistake")
+    p.add_argument("--arithmetic", action="store_true",
+                   help="add the repair-only arithmetic slips (a growth rate or share misstated from the right figures, D-088)")
     p.add_argument("--out", default="runs/sft")
     p.set_defaults(fn=cmd_sft)
 

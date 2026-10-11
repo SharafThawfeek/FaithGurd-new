@@ -41,16 +41,16 @@ def track_split(issuer: str) -> str:
     return TRACK_SPLITS[-1][0]
 
 
-def build(source: str, split: str) -> tuple[list[Item], GoldStore]:
-    """Items with planted errors, and their gold, for one dataset split."""
+def build(source: str, split: str, errors: tuple[str, ...] | None = None) -> tuple[list[Item], GoldStore]:
+    """Items with planted errors, and their gold, for one dataset split (errors: the injector's, by default)."""
     from faithguard.data import finqa, tatqa
-    from faithguard.inject import inject
+    from faithguard.inject import ERRORS, inject
 
     loader = tatqa if source == "tatqa" else finqa
     gold = GoldStore("unused")
     items: list[Item] = []
     for ex in loader.load(SOURCES[(source, split)]):
-        pairs = inject(ex)
+        pairs = inject(ex, errors=errors or ERRORS)
         if pairs:
             gold.add_question(ex.gold)
         for item, injection in pairs:
@@ -110,3 +110,21 @@ def load_or_build(source: str, split: str, root: str | Path = "runs/controlled",
     write_jsonl(out / "items.jsonl", items)
     write_jsonl(out / "replay.jsonl", records)
     return items, gold, records
+
+
+def repair_only(source: str, split: str, root: str | Path = "runs/controlled", rebuild: bool = False) -> tuple[list[Item], GoldStore]:
+    """Items with the repair-only error types (inject.REPAIR_ONLY_ERRORS) and their gold, cached on disk.
+
+    They sit outside the controlled track, so its items and replays are unchanged; an item's track
+    split is still its issuer's (track_split).
+    """
+    from faithguard.inject import REPAIR_ONLY_ERRORS
+
+    out = Path(root) / f"{source}-{split}-repair-only"
+    if not rebuild and (out / "items.jsonl").exists() and (out / "gold").exists():
+        return list(read_jsonl(out / "items.jsonl", Item)), GoldStore.load(out / "gold")
+    items, gold = build(source, split, errors=REPAIR_ONLY_ERRORS)
+    gold.root = out / "gold"
+    gold.save()
+    write_jsonl(out / "items.jsonl", items)
+    return items, gold

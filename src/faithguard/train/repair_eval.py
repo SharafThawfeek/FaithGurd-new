@@ -33,6 +33,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--unconstrained", action="store_true", help="server: do not constrain replies to the program schema")
     parser.add_argument("--sources", default="tatqa,finqa")
     parser.add_argument("--track", default="tune")
+    parser.add_argument("--arithmetic", action="store_true",
+                        help="evaluate on the track's repair-only arithmetic slips (D-088) instead of its controlled-track items")
     parser.add_argument("--limit", type=int, default=500)
     parser.add_argument("--seed", type=int, default=13)
     parser.add_argument("--spans", default="rules",
@@ -44,7 +46,7 @@ def main(argv: list[str] | None = None) -> None:
     if args.tiny:
         args.load, args.limit = "tiny", 3
 
-    from faithguard.controlled import load_or_build
+    from faithguard.controlled import load_or_build, repair_only, track_split
     from faithguard.evaluate.repair import evaluate_repairer, report
     from faithguard.gold import GoldStore
     from faithguard.repair.model import ModelRepairer
@@ -53,8 +55,12 @@ def main(argv: list[str] | None = None) -> None:
     items, gold = [], GoldStore("unused")
     for source in args.sources.split(","):
         for split in ("train", "dev", "test"):
-            its, g, records = load_or_build(source, split)
-            track = {r.item_id: r.split for r in records}
+            if args.arithmetic:
+                its, g = repair_only(source, split)
+                track = {it.id: track_split(it.question.issuer) for it in its}
+            else:
+                its, g, records = load_or_build(source, split)
+                track = {r.item_id: r.split for r in records}
             for it in its:
                 if track.get(it.id) == args.track:
                     items.append(it)
@@ -88,7 +94,7 @@ def main(argv: list[str] | None = None) -> None:
     result = evaluate_repairer(items, gold, repairer, detector=detector)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    title = f"{args.mode} repairer, {name}, {args.track} track"
+    title = f"{args.mode} repairer, {name}, {args.track} track{', arithmetic slips' if args.arithmetic else ''}"
     (out / "report.md").write_text(report(title, result), encoding="utf-8")
     (out / "results.json").write_text(json.dumps({k: v for k, v in result.items() if k != "rows"} | {"settings": vars(args)}, indent=2), encoding="utf-8")
     with open(out / "rows.jsonl", "w", encoding="utf-8") as f:
