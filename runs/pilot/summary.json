@@ -4,11 +4,11 @@
       "answers": 33,
       "empty": 0,
       "thinking_leaks": 0,
-      "supported_useful": 18,
-      "checker_flagged": 9,
-      "passed_and_auto_right": 20,
-      "unsupported": 9,
-      "flagged_and_auto_wrong": 9,
+      "supported_useful": 19,
+      "checker_flagged": 8,
+      "passed_and_auto_right": 21,
+      "unsupported": 8,
+      "flagged_and_auto_wrong": 8,
       "narrative": 4,
       "supported_unhelpful": 2,
       "mean_words": 24.8
@@ -68,8 +68,8 @@
     },
     "growth": {
       "supported_unhelpful": 1,
-      "supported_useful": 12,
-      "unsupported": 13
+      "supported_useful": 13,
+      "unsupported": 12
     },
     "lookup": {
       "unsupported": 8,
@@ -86,13 +86,13 @@
     }
   },
   "checker_flags_by_slot": {
-    "metric": 20,
+    "metric": 19,
     "value": 13,
     "period": 11,
     "sign": 9,
     "missing_operand": 8,
     "scale_currency": 5,
-    "entity_scope": 3,
+    "entity_scope": 2,
     "basis": 1
   },
   "labels": {
@@ -106,13 +106,11 @@
         "useful": 23,
         "numeric": 29,
         "numeric_incorrect": 8,
-        "checker_passed_and_right": 20,
-        "scorer_right_and_right": 20,
+        "checker_passed_and_right": 21,
+        "scorer_right_and_right": 21,
         "incorrect": 8,
         "checker_flagged_and_wrong": 8,
         "scorer_wrong_and_wrong": 8,
-        "checker_flagged_but_right": 1,
-        "scorer_wrong_but_right": 1,
         "unhelpful": 2
       },
       "LK qwen": {

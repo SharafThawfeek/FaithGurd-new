@@ -57,6 +57,8 @@ NUMBER_RE = re.compile(
     re.IGNORECASE,
 )
 
+_BRACKET_PERCENT = re.compile(r"\s?\)\s?%")  # what closes "(3)%" after the number
+
 MONTHS = (
     "january|february|march|april|may|june|july|august|september|october|november|december"
     "|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec"
@@ -77,6 +79,7 @@ class NumberStyle:
     grouping: bool = True  # thousands separators
     brackets: bool = False  # negative written as (1,234)
     bps: bool = False  # percentage printed in basis points
+    suffix_outside: bool = False  # the suffix follows the closing bracket: "(3)%"
 
 
 @dataclass(frozen=True)
@@ -157,6 +160,12 @@ def find_numbers(text: str, include_years: bool = False, brackets_negative: bool
         if brackets:
             start = len(before) - 1
             end = len(text) - len(after) + 1
+        # In prose "(3)%" can only be minus 3%, the accounting way of writing it (D-094); table cells keep
+        # their reading until the controlled track is rebuilt
+        bracket_percent = None if suffix or brackets_negative or not before.endswith("(") else _BRACKET_PERCENT.match(text, end)
+        if bracket_percent:
+            brackets, suffix = True, "%"
+            start, end = len(before) - 1, bracket_percent.end()
         negative = bool(m.group("sign") or m.group("sign2") or brackets)
         raw = Decimal(num.replace(",", ""))
         decimals = len(num.split(".")[1]) if "." in num else 0
@@ -164,7 +173,7 @@ def find_numbers(text: str, include_years: bool = False, brackets_negative: bool
         scale = _scale_from_suffix(suffix)
         prefix = text[m.start("cur") : m.start("sign2") if m.group("sign2") else m.start("num")] if cur else ""
         unit_after = None if low or brackets else _UNIT_AFTER.match(text, end)
-        unit_before = None if cur or m.group("sign") else _UNIT_BEFORE.search(text, 0, start)
+        unit_before = None if cur or m.group("sign") or bracket_percent else _UNIT_BEFORE.search(text, 0, start)
         if unit_after:
             suffix, scale, end = unit_after.group(0), _bracket_scale(unit_after.group("word")), unit_after.end()
         elif unit_before:
@@ -195,6 +204,7 @@ def find_numbers(text: str, include_years: bool = False, brackets_negative: bool
             grouping="," in num or len(num.split(".")[0]) < 4,
             brackets=brackets,
             bps=low in ("bps", "bp", "basis points"),
+            suffix_outside=bool(bracket_percent),
         )
         currency = CURRENCY_CODES.get((cur or cur_after.strip()).lower())
         mentions.append(
@@ -268,6 +278,8 @@ def render(value: Decimal, style: NumberStyle, min_significant: int = 3) -> str:
     digits = _group(digits) if style.grouping else digits
     body = style.prefix + digits + style.suffix
     if x < 0 and q != 0:
+        if style.brackets and style.suffix_outside:
+            return f"({style.prefix}{digits}){style.suffix}"
         return f"({body})" if style.brackets else "-" + body
     return body
 

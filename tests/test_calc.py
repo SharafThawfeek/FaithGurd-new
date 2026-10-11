@@ -169,3 +169,12 @@ def test_expressions_reject_anything_else(bad):
 def test_unknown_cell_is_a_calc_error():
     with pytest.raises(CalcError):
         calculate("c9 + 1", {})
+
+
+def test_bracketed_negative_percentages_in_prose():
+    # Sri Lankan reports, and answers copying them, write minus 3% as "(3)%" (D-094)
+    m = one("The Bank's net interest income changed by (3)% in 2025.")
+    assert (m.text, m.kind, m.raw) == ("(3)%", "percent", D("-3"))
+    assert render(D("-2.78"), m.style) == "(3)%" and render(D("4.2"), m.style) == "4%"
+    assert [x.text for x in find_numbers("revenue (Rs. 5 million) and (3) items")] == ["Rs. 5 million", "3"]  # asides stay asides
+    assert parse_cell("(3.5)%").kind == "number"  # table cells keep their reading until the controlled track is rebuilt

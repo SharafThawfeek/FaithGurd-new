@@ -4,7 +4,7 @@ Counts only. The gold scorer is strict (any figure outside the gold program coun
 
 | Country, generator | answers | empty | thinking_leaks | mean_words | narrative | supported_useful | supported_unhelpful | unsupported | checker_flagged | flagged_and_auto_wrong | flagged_but_auto_right | missed_auto_wrong |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| LK gemma | 33 | 0 | 0 | 24.8 | 4 | 18 | 2 | 9 | 9 | 9 | 0 | 0 |
+| LK gemma | 33 | 0 | 0 | 24.8 | 4 | 19 | 2 | 8 | 8 | 8 | 0 | 0 |
 | LK qwen | 33 | 0 | 0 | 44.9 | 4 | 22 | 2 | 5 | 5 | 3 | 2 | 2 |
 | US gemma | 27 | 0 | 0 | 25.6 | 4 | 13 | 0 | 10 | 12 | 9 | 3 | 1 |
 | US qwen | 27 | 0 | 0 | 47.9 | 4 | 13 | 0 | 10 | 10 | 8 | 2 | 2 |
@@ -15,7 +15,7 @@ Counts only. The gold scorer is strict (any figure outside the gold program coun
 | --- | --- | --- | --- |
 | comparison | 1 | 0 | 3 |
 | difference | 12 | 0 | 2 |
-| growth | 12 | 1 | 13 |
+| growth | 13 | 1 | 12 |
 | lookup | 30 | 0 | 8 |
 | ratio | 2 | 0 | 2 |
 | share | 9 | 3 | 6 |
@@ -24,13 +24,13 @@ Counts only. The gold scorer is strict (any figure outside the gold program coun
 
 | Slot or verdict | Claims |
 | --- | --- |
-| metric | 20 |
+| metric | 19 |
 | value | 13 |
 | period | 11 |
 | sign | 9 |
 | missing_operand | 8 |
 | scale_currency | 5 |
-| entity_scope | 3 |
+| entity_scope | 2 |
 | basis | 1 |
 
 ## Labels
@@ -51,11 +51,11 @@ Labelled by: claude (120). Numeric answers are the answers to every question typ
 
 | Country, generator | checker flagged, labelled incorrect | flagged, labelled right | missed, labelled incorrect | passed, labelled right | scorer wrong, labelled incorrect | scorer wrong, labelled right | scorer right, labelled incorrect |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LK gemma | 8 | 1 | 0 | 20 | 8 | 1 | 0 |
+| LK gemma | 8 | 0 | 0 | 21 | 8 | 0 | 0 |
 | LK qwen | 1 | 4 | 3 | 21 | 1 | 4 | 3 |
 | US gemma | 6 | 6 | 0 | 11 | 6 | 4 | 0 |
 | US qwen | 4 | 6 | 1 | 12 | 5 | 5 | 0 |
-| all | 19 | 17 | 4 | 64 | 20 | 14 | 3 |
+| all | 19 | 16 | 4 | 65 | 20 | 13 | 3 |
 
 ### Labels by question type
 

@@ -27,11 +27,11 @@
     "damage_rate": 0.0,
     "valid_program_rate": 1.0,
     "gate_pass_rate": 1.0,
-    "mean_attempts": 0.973,
+    "mean_attempts": 0.972,
     "status": {
-      "nothing_to_fix": 67,
+      "nothing_to_fix": 68,
       "cannot_fix": 14,
-      "repaired": 23
+      "repaired": 22
     }
   },
   "trained repairer, channel_a_spans": {
