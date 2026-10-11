@@ -77,10 +77,10 @@ From `faithguard.policy` and `faithguard.stats` at the code version named at fil
 | Policy | Residual risk | Share of sent answers that are unsupported (the certified quantity) |
 | Policy | Useful coverage | Share of items where a supported, useful answer is sent |
 | Policy | Flip matrix, regret | Each answer's state before and after repair; useful coverage below the stored-outcome oracle |
-| Detection | Span F1 by slot; wrong-context recall; clean false-alarm rate; AUROC; Brier score and ECE; coverage at certified selective risk | As in the revised plan. **Open (M.L Ahamed):** the span-matching rule for F1 (proposed: token-level overlap) and how ambiguous labels count (proposed: left out of span F1, reported separately) |
+| Detection | Span F1 by slot; wrong-context recall; clean false-alarm rate; AUROC; Brier score and ECE; coverage at certified selective risk | As in the revised plan. Span F1 is computed on character overlap between predicted and gold spans, as LettuceDetect reports span-level results and `train/detector_eval.py` computes it; answers labelled ambiguous are left out of span F1 and reported separately (D-089) |
 | Repair | Correction rate; new-error rate; damage rate; information preserved (human-scored sample); abstention calibration; valid-program rate in the 4-bit runtime; latency | As in the revised plan. **Open (M.S.A Ahamed):** how the correction rate is matched for R-H1 (proposed: compare new-error rates along each system's correction-versus-new-error frontier, at the free-rewrite baseline's correction rate) |
 
-**Ambiguous labels in risk metrics. Open (all):** proposed default: an answer labelled ambiguous counts as unsafe in residual risk (the conservative choice) and is reported separately.
+**Ambiguous labels in risk metrics:** an answer labelled ambiguous counts as unsafe in residual risk (the conservative choice) and is reported separately (D-089).
 
 ## 6. Statistics
 
