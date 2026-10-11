@@ -1,7 +1,7 @@
 """Released detectors the detection paper compares against (GPU; inference only).
 
 Each scores an item with a risk in [0, 1] (higher = more likely unsupported), on the
-same evidence text Channel A sees:
+same evidence text Channel A sees, focused the same way when it is large (passages(), D-091):
 
     lettuce   LettuceDetect v1-large or v2 mmBERT (span detector): risk = highest span confidence
     hhem      Vectara HHEM-2.1-Open (premise/hypothesis consistency): risk = 1 - consistency
@@ -14,6 +14,15 @@ import re
 
 from faithguard.detect.channel_a import evidence_passages
 from faithguard.records import Item
+
+
+def passages(item: Item) -> list[str]:
+    """The evidence passages every detector sees: above 30 rows, only the rows the rule checker traced the
+    claims to and the line items they or the question name (faithguard.focus), as for Channel A."""
+    from faithguard.detect import detect
+    from faithguard.focus import focus_rows
+
+    return evidence_passages(item.evidence, focus=focus_rows(item.evidence, detect(item), item.question.text))
 
 LETTUCE = {
     "lettuce-v1-large": "KRLabsOrg/lettucedect-large-modernbert-en-v1",
@@ -50,7 +59,7 @@ class LettuceBaseline:
 
     def risk(self, item: Item) -> float:
         spans = self.detector.predict(
-            context=evidence_passages(item.evidence), question=item.question.text, answer=item.answer.text, output_format="spans"
+            context=passages(item), question=item.question.text, answer=item.answer.text, output_format="spans"
         )
         return max((float(s.get("confidence", 0.0)) for s in spans), default=0.0)
 
@@ -72,7 +81,7 @@ class HHEMBaseline:
         self.model.eval()
 
     def risk(self, item: Item) -> float:
-        premise = "\n".join(evidence_passages(item.evidence)) + f"\nQuestion: {item.question.text}"
+        premise = "\n".join(passages(item)) + f"\nQuestion: {item.question.text}"
         score = self.model.predict([(premise, item.answer.text)])
         return float(1 - score[0])
 
@@ -96,7 +105,7 @@ class GraniteGuardianBaseline:
         self.model = AutoModelForCausalLM.from_pretrained(model_id, **kwargs).eval()
 
     def risk(self, item: Item) -> float:
-        documents = [{"doc_id": "0", "text": "\n".join(evidence_passages(item.evidence))}]
+        documents = [{"doc_id": "0", "text": "\n".join(passages(item))}]
         messages = [
             {"role": "user", "content": item.question.text},
             {"role": "assistant", "content": item.answer.text},

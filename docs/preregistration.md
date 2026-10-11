@@ -94,7 +94,7 @@ From `faithguard.policy` and `faithguard.stats` at the code version named at fil
 
 Not hypothesis tests; reported with the same intervals.
 
-- Detection: A alone, B alone and A + B; with vs without the slot head; four released baselines (LettuceDetect v1-large and v2, HHEM-2.1-Open, Granite Guardian 4.1-8B).
+- Detection: A alone, B alone and A + B; with vs without the slot head; four released baselines (LettuceDetect v1-large and v2, HHEM-2.1-Open, Granite Guardian 4.1-8B). Every detector reads the same evidence text: above 30 rows, only the rows the rule checker traced the claims to and the line items the claims or the question name (`faithguard.focus`, D-084, D-091).
 - Repair: rule-only COPY and CALCULATE; zero-shot programs (2B and 9B); supervised vs self-trained; gold vs predicted spans; with vs without KEEP training; dependency closure on vs off.
 - Policy: always keep; always repair; static four-state classifier; stored-outcome oracle; LightGBM vs TabICLv2; v0 policy on v1 outputs as-is, recalibrated and refitted; train on Qwen answers, test on Gemma answers.
 - The real-world condition (D-070): the full pipeline with automatically extracted Sri Lankan tables, reporting emission coverage, residual risk and useful coverage.

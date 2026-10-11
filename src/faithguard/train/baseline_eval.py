@@ -6,6 +6,9 @@
 
 Writes results.json (AUROC, false alarms on clean answers, wrong-context recall at
 risk >= 0.5) and scores.jsonl (one risk per item, for later fusion or policy features).
+
+With --items (benchmark items, phase 6) it only scores them: scores.jsonl holds each item's
+risk and nothing is read from gold; the scores are judged later against the labels.
 """
 
 from __future__ import annotations
@@ -25,7 +28,11 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--track", default="tune")
     parser.add_argument("--limit", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=13)
+    parser.add_argument("--items", help="score these items (JSON Lines) instead of controlled-track items; no gold is read")
     args = parser.parse_args(argv)
+    if args.items:
+        score_items(args)
+        return
 
     import numpy as np
 
@@ -73,6 +80,22 @@ def main(argv: list[str] | None = None) -> None:
         for r in rows:
             f.write(json.dumps(r) + "\n")
     print(json.dumps(result, indent=2))
+
+
+def score_items(args) -> None:
+    """Phase 6: each item's risk from one released detector, stored for scoring against the labels later."""
+    from faithguard.detect import baselines
+    from faithguard.records import Item, read_jsonl
+
+    items = list(read_jsonl(args.items, Item))
+    detector = baselines.make(args.detector)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    started = time.time()
+    with open(out / "scores.jsonl", "w", encoding="utf-8") as f:
+        for item in items:
+            f.write(json.dumps({"item_id": item.id, "detector": args.detector, "risk": detector.risk(item)}) + "\n")
+    print(f"{len(items)} items scored by {args.detector} in {time.time() - started:.0f} s -> {out / 'scores.jsonl'}")
 
 
 if __name__ == "__main__":

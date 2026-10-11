@@ -195,3 +195,33 @@ def test_large_evidence_is_focused_on_the_rows_the_claims_need():
     assert focus == {"t1": {3}}  # the profit after tax row: the claim's cell and the question's line item
     prompt = build_prompt(big, det.claims, editable_claims(det), det)
     assert "t1r3c1" in prompt and "Other line item" not in prompt and "rows of these statements are not shown" in prompt
+
+
+def test_released_detectors_see_the_same_focused_evidence(tmp_path, monkeypatch):
+    import json
+
+    from faithguard.detect import baselines
+    from faithguard.detect.channel_a import evidence_passages
+    from faithguard.focus import FOCUS_ABOVE_ROWS
+    from faithguard.records import Evidence, write_jsonl
+    from faithguard.tables import table_from_grid
+    from faithguard.train import baseline_eval
+    from fixtures import BANK_GRID
+
+    small = bank_item("Group profit after tax was Rs. 12,450 million.")
+    assert baselines.passages(small) == evidence_passages(small.evidence)  # controlled-track sizes: unchanged
+    filler = [[f"Other line item {i}", f"{1000 + i:,}", "900", "800", "700"] for i in range(FOCUS_ABOVE_ROWS)]
+    big = small.model_copy(update={"evidence": Evidence(tables=[table_from_grid("t1", BANK_GRID + filler, currency="LKR")])})
+    text = "\n".join(baselines.passages(big))
+    assert "14,212,560" in text and "Other line item" not in text  # D-091: the rows Channel A sees, nothing else
+
+    class Fake:  # stands in for a released detector, so no model is downloaded
+        def risk(self, item):
+            return 0.25
+
+    monkeypatch.setattr(baselines, "make", lambda name: Fake())
+    write_jsonl(tmp_path / "items.jsonl", [small, big.model_copy(update={"id": "demo-bank-big"})])
+    baseline_eval.main(["--detector", "hhem", "--items", str(tmp_path / "items.jsonl"), "--out", str(tmp_path / "out")])
+    rows = [json.loads(line) for line in (tmp_path / "out" / "scores.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert rows == [{"item_id": "demo-bank", "detector": "hhem", "risk": 0.25}, {"item_id": "demo-bank-big", "detector": "hhem", "risk": 0.25}]
+    assert not (tmp_path / "out" / "results.json").exists()  # benchmark items: no gold, so no metrics
