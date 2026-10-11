@@ -1,0 +1,93 @@
+{
+  "alpha": 0.1,
+  "delta": 0.05,
+  "counts": {
+    "fit": [
+      1000,
+      1000
+    ],
+    "tune": [
+      1000,
+      1000
+    ],
+    "calibration": [
+      1000,
+      1000
+    ],
+    "test": [
+      1000,
+      1000
+    ]
+  },
+  "v0_setting": "send<0.005,fix>0.5",
+  "v0_on_v0_test": {
+    "items": 1000,
+    "emitted": 722,
+    "emission_coverage": 0.722,
+    "residual_risk": 0.019390581717451522,
+    "useful_coverage": 0.708,
+    "unsafe_emitted": 14,
+    "risk_within_alpha": true
+  },
+  "as_is": {
+    "items": 1000,
+    "emitted": 716,
+    "emission_coverage": 0.716,
+    "residual_risk": 0.009776536312849162,
+    "useful_coverage": 0.709,
+    "unsafe_emitted": 7,
+    "risk_within_alpha": true
+  },
+  "recalibrated": [
+    {
+      "labels": 25,
+      "draws": 50,
+      "certified_share": 0.0,
+      "mean_risk": null,
+      "risk_within_alpha_share": null,
+      "mean_useful_coverage": null
+    },
+    {
+      "labels": 50,
+      "draws": 50,
+      "certified_share": 0.0,
+      "mean_risk": null,
+      "risk_within_alpha_share": null,
+      "mean_useful_coverage": null
+    },
+    {
+      "labels": 100,
+      "draws": 50,
+      "certified_share": 0.76,
+      "mean_risk": 0.009418737285576457,
+      "risk_within_alpha_share": 1.0,
+      "mean_useful_coverage": 0.696736842105263
+    },
+    {
+      "labels": 200,
+      "draws": 50,
+      "certified_share": 1.0,
+      "mean_risk": 0.009731852262537142,
+      "risk_within_alpha_share": 1.0,
+      "mean_useful_coverage": 0.7060200000000001
+    },
+    {
+      "labels": 1000,
+      "draws": 1,
+      "certified_share": 1.0,
+      "mean_risk": 0.009776536312849162,
+      "risk_within_alpha_share": 1.0,
+      "mean_useful_coverage": 0.709
+    }
+  ],
+  "refitted_setting": "send<0.005,fix>0.5",
+  "refitted": {
+    "items": 1000,
+    "emitted": 732,
+    "emission_coverage": 0.732,
+    "residual_risk": 0.009562841530054645,
+    "useful_coverage": 0.725,
+    "unsafe_emitted": 7,
+    "risk_within_alpha": true
+  }
+}

@@ -98,6 +98,17 @@ def test_executor_rejects_unknown_cells_and_type_mismatches():
         execute(item, claims, EditProgram(edits=[Calculate(claim="k1", expr="__import__('os')")]))
     with pytest.raises(ExecError):
         execute(item, claims, EditProgram(edits=[Keep(claim="k1"), Keep(claim="k1")]))
+    # seen on the pilot's natural answers (D-092): a difference of amounts written into a percentage claim,
+    # and a calculation on typed-in numbers, which no provenance check can trace
+    with pytest.raises(ExecError, match="gives an amount for a percent claim"):
+        execute(item, claims, EditProgram(edits=[Calculate(claim="k1", expr="diff(t1r3c1, t1r3c2)")]))
+    with pytest.raises(ExecError, match="gives a percentage for a amount claim"):
+        execute(item, claims, EditProgram(edits=[Calculate(claim="k2", expr="growth(t1r3c1, t1r3c2)")]))
+    with pytest.raises(ExecError, match="at least one evidence cell"):
+        execute(item, claims, EditProgram(edits=[Calculate(claim="k2", expr="14212.56 / 1000")]))
+    fixed = execute(item, claims, EditProgram(edits=[Calculate(claim="k1", expr="growth(t1r3c1, t1r3c2)"),
+                                                     Calculate(claim="k2", expr="t1r3c1 / 1")]))
+    assert fixed.text == "Group profit after tax rose 9.3% to Rs. 14,213 million."  # scaling is not judged
 
 
 def test_repair_reports_nothing_to_fix():

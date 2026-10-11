@@ -100,6 +100,11 @@ def execute(item: Item, claims: list[Claim], program: EditProgram) -> ExecResult
             except (expr.ExprError, CalcError) as err:
                 raise ExecError(str(err)) from err
             used, is_change = expr.refs(tree), claim.direction is not None
+            if not used:
+                raise ExecError("a calculation must use at least one evidence cell")
+            kind = result_kind(tree, lambda cell_id: item.evidence.cell(cell_id).kind)
+            if kind is not None and (kind == "percent") != (claim.kind == "percent"):
+                raise ExecError(f"CALCULATE gives {'a percentage' if kind == 'percent' else 'an amount'} for a {claim.kind} claim")
         else:
             continue
 
@@ -122,6 +127,29 @@ def execute(item: Item, claims: list[Claim], program: EditProgram) -> ExecResult
         if s2 < e1:
             raise ExecError("edits overlap")
     return ExecResult(text=apply(text, replacements), changes=changes, replacements=replacements)
+
+
+PERCENT_FUNCTIONS = ("growth", "share")
+
+
+def result_kind(node, kind_of) -> str | None:
+    """'percent' or 'amount' (amounts and plain numbers) for what an expression computes, or None when that
+    cannot be told (anything multiplied or divided, which may rescale it). kind_of: cell id -> the cell's kind."""
+    if isinstance(node, expr.Ref):
+        return "percent" if kind_of(node.cell) == "percent" else "amount"
+    if isinstance(node, expr.Neg):
+        return result_kind(node.arg, kind_of)
+    if isinstance(node, expr.Call):
+        if node.fn in PERCENT_FUNCTIONS:
+            return "percent"
+        if node.fn == "ratio":
+            return "amount"
+        kinds = {result_kind(a, kind_of) for a in node.args}
+        return kinds.pop() if len(kinds) == 1 else None  # diff, sum, avg, abs: the kind of what they combine
+    if isinstance(node, expr.BinOp) and node.op in "+-":
+        kinds = {result_kind(node.left, kind_of), result_kind(node.right, kind_of)}
+        return kinds.pop() if len(kinds) == 1 else None
+    return None
 
 
 def _has_cell(item: Item, cell_id: str) -> bool:
