@@ -141,6 +141,29 @@ def cmd_policy(args) -> None:
     print(f"Report: {out / 'report.md'}")
 
 
+def cmd_transfer(args) -> None:
+    """The transfer study on the controlled track: v0 = the cached rule-repairer replays of the items v1 replayed."""
+    from faithguard.controlled import load_or_build
+    from faithguard.policy import transfer
+    from faithguard.replay import ReplayRecord
+
+    v1 = list(read_jsonl(args.v1, ReplayRecord))
+    order = {r.item_id: i for i, r in enumerate(v1)}
+    v0 = []
+    for source in args.sources.split(","):
+        for split in ("train", "dev", "test"):
+            v0 += [r for r in load_or_build(source, split)[2] if r.item_id in order]
+    v0.sort(key=lambda r: order[r.item_id])
+    if len(v0) != len(v1):
+        raise SystemExit(f"{len(v1) - len(v0)} of v1's items have no rule-repairer replay: check --sources")
+    result = transfer.run(v0, v1, alpha=args.alpha, delta=args.delta, seed=args.seed)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "results.json").write_text(json.dumps(result, indent=2, default=str) + "\n", encoding="utf-8")
+    (out / "report.md").write_text(transfer.report(result), encoding="utf-8")
+    print(transfer.report(result))
+
+
 def cmd_sft(args) -> None:
     from faithguard.controlled import load_or_build, repair_only, track_split
     from faithguard.data import repair_examples as sft
@@ -518,6 +541,15 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--rebuild", action="store_true", help="rebuild the replay records instead of using the cache")
     p.add_argument("--out", default="runs/policy/controlled")
     p.set_defaults(fn=cmd_policy)
+
+    p = sub.add_parser("transfer", help="the transfer study: the rule-repairer (v0) policy on a trained repairer's (v1) replays")
+    p.add_argument("--v1", required=True, help="replay.jsonl written by faithguard.train.replays")
+    p.add_argument("--sources", default="tatqa,finqa")
+    p.add_argument("--alpha", type=float, default=0.10)
+    p.add_argument("--delta", type=float, default=0.05)
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--out", default="runs/policy/transfer")
+    p.set_defaults(fn=cmd_transfer)
 
     p = sub.add_parser("sft", help="repairer training data from the controlled track")
     p.add_argument("--mode", choices=["program", "rewrite"], default="program")

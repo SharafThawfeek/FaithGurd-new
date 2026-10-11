@@ -69,6 +69,7 @@ NOTEBOOKS = {
                      ROOT / "runs" / "repair" / "kaggle"),
     "repair_v1": (ROOT / "notebooks", "FaithGuard repair v1", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl",
                   ROOT / "runs" / "repair" / "kaggle"),
+    "transfer_replays": (ROOT / "notebooks", "FaithGuard transfer replays", r"replay[.]jsonl", ROOT / "runs" / "policy"),
     "repair_zero_shot_9b": (ROOT / "notebooks", "FaithGuard repair zero-shot 9B", r"results[.]json|report[.]md|rows[.]jsonl",
                             ROOT / "runs" / "repair" / "kaggle"),
     "repair_baselines": (ROOT / "notebooks", "FaithGuard repair baselines", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl",

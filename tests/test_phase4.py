@@ -183,3 +183,19 @@ def test_deployed_outcome_aware_policy_decides():
     item = bank_item("Group profit after tax rose 7.0% to Rs. 12,450 million.")
     decision = policy.decide(item, detect(item))
     assert decision.action in ("send", "repair", "abstain") and "p_unsafe" in decision.scores
+
+
+def test_transfer_replays_pick_a_fixed_sample_and_fill_in_the_track_split():
+    from faithguard.controlled import track_split
+    from faithguard.train.replays import pick, replay_items
+
+    pairs, gold = injected()
+    items = [item for item, _ in pairs]
+    by_split = {"fit": items[:4], "tune": items[4:], "test": items[:2]}
+    chosen = pick(by_split, 2, seed=3)
+    assert len(chosen) == 2 + 2 + 2  # two per split that has items; calibration has none
+    shuffled = {k: list(reversed(v)) for k, v in by_split.items()}
+    assert [i.id for i in pick(shuffled, 2, seed=3)] == [i.id for i in chosen]  # the input order does not matter
+    records = list(replay_items(items[:3], gold, repair))
+    assert [r.item_id for r in records] == [i.id for i in items[:3]]
+    assert all(r.split == track_split("demo-bank") for r in records)

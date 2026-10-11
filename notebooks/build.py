@@ -189,6 +189,20 @@ NOTEBOOKS = {
              "    !python -m faithguard.train.systems --items $ITEMS --channel-a $CHANNEL_A --adapter {adapter} --out {OUT}/systems-pilot-{name}"),
         ],
     },
+    "transfer_replays": {
+        "title": "Policy RQ3: controlled-track replays with the trained repairer",
+        "about": "The transfer study's rehearsal (D-082): replays 1,000 controlled-track items per track split (fit, tune, "
+                 "calibration, test) with a trained repairer in place of the rule repairer; the detector, features and decision "
+                 "are unchanged. Attach the notebook whose adapter is repairer v1 (repair_v1, or repair_sft for stage A). On a "
+                 "laptop, `faithguard transfer --v1 replay.jsonl` pairs them with the rule repairer's replays. Resumable. "
+                 "Expect about 4 GPU hours.",
+        "cells": [
+            ("The trained repairer's adapter (v1 if attached, else stage A)",
+             "import glob\nfound = {p.split('/')[-2]: p for p in sorted(glob.glob('/kaggle/input/**/adapter', recursive=True))}\n"
+             "ADAPTER = found.get('repair-v1') or found['repair-sft']\nprint(ADAPTER)\nMODE = 'fp16'"),
+            ("Replay 4,000 items", "!python -m faithguard.train.replays --adapter $ADAPTER --load $MODE --per-split 1000 --out {OUT}/transfer-replays"),
+        ],
+    },
     "repair_v1": {
         "title": "Repair v1: stage A with arithmetic slips",
         "about": "Repairer v1's candidate (D-088): stage A's recipe with the repair-only arithmetic slips added to training (a growth "
