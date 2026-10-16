@@ -28,3 +28,11 @@ labelling/*tasks*.json
 
 # Fitted models are rebuilt by commands; pickles are never shared (loading one can run code)
 runs/**/*.pkl
+
+# Local-only files (kept out of the public repository)
+.claude/
+docs/FaithGuard-Models-and-Tech-Stack.pdf
+docs/FaithGuard-Project-Briefing.pdf
+docs/FaithGuard-Questions-and-Answers.pdf
+docs/briefing/
+docs/components.zip
