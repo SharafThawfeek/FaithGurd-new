@@ -207,16 +207,18 @@ NOTEBOOKS = {
         "title": "Repair v1: stage A with arithmetic slips",
         "about": "Repairer v1's candidate (D-088): stage A's recipe with the repair-only arithmetic slips added to training (a growth "
                  "rate or share misstated from the right figures, the commonest natural error in the pilot). Evaluated on the same "
-                 "500 tune-track items as stage A, and with stage A on the tune track's arithmetic slips. Attach the stage A "
-                 "notebook's output. Expect about 8 GPU hours.",
+                 "500 tune-track items as stage A and on the tune track's arithmetic slips, and stage A is evaluated again on both "
+                 "with the same code, since the gate and executor changed after stage A's first evaluation (D-087, D-090, D-092). "
+                 "Attach the stage A notebook's output. Expect about 8.5 GPU hours.",
         "cells": [
-            ("Stage A's adapter, for the comparison on arithmetic slips",
+            ("Stage A's adapter, for the comparisons",
              "import glob\nADAPTER = sorted(glob.glob('/kaggle/input/**/repair-sft/adapter', recursive=True))[0]\nprint(ADAPTER)\nMODE = 'fp16'"),
             ("Training data with arithmetic slips (about 3 minutes on CPU)", "!faithguard sft --mode program --arithmetic --out runs/sft-v1"),
             ("Fine-tune (resumable)", "!python -m faithguard.train.repair_sft --data runs/sft-v1/repair-program-train.jsonl --out {OUT}/repair-v1 --mode $MODE"),
-            ("Evaluate v1 on the tune track and its arithmetic slips; stage A on the slips",
+            ("Evaluate v1 and stage A with the same code: the tune track and its arithmetic slips",
              "!python -m faithguard.train.repair_eval --adapter {OUT}/repair-v1/adapter --load $MODE --out {OUT}/eval-v1\n"
              "!python -m faithguard.train.repair_eval --adapter {OUT}/repair-v1/adapter --load $MODE --arithmetic --out {OUT}/eval-v1-arithmetic\n"
+             "!python -m faithguard.train.repair_eval --adapter $ADAPTER --load $MODE --out {OUT}/eval-sft-current\n"
              "!python -m faithguard.train.repair_eval --adapter $ADAPTER --load $MODE --arithmetic --out {OUT}/eval-sft-arithmetic"),
         ],
     },
