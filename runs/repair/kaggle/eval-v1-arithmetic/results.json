@@ -1,0 +1,56 @@
+{
+  "summary": {
+    "items": 207,
+    "needing_repair": 207,
+    "correction_rate": 0.8406,
+    "abstained_when_needed": 0.1498,
+    "still_wrong_when_sent": 0.0114,
+    "new_error_rate": 0.0,
+    "damage_rate": null,
+    "valid_program_rate": 1.0,
+    "gate_pass_rate": 0.8488,
+    "mean_attempts": 1.151,
+    "status": {
+      "repaired": 174,
+      "gate_failed": 31,
+      "nothing_to_fix": 2
+    }
+  },
+  "by_error": {
+    "arithmetic": {
+      "items": 207,
+      "needing_repair": 207,
+      "correction_rate": 0.8406,
+      "abstained_when_needed": 0.1498,
+      "still_wrong_when_sent": 0.0114,
+      "new_error_rate": 0.0,
+      "damage_rate": null,
+      "valid_program_rate": 1.0,
+      "gate_pass_rate": 0.8488,
+      "mean_attempts": 1.151,
+      "status": {
+        "repaired": 174,
+        "gate_failed": 31,
+        "nothing_to_fix": 2
+      }
+    }
+  },
+  "seconds": 905.0,
+  "settings": {
+    "out": "/kaggle/working/outputs/eval-v1-arithmetic",
+    "mode": "program",
+    "model": "Qwen/Qwen3.5-2B",
+    "adapter": "/kaggle/working/outputs/repair-v1/adapter",
+    "load": "fp16",
+    "server": null,
+    "unconstrained": false,
+    "sources": "tatqa,finqa",
+    "track": "tune",
+    "arithmetic": true,
+    "limit": 500,
+    "seed": 13,
+    "spans": "rules",
+    "span_threshold": 0.5,
+    "tiny": false
+  }
+}
