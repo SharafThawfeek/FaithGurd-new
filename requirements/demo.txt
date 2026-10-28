@@ -1,0 +1,10 @@
+# Optional: the trained models live in the local demo (demo/README.md), on top of laptop.lock.txt (do not freeze into it).
+# Same versions as the Kaggle runs: requirements/gpu.txt, and torch 2.11.0+cu128 as the GPU pilots recorded (pilots/results/*.json). D-097.
+# Install with:
+#   python -m pip install -r requirements/demo.txt --extra-index-url https://download.pytorch.org/whl/cu128
+# Without a CUDA GPU, drop the extra index: the CPU build of torch runs Channel A, but not the repairer in time.
+torch==2.11.0
+transformers==5.19.0
+peft==0.21.2
+accelerate==1.15.0
+huggingface_hub==1.33.0

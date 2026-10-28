@@ -10,6 +10,7 @@ outcome-aware policy, trained repairer) drop in without changing this file.
 
 from __future__ import annotations
 
+from textwrap import shorten
 from typing import Callable, Protocol
 
 from faithguard.calc.numbers import default_style, render
@@ -29,9 +30,13 @@ class Policy(Protocol):
 
 
 def evidence_note(item: Item, cell_ids: list[str]) -> str:
-    """A short, human-readable list of the cells behind a decision."""
+    """A short, human-readable list of the cells behind a decision (a claim traced to text names its passage)."""
+    passages = {p.id: p for p in item.evidence.passages}
     parts = []
     for cell_id in cell_ids:
+        if cell_id in passages:
+            parts.append(f"text passage {cell_id}: {shorten(passages[cell_id].text, 160)}")
+            continue
         cell = item.evidence.cell(cell_id)
         label = " ".join(x for x in (cell.entity, cell.metric, cell.period) if x) or f"{cell.row_label} {cell.column_label}"
         shown = render(cell.value, default_style(cell.kind if cell.kind != "text" else "amount", cell.scale, cell.currency, 0)) if cell.value is not None else cell.text

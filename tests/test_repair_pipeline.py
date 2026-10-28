@@ -31,6 +31,14 @@ def test_missing_cell_leads_to_abstention_with_evidence():
     assert out.reason
 
 
+def test_abstention_names_a_text_passage_the_claim_was_traced_to():
+    # The number is found only in a passage about another metric: unverifiable, traced to p1, not a table cell
+    item = us_item("Revenue was $9,100.0 million in FY2025.", passages=["Backlog reached $9,100.0 million at year end."])
+    out = run(item)
+    assert out.action == "abstain" and out.evidence_cells == ["p1"]
+    assert "text passage p1: Backlog reached $9,100.0 million at year end." in out.reason
+
+
 def test_sign_error_flips_the_direction_word():
     item = us_item("Net income rose 6.5% to $612.4 million.", question="How did Example Industries' net income change in FY2025?")
     out = run(item)
