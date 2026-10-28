@@ -17,14 +17,14 @@
       "answers": 33,
       "empty": 0,
       "thinking_leaks": 0,
-      "unsupported": 5,
+      "unsupported": 4,
       "checker_flagged": 5,
       "missed_auto_wrong": 2,
-      "supported_useful": 22,
+      "supported_useful": 23,
       "passed_and_auto_right": 22,
       "supported_unhelpful": 2,
-      "flagged_but_auto_right": 2,
-      "flagged_and_auto_wrong": 3,
+      "flagged_but_auto_right": 3,
+      "flagged_and_auto_wrong": 2,
       "narrative": 4,
       "mean_words": 44.9
     },
@@ -32,52 +32,50 @@
       "answers": 27,
       "empty": 0,
       "thinking_leaks": 0,
-      "supported_useful": 13,
+      "supported_useful": 17,
       "checker_flagged": 12,
-      "passed_and_auto_right": 10,
-      "unsupported": 10,
-      "flagged_and_auto_wrong": 9,
-      "flagged_but_auto_right": 3,
+      "passed_and_auto_right": 11,
+      "unsupported": 6,
+      "flagged_and_auto_wrong": 6,
+      "flagged_but_auto_right": 6,
       "narrative": 4,
-      "missed_auto_wrong": 1,
       "mean_words": 25.6
     },
     "US qwen": {
       "answers": 27,
       "empty": 0,
       "thinking_leaks": 0,
-      "supported_useful": 13,
+      "supported_useful": 16,
       "checker_flagged": 10,
-      "passed_and_auto_right": 11,
-      "flagged_but_auto_right": 2,
-      "unsupported": 10,
-      "flagged_and_auto_wrong": 8,
+      "passed_and_auto_right": 12,
+      "flagged_but_auto_right": 4,
+      "unsupported": 7,
+      "flagged_and_auto_wrong": 6,
       "narrative": 4,
-      "missed_auto_wrong": 2,
+      "missed_auto_wrong": 1,
       "mean_words": 47.9
     }
   },
   "auto_score_by_question_type": {
     "comparison": {
-      "unsupported": 3,
-      "supported_useful": 1
+      "unsupported": 2,
+      "supported_useful": 2
     },
     "difference": {
-      "supported_useful": 12,
-      "unsupported": 2
+      "supported_useful": 14
     },
     "growth": {
       "supported_unhelpful": 1,
-      "supported_useful": 13,
-      "unsupported": 12
+      "supported_useful": 14,
+      "unsupported": 11
     },
     "lookup": {
-      "unsupported": 8,
-      "supported_useful": 30
+      "unsupported": 5,
+      "supported_useful": 33
     },
     "ratio": {
-      "supported_useful": 2,
-      "unsupported": 2
+      "supported_useful": 3,
+      "unsupported": 1
     },
     "share": {
       "supported_useful": 9,
@@ -120,8 +118,8 @@
         "numeric": 29,
         "numeric_incorrect": 4,
         "checker_passed_and_right": 21,
-        "scorer_wrong_but_right": 4,
-        "scorer_right_and_right": 21,
+        "scorer_wrong_but_right": 3,
+        "scorer_right_and_right": 22,
         "incorrect": 4,
         "checker_missed_wrong": 3,
         "scorer_missed_wrong": 3,
@@ -137,12 +135,11 @@
         "numeric": 23,
         "numeric_incorrect": 6,
         "checker_passed_and_right": 11,
-        "scorer_right_and_right": 13,
+        "scorer_right_and_right": 17,
         "incorrect": 6,
         "checker_flagged_and_wrong": 6,
         "scorer_wrong_and_wrong": 6,
-        "checker_flagged_but_right": 6,
-        "scorer_wrong_but_right": 4
+        "checker_flagged_but_right": 6
       },
       "US qwen": {
         "labelled": 27,
@@ -151,9 +148,9 @@
         "numeric": 23,
         "numeric_incorrect": 5,
         "checker_passed_and_right": 12,
-        "scorer_right_and_right": 13,
+        "scorer_right_and_right": 16,
         "checker_flagged_but_right": 6,
-        "scorer_wrong_but_right": 5,
+        "scorer_wrong_but_right": 2,
         "incorrect": 5,
         "checker_flagged_and_wrong": 4,
         "scorer_wrong_and_wrong": 5,

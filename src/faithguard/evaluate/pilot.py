@@ -2,7 +2,7 @@
 
 Two automatic readings of every answer:
 
-- the gold scorer (`score_text`): does every figure in the answer match a gold value?
+- the gold scorer (`score_text`, read with the answer's evidence, D-100): does every figure in the answer match a gold value?
   This is strict. A correct answer that adds a figure from outside the gold
   program (another year, another entity, a figure it worked out) counts as
   unsupported, so the automatic error rate is an upper bound;
@@ -31,7 +31,9 @@ _SCORER = {(True, True): "scorer_wrong_and_wrong", (True, False): "scorer_wrong_
            (False, True): "scorer_missed_wrong", (False, False): "scorer_right_and_right"}
 
 
-AI_ANNOTATORS = {"claude"}  # labels written by an AI model at the user's request (D-066); a person's label wins over them
+# Labels no person wrote: Claude's, at the user's request (D-066), and the gold scorer's (evaluate.triage, D-100).
+# A person's label wins over them.
+AI_ANNOTATORS = {"claude", "code-scorer-v1"}
 
 
 def label_of(gold: GoldStore, item_id: str) -> GoldLabel | None:
@@ -70,7 +72,7 @@ def summarise(items: list[Item], gold: GoldStore) -> dict:
         if item.question.question_type == "narrative":
             c["narrative"] += 1
             continue
-        state = score_text(item.answer.text, gold.questions[item.question.id])
+        state = score_text(item.answer.text, gold.questions[item.question.id], item.evidence)
         flagged_checks = [ch for ch in detect(item).checks if ch.verdict != "supported"]
         flagged = bool(flagged_checks)
         c[state] += 1

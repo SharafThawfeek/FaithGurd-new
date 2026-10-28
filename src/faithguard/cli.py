@@ -5,7 +5,7 @@
     faithguard slice                                 the thin end-to-end slice: 20-40 items, rules only
     faithguard trace --items F --id ID               one item, step by step (for demonstrations)
     faithguard splits build                          rebuild the split manifest
-    faithguard labelling tasks|import ...            Label Studio tasks in, gold labels out
+    faithguard labelling tasks|triage|audit|import   Label Studio tasks in, gold labels out; code labels with an audit
     faithguard pilot                                 the pilot answers at a glance (counts only)
     faithguard hashes FILES --out F                  pin files by SHA-256 (answers, evidence, the locked test set)
     faithguard extraction compare                    three PDF table tools against the hand-corrected tables (20 tables)
@@ -482,6 +482,10 @@ def cmd_systems(args) -> None:
         label = label_of(gold, item.id)
         if label and label.status in systems.LABEL_STATE:
             states[item.id] = systems.LABEL_STATE[label.status]
+    # on the benchmark every original is judged by its label (D-100); only the pilot may fall back to the gold scorer
+    locked = [i.id for i in items if i.question.split in ("test", "calibration") and i.question.question_type != "narrative"]
+    if unlabelled := [i for i in locked if i not in states]:
+        sys.exit(f"{len(unlabelled)} test or calibration answers have no label yet, e.g. {', '.join(unlabelled[:3])}")
     summary = systems.score(items, gold, rows("detector"), {"rule_spans": rows("repair-rule-spans"),
                                                             "channel_a_spans": rows("repair-channel-a-spans")}, states)
     out = Path(args.out)
@@ -512,19 +516,100 @@ def cmd_labelling(args) -> None:
     from faithguard import labelling
     from faithguard.gold import GoldStore
 
+    needed = {"tasks": ("items", "mapping"), "triage": ("items", "gold"), "audit": ("items", "gold"),
+              "import": ("export", "mapping", "gold")}[args.action]
+    if missing := [f"--{name}" for name in needed if getattr(args, name) is None]:
+        sys.exit(f"labelling {args.action} needs {', '.join(missing)}")
+
+    def write_tasks(items: list, out: Path, mapping: Path) -> int:
+        # random keys each time, so a second set of tasks would orphan any export made from the first
+        if taken := [str(p) for p in (out, mapping) if p.exists()]:
+            sys.exit(f"{' and '.join(taken)} already exist; move them away first")
+        return labelling.write_tasks(items, out, mapping, salt=args.salt)
+
     if args.action == "tasks":
         items = list(read_jsonl(args.items, Item))
-        n = labelling.write_tasks(items, args.out, args.mapping, salt=args.salt)
-        print(f"wrote {n} blinded tasks to {args.out}; keep {args.mapping} with the gold store")
+        n = write_tasks(items, Path(args.out or "labelling/tasks.json"), Path(args.mapping))
+        print(f"wrote {n} blinded tasks; keep {args.mapping} with the gold store")
+    elif args.action == "triage":
+        from faithguard.evaluate import triage
+
+        items = list(read_jsonl(args.items, Item))
+        store = GoldStore.load(args.gold)
+        locked = {item.question.id for item in items if item.question.split in triage.LOCKED_SPLITS}
+        if locked and (args.audit not in (None, triage.AUDIT_SIZE) or args.seed not in (None, triage.AUDIT_SEED)):
+            sys.exit(f"on test or calibration questions the audit is pre-registered: {triage.AUDIT_SIZE} answers, seed {triage.AUDIT_SEED}")
+        if locked and not args.filed:
+            sys.exit("triage scores answers: on test or calibration questions it runs only after the pre-registration "
+                     "is filed; pass --filed with the filing (OSF link or tagged commit)")
+        if locked and (unchecked := triage.unchecked_questions(locked, args.benchmark)):
+            sys.exit(f"code labels take the gold as true; {len(unchecked)} questions have no second reader (R-23), "
+                     f"e.g. {', '.join(unchecked[:5])}")
+        if (store.root / "triage.json").exists():
+            sys.exit(f"{store.root} is already triaged; move triage.json, triage-task-mapping.json and code-labels.jsonl away first")
+        result = triage.triage(items, store, audit_size=triage.AUDIT_SIZE if args.audit is None else args.audit,
+                               seed=triage.AUDIT_SEED if args.seed is None else args.seed)
+        result["filed"] = args.filed
+        by_id = {item.id: item for item in items}
+        for_person = [by_id[i] for i in sorted(set(result["person"]) | set(result["audit"]))]
+        n = write_tasks(for_person, Path(args.out or "labelling/triage-tasks.json"), store.root / "triage-task-mapping.json")
+        (store.root / "triage.json").write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
+        write_jsonl(store.root / "code-labels.jsonl", [triage.code_label(by_id[i]) for i in result["code"]])
+        if args.report:
+            out = Path(args.report)
+            out.mkdir(parents=True, exist_ok=True)
+            (out / "report.md").write_text(triage.report(result, items, store), encoding="utf-8")
+        print(f"wrote {n} blinded tasks for a person, the audit sample hidden among them; the routing, the key mapping "
+              f"and the code labels are kept in {store.root} until `labelling audit` decides on the code labels")
+    elif args.action == "audit":
+        from faithguard.evaluate import triage
+
+        items = list(read_jsonl(args.items, Item))
+        store = GoldStore.load(args.gold)
+        if not (store.root / "triage.json").exists():
+            sys.exit(f"{store.root} has no triage.json: run `labelling triage` first")
+        result = json.loads((store.root / "triage.json").read_text(encoding="utf-8"))
+        by_id = {item.id: item for item in items}
+        if missing := sorted((set(result["code"]) | set(result["person"])) - set(by_id)):
+            sys.exit(f"--items lacks {len(missing)} of the triaged answers, e.g. {', '.join(missing[:3])}; pass the items triaged")
+        verdict = triage.audit(result, store, items)
+        (store.root / "audit.json").write_text(json.dumps(verdict, indent=1) + "\n", encoding="utf-8")
+        upper = f"{verdict['upper_95']:.1%}" if verdict["upper_95"] is not None else "n/a"
+        if verdict["status"] == "incomplete":
+            sys.exit(f"audit incomplete: {verdict['labelled']} of {verdict['planned']} audited answers have a person's label; "
+                     f"import the rest, then run it again")
+        print(f"audit: {verdict['planned']} audited answers labelled by a person, {len(verdict['overruled'])} overruled "
+              f"(95% upper bound {upper}); the code labels {'stand' if verdict['code_labels_stand'] else 'fall'}; "
+              f"{len(verdict['to_person'])} answers still need a person")
+        tasked = set()
+        for mapping in sorted(store.root.glob("audit-task-mapping*.json")):
+            tasked |= set(json.loads(mapping.read_text(encoding="utf-8")).values())
+        if new := [i for i in verdict["to_person"] if i not in tasked]:
+            n = 1 + len(list(store.root.glob("audit-task-mapping*.json")))
+            mapping = store.root / f"audit-task-mapping-{n}.json"
+            count = write_tasks([by_id[i] for i in new], Path(args.out or f"labelling/audit-tasks-{n}.json"), mapping)
+            print(f"wrote {count} blinded tasks for them; import their labels with --mapping {mapping}")
+        if args.apply:
+            people = {i for i in by_id if triage.person_labels(store, i)}
+            if waiting := sorted((set(result["person"]) | set(verdict["to_person"])) - people):
+                sys.exit(f"{len(waiting)} answers routed to a person have no person's label yet, e.g. {', '.join(waiting[:3])}; "
+                         f"the code labels are added only once every one has")
+            for i in verdict["code_labels_kept"]:
+                if not any(label.annotator == triage.AUTO_ANNOTATOR for label in store.labels.get(i, [])):
+                    store.add_label(triage.code_label(by_id[i]))
+            store.save()
+            print(f"added {len(verdict['code_labels_kept'])} code labels to {store.root}")
     else:
         export = json.loads(Path(args.export).read_text(encoding="utf-8"))
         mapping = json.loads(Path(args.mapping).read_text(encoding="utf-8"))
         store = GoldStore.load(args.gold)
         labels = labelling.labels_from_export(export, mapping, target=args.target)
-        for label in labels:
+        seen = {(x.item_id, x.target, x.annotator) for xs in store.labels.values() for x in xs}
+        fresh = [x for x in labels if (x.item_id, x.target, x.annotator) not in seen]
+        for label in fresh:
             store.add_label(label)
         store.save()
-        print(f"added {len(labels)} labels to {args.gold}")
+        print(f"added {len(fresh)} labels to {args.gold}" + (f" ({len(labels) - len(fresh)} already there)" if len(fresh) < len(labels) else ""))
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -681,15 +766,21 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_hashes)
 
-    p = sub.add_parser("labelling")
-    p.add_argument("action", choices=["tasks", "import"])
+    p = sub.add_parser("labelling", help="blinded Label Studio tasks, code labels with a person's audit (D-100), label import")
+    p.add_argument("action", choices=["tasks", "triage", "audit", "import"])
     p.add_argument("--items")
-    p.add_argument("--out", default="labelling/tasks.json")
-    p.add_argument("--mapping", default="data/gold/task-mapping.json")
-    p.add_argument("--salt", default="faithguard")
+    p.add_argument("--out", help="the blinded tasks for a person (never overwritten)")
+    p.add_argument("--mapping", help="the task key -> item file, kept with the gold store (tasks, import)")
+    p.add_argument("--salt", help="task-key salt; random when left out, so nobody can recompute the keys")
     p.add_argument("--export")
-    p.add_argument("--gold", default="data/gold")
+    p.add_argument("--gold", help="the gold store folder (triage, audit, import)")
     p.add_argument("--target", choices=["original", "repair"], default="original")
+    p.add_argument("--audit", type=int, help="code labels a person also labels, hidden among the tasks (default 150)")
+    p.add_argument("--seed", type=int, help="seed for drawing the audit sample (default 2026, pre-registered)")
+    p.add_argument("--report", help="folder for the counts-only triage report")
+    p.add_argument("--filed", help="the pre-registration's filing (OSF link or tagged commit): needed to triage test or calibration answers")
+    p.add_argument("--benchmark", default="data/benchmark", help="report YAMLs, for the second-reader check")
+    p.add_argument("--apply", action="store_true", help="audit: add the code labels that stand to the gold store's labels")
     p.set_defaults(fn=cmd_labelling)
 
     args = parser.parse_args(argv)

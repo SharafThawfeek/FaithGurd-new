@@ -15,7 +15,7 @@ Sources: [the revised plan](FaithGuard-Revised-Plan.md) (hypotheses, research qu
 | Answers | Each question answered once by Qwen3.5-9B (Q4_K_M) and Gemma 4 12B (QAT Q4_0) with llama.cpp b11490, thinking off, fixed seed and settings, prompt version `1f13b3d92d8a`: 800 answers |
 | Evidence | Hand-corrected income statement and balance sheet per report (D-060, D-062), frozen by hash at lock |
 | Real-world condition | The same answers checked against tables read by PyMuPDF (text) with no correction (D-070); a secondary analysis, not a hypothesis test |
-| Labels | Annotation guide v2 ([annotation-guide.md](annotation-guide.md), D-068): spans with slot types, status (correct, incorrect, ambiguous, unhelpful) and usefulness; 240 items double-labelled; Cohen's kappa per field; disagreements adjudicated by an accounting lecturer or senior accounting student |
+| Labels | Annotation guide v2 ([annotation-guide.md](annotation-guide.md), D-068): spans with slot types, status (correct, incorrect, ambiguous, unhelpful) and usefulness. **Who labels (D-100):** run only after filing and only on questions with a second reader, `faithguard labelling triage` gives an answer a code label (correct, useful, no spans) when the question asks for a number (not narrative or comparison questions, nor a difference between two entities), every number matches a gold value read with the evidence and one is the answer, every year, "this/last year", Group/Company/Bank word, metric name and unit word belongs to its figure's cells, "from" and "to" introduce the earlier and later figure of a change, every direction word says how the two cells moved, and the answer has no negation, hedge or guess, no explanation or judgement, no figure in words or fraction, no quarter or part-year, no percentage points (except for a difference of two percentages), no foreign currency, no currency after a bare figure printed in thousands or millions, no "loss" beside a figure that is not a loss and no thinking leak (the rules in `evaluate/triage.py` and `evaluate/score.py` at the filing commit). A person labels every other answer, plus a stratified random audit of 150 code labels (seed 2026; strata: country, generator, one figure or several) hidden among the other tasks. An audited answer counts as overruled if any person's label overrules it, unless the adjudicator's label says otherwise; the audit decides nothing until every audited answer has a person's label. The code labels stand only if at most 1 of the 150 is overruled; otherwise a person labels every code-labelled answer. An overruled audit answer, or any person's ambiguous label, sends the other code-labelled answers to the same question to a person. Code labels enter the gold store only once every answer routed to a person has a person's label. Each answer's deciding label is the adjudicated one, else a person's, else its code label. A second person labels 80 tasks (60 person-routed and 20 audit answers) for Cohen's kappa per field; disagreements are adjudicated by an accounting lecturer or senior accounting student |
 | Future-period set | The next annual report of each test issuer, held back unopened ([manifests/future-period.csv](../manifests/future-period.csv), D-069) |
 
 ## 2. Hypotheses
@@ -82,12 +82,15 @@ From `faithguard.policy` and `faithguard.stats` at the code version named at fil
 
 **Ambiguous labels in risk metrics:** an answer labelled ambiguous counts as unsafe in residual risk (the conservative choice) and is reported separately (D-089).
 
+**The gold scorer on natural answers (D-100):** a repair's state, and an original's code label, come from `score_text` read with the answer's evidence. A number matches a gold value at its printed precision; a change may be stated by its size and a direction word that says how the cells moved; a loss may be written as a positive figure right after "loss", or in accounting brackets; a ratio may be written as a percentage; the constants of a worked calculation are skipped. Template answers (the controlled track) are scored without the evidence.
+
 ## 6. Statistics
 
 - **Intervals:** issuer-clustered bootstrap (`stats/bootstrap.py`): whole issuers resampled with replacement, 2,000 resamples, 95% percentile intervals, seed 0.
 - **Counts:** issuers, questions and answers are always reported separately.
 - **Recalibration label sizes (D-H3, P-H3):** 25, 50, 100 and 200 labels.
-- **Repair labelling rule:** if code and humans disagree on more than about 10% of the 400 sampled repairs, human checking of repairs is expanded.
+- **Repair labelling rule (D-100):** people check at least 50 changed repairs from each R-H1 arm (edit programs, free rewriting) and 50 across the other variants; if code and people disagree on more than 10% of an arm's checked repairs, people check every changed repair of that arm.
+- **Code labels (D-100):** the audit's overruled share is reported with its 95% Clopper–Pearson upper bound. Every certificate is also computed with each unaudited code-labelled sent answer counted unsafe at that upper bound, and every detection metric again on person-labelled answers only; whether P-H1 to P-H3 or D-H1 to D-H3 change is reported. Code labels and the rule checker read numbers with the same code (`calc/numbers.py`, `claims.py`), so errors that code cannot see escape both (R-25).
 - **Groups:** residual risk is also reported by group (numeric vs narrative, US vs Sri Lanka).
 
 ## 7. Secondary analyses
@@ -110,4 +113,4 @@ Filled in at filing with `faithguard hashes`.
 | The 800 answers | To fill at lock |
 | Detector, fusion and ablation variants | To fill (M.L Ahamed) |
 | Repairer v1 and repair variants | To fill (M.S.A Ahamed) |
-| Code version used for the analysis | Commit hash at filing |
+| Code version used for the analysis, including the triage and scorer rules (D-100) | Commit hash at filing |

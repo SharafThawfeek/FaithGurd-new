@@ -6,6 +6,8 @@ This guide says how to label AI answers about financial reports in Label Studio.
 
 Each task shows a **question**, the **evidence** (report tables and text) and one **answer**. You never see which model wrote the answer or whether it has been repaired. Judge the answer against the evidence shown and nothing else, not your own knowledge of the company.
 
+**Which answers reach you (D-100):** code labels the answers whose every number matches the gold cells and whose words cannot still make them wrong. You get every other answer, and also a hidden sample of the answers code labelled, to check the code. So some of your tasks will look clean, and a clean-looking task may be one code thinks is right. That changes nothing: label every task in full, exactly as below, and never assume a task is right or wrong because of how it reached you.
+
 ## What you do
 
 1. **Select every wrong or unsupported span** in the answer and pick what is wrong with it (the slot, below). Select the number together with its currency and unit ("Rs. 12,450 million", not just "12,450"). Select a direction word ("rose", "fell") only if the word itself is wrong.
@@ -65,8 +67,9 @@ These come from the 120 pilot answers (decision D-066). The examples use the fic
 
 - **Blinding:** never try to find out which model or system produced an answer.
 - **Own work:** where possible, do not label outputs of the component you built.
-- **Double labelling:** 20% of items are labelled by two people independently; do not discuss them before both are done.
-- **Disagreements** go to the adjudicator, an accounting lecturer or senior accounting student, whose decision is final.
+- **Double labelling:** a second person labels 80 of the tasks independently (D-100); do not discuss them before both are done.
+- **Disagreements** go to the adjudicator, an accounting lecturer or senior accounting student, whose decision is final. When your label differs from a code label, yours stands unless the adjudicator reverses it.
+- **Ambiguous:** when you choose ambiguous, say in the note whether the question, the evidence or only this answer is ambiguous. Any ambiguous label sends every code-labelled answer to that question to a person.
 - **Time:** after each sitting, add a line to [logs/labelling-hours.csv](../logs/labelling-hours.csv): the date, your name, the task file, how many items you finished and how many minutes it took. Minutes per item come from this log.
 - **Pre-filled labels:** a task may come with suggested labels (the pilot's labels by Claude, for example). They are suggestions: read every task, check each span and choice against the evidence, and correct what is wrong. Never accept one unread. Main-benchmark tasks come without suggestions, so they cannot anchor the labels.
 
@@ -86,7 +89,7 @@ python -m venv .venv-labelstudio
 .venv-labelstudio/Scripts/label-studio start
 ```
 
-Then create a project, paste `labelling/label_config.xml` into *Settings → Labeling Interface → Code*, and import the tasks file made by `faithguard labelling tasks`. Export results as JSON and convert them with `faithguard labelling import`.
+Then create a project, paste `labelling/label_config.xml` into *Settings → Labeling Interface → Code*, and import the tasks file you were given: for the main benchmark, the one made by `faithguard labelling triage` (and any later `labelling audit` task files); for other work, the one made by `faithguard labelling tasks`. Export results as JSON and convert them with `faithguard labelling import`, giving the mapping file that came with the tasks.
 
 To review the pilot's suggested labels, import `data/benchmark-build/labels/tasks-with-labels.json` (not in git) instead, and turn on *Settings → Annotation → Use predictions to prelabel tasks*: each task then opens with the suggestions filled in. Submit each task after checking it, export, and convert the export as above with the pilot's mapping (`--mapping data/benchmark-build/gold/task-mapping.json --gold data/benchmark-build/gold`). Your labels then decide each answer in `faithguard pilot`, ahead of the suggestions.
 

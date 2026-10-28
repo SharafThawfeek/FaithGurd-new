@@ -871,7 +871,9 @@ Replay plays out **every** action on **every** item, so a policy can be evaluate
 
 ```mermaid
 flowchart LR
-    IT["items.jsonl"] --> TK["faithguard labelling tasks<br/>opaque task keys, shuffled<br/>with a fixed seed"]
+    IT["items.jsonl"] --> TR["faithguard labelling triage<br/>(test/calibration: after filing,<br/>second reader required)"]
+    TR --> CL["code labels<br/>correct, useful, no spans"]
+    TR --> TK["blinded tasks: answers code<br/>cannot decide + hidden audit of 150<br/>random keys and order"]
     TK --> KEY[("key -> item mapping<br/>kept on the gold side")]
     TK --> LS["Label Studio 1.23.2<br/>(own environment)"]
     LS --> AN["Annotators, blind to the model:<br/>spans + slot, status,<br/>usefulness, note"]
@@ -879,11 +881,13 @@ flowchart LR
     EXP --> IMP["faithguard labelling import"]
     KEY --> IMP
     IMP --> GL["GoldLabel records<br/>one per annotator per item"]
-    GL --> AGR["Agreement: Cohen's kappa<br/>on the 20% double-labelled"]
+    GL --> AUD["faithguard labelling audit<br/>code labels stand if at most 1<br/>of 150 is overruled"]
+    CL --> AUD
+    GL --> AGR["Agreement: Cohen's kappa<br/>on 80 double-labelled tasks"]
     GL --> ADJ["Disagreements -> accounting<br/>adjudicator (final)"]
 ```
 
-Annotators follow [annotation-guide.md](annotation-guide.md) (v2). They never see which generator or system produced an answer. Main-benchmark tasks carry no suggested labels, so nothing can anchor them. Time per sitting is logged in `logs/labelling-hours.csv`. When labels disagree on the same item, a person's label wins over an AI annotator's, and an adjudicated label over both (`label_of`).
+Code labels an answer only when nothing in it could still be wrong: a numeric question (not narrative or comparison, nor a difference between two entities), every number matching a gold value read with the evidence (one of them the answer), every year, entity word, metric name and unit word belonging to its figure's cells, "from" and "to" in the right order, every direction word saying how the cells moved, and no hedge, explanation, figure in words, part-year, percentage points, foreign currency or thinking leak (`evaluate/triage.py`, D-100). A person labels the rest and a stratified audit of 150 code labels; any person's overrule counts unless the adjudicator reverses it, and if more than one of the 150 is overruled, a person labels every answer. An overruled audit answer or an ambiguous label sends the other code-labelled answers to that question to a person. Annotators follow [annotation-guide.md](annotation-guide.md) (v2). They never see which generator or system produced an answer. Main-benchmark tasks carry no suggested labels, so nothing can anchor them. Time per sitting is logged in `logs/labelling-hours.csv`. When labels disagree on the same item, a person's label wins over a code or AI annotator's, and an adjudicated label over all (`label_of`).
 
 ---
 

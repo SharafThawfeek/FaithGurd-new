@@ -19,19 +19,20 @@ from faithguard.evaluate.score import score_text, wrong_numbers
 from faithguard.gold import GoldStore
 from faithguard.records import Item, RepairOutput
 
-LABEL_STATE = {"correct": "supported_useful", "unhelpful": "supported_unhelpful", "incorrect": "unsupported"}
+# Ambiguous answers count as unsafe (D-089).
+LABEL_STATE = {"correct": "supported_useful", "unhelpful": "supported_unhelpful", "incorrect": "unsupported", "ambiguous": "unsupported"}
 
 
 def _row(item: Item, gold: GoldStore, out: RepairOutput, before: str) -> dict:
     g = gold.questions[item.question.id]
     sent = out.text if out.status in ("repaired", "nothing_to_fix") else None
-    before_wrong = set(wrong_numbers(item.answer.text, g))
+    before_wrong = set(wrong_numbers(item.answer.text, g, item.evidence))
     # an answer sent unchanged keeps its own state: the strict scorer must not overrule the label on the same text
-    after = before if sent == item.answer.text else score_text(sent, g)
+    after = before if sent == item.answer.text else score_text(sent, g, item.evidence)
     return {
         "item_id": item.id, "error": None, "before": before, "after": after, "status": out.status,
         "attempts": out.attempts, "program": out.program is not None,
-        "new_errors": [w for w in wrong_numbers(sent, g) if w not in before_wrong],
+        "new_errors": [w for w in wrong_numbers(sent, g, item.evidence) if w not in before_wrong],
     }
 
 
@@ -47,7 +48,7 @@ def score(items: Sequence[Item], gold: GoldStore, detector_rows: dict[str, dict]
         if item.question.question_type == "narrative" or item.id not in detector_rows:
             continue
         g = gold.questions[item.question.id]
-        before = label_state.get(item.id) or score_text(item.answer.text, g)
+        before = label_state.get(item.id) or score_text(item.answer.text, g, item.evidence)
         det_b = detect(item)
         rec = detector_rows[item.id]
         a_max = {c["claim_id"]: c["a_max"] for c in rec["claims"]}  # Channel A's probability over each claim

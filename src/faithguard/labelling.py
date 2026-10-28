@@ -1,9 +1,9 @@
 """Label Studio tasks in, gold labels out, with blinding in between.
 
 Tasks hide which system or generator produced an answer: every item gets an
-opaque task key, order is shuffled with a fixed seed, and the key -> item mapping
-is written to the gold store side, never into the tasks. Exports are converted
-back into GoldLabel records, one per annotator per item.
+opaque task key, order is shuffled, and the key -> item mapping is written to the
+gold store side, never into the tasks. Exports are converted back into GoldLabel
+records, one per annotator per item.
 """
 
 from __future__ import annotations
@@ -12,6 +12,7 @@ import hashlib
 import html
 import json
 import random
+import secrets
 from pathlib import Path
 
 from faithguard.gold import GoldLabel, GoldSpan
@@ -49,8 +50,13 @@ def task_key(item_id: str, salt: str) -> str:
     return hashlib.sha256(f"{salt}:{item_id}".encode()).hexdigest()[:12]
 
 
-def build_tasks(items: list[Item], salt: str, seed: int = 7) -> tuple[list[dict], dict[str, str]]:
-    """(tasks, key -> item id). The mapping belongs with the gold store, not with the annotators."""
+def build_tasks(items: list[Item], salt: str | None = None, seed: int | None = None) -> tuple[list[dict], dict[str, str]]:
+    """(tasks, key -> item id). The mapping belongs with the gold store, not with the annotators.
+
+    Without a salt and a seed both are random, so nobody holding this public code can recompute the
+    keys or the order and tell a task's generator from its item id (D-100); the mapping is all that's kept.
+    """
+    salt = salt if salt is not None else secrets.token_hex(16)
     tasks, mapping = [], {}
     for item in items:
         key = task_key(item.id, salt)
@@ -63,11 +69,11 @@ def build_tasks(items: list[Item], salt: str, seed: int = 7) -> tuple[list[dict]
                 "answer": item.answer.text,
             }
         })
-    random.Random(seed).shuffle(tasks)
+    (random.Random(seed) if seed is not None else random.SystemRandom()).shuffle(tasks)
     return tasks, mapping
 
 
-def write_tasks(items: list[Item], tasks_path: str | Path, mapping_path: str | Path, salt: str) -> int:
+def write_tasks(items: list[Item], tasks_path: str | Path, mapping_path: str | Path, salt: str | None = None) -> int:
     tasks, mapping = build_tasks(items, salt)
     Path(tasks_path).parent.mkdir(parents=True, exist_ok=True)
     Path(mapping_path).parent.mkdir(parents=True, exist_ok=True)

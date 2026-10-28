@@ -111,8 +111,10 @@ export FG_SEC_USER_AGENT="FaithGuard research Your Name you@example.com"
 | `faithguard generate --generator qwen` | Answers from one generator served by llama.cpp (resumable) |
 | `faithguard items --questions F --answers A B` | Join questions and answers into items for labelling and the pipeline |
 | `faithguard splits build` | Rebuild the split manifest from `manifests/issuers.csv` |
-| `faithguard labelling tasks --items F` | Blinded Label Studio tasks; the key mapping goes to the gold store |
-| `faithguard labelling import --export F` | Convert a Label Studio export into gold labels |
+| `faithguard labelling tasks --items F --mapping M` | Blinded Label Studio tasks with random keys; the key mapping M goes to the gold store |
+| `faithguard labelling triage --items F --gold G [--filed REF]` | Code labels the answers it can decide; blinded tasks for a person for the rest plus a hidden audit of 150 code labels (D-100). Test and calibration answers need the filed pre-registration and a second reader for every question |
+| `faithguard labelling audit --items F --gold G [--apply]` | The audit's verdict once every audited answer has a person's label; tasks for any answers that still need a person; `--apply` adds the code labels that stand, once every routed answer has a person's label |
+| `faithguard labelling import --export F --mapping M --gold G` | Convert a Label Studio export into gold labels |
 | `faithguard extraction compare\|all\|evidence` | The automatic-extraction run: PDF table tools against the hand-corrected tables, and the real-world condition's evidence |
 | `faithguard hashes FILES --out F` | Pin files by SHA-256 (answers, evidence, the locked test set) |
 
@@ -179,7 +181,7 @@ Controlled track on development data, made from the project's own templates (pip
 
 | Exit item | State |
 | --- | --- |
-| All answers generated and stored | Done (D-073): 800 answers (400 questions, Qwen3.5-9B and Gemma-4-12B), no thinking leaks or empty answers, 0.95 GPU hours; files pinned in [manifests/main-answers.json](manifests/main-answers.json); blinded labelling tasks made (`labelling/main-tasks.json`, not in git), with no suggested labels |
+| All answers generated and stored | Done (D-073): 800 answers (400 questions, Qwen3.5-9B and Gemma-4-12B), no thinking leaks or empty answers, 0.95 GPU hours; files pinned in [manifests/main-answers.json](manifests/main-answers.json); blinded labelling tasks made (`labelling/main-tasks.json`, not in git), with no suggested labels; superseded by D-100, which builds the main tasks with `labelling triage` after filing |
 | Evidence frozen and test set locked | After every table and question has a second reader |
 | Detector, repairer v1 and all variants frozen | After phase 4's GPU runs |
 | Pre-registration filed | Drafted (D-071): [docs/preregistration.md](docs/preregistration.md); filed at lock |
@@ -190,7 +192,7 @@ Controlled track on development data, made from the project's own templates (pip
 | --- | --- |
 | Run every frozen system on the items | `python -m faithguard.train.systems` (GPU) stores Channel A's spans and the trained repairer's outputs; large evidence is focused first (D-084). Dry run on the 120 pilot answers done (D-085) |
 | Code checks on every repair | `faithguard systems` scores the stored outputs against gold, counts only: [runs/pilot/systems/report.md](runs/pilot/systems/report.md). On the pilot, after the gate and parser fixes (D-087, D-092, D-094), stage A corrects 34.8% of the wrong answers with the rule checker's spans and 39.1% with Channel A's, damaging none; the rules correct 43.5%. Without KEEP training the model corrects more with the rule checker's spans but loses more correct answers with Channel A's ([stage A](runs/pilot/systems-repair-sft/report.md), [no KEEP](runs/pilot/systems-repair-sft-nokeep/report.md)) |
-| Label the 800 main answers | Blinded tasks ready in `labelling/main-tasks.json` (not in git); waits for the pre-registration |
+| Label the 800 main answers | Code labels plus a person's labels and audit (D-100): after filing, `faithguard labelling triage` builds the tasks (the older `labelling/main-tasks.json` used a public key salt and is not used). Rehearsed on the pilot: code labels 61 of 120 answers, a person 59 ([runs/pilot/triage/report.md](runs/pilot/triage/report.md)) |
 
 ### Phase 4: components (built and trained; development-data runs done)
 
