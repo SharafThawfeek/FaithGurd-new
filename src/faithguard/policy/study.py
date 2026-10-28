@@ -36,6 +36,17 @@ def _qtype(r) -> str:
     return next((q for q in QTYPES if r.features.get(f"qtype_{q}", 0) > 0), "other")
 
 
+def _quality(y: tuple, p: tuple, mask: np.ndarray | None = None) -> dict:
+    """AUROC (None when every item has the same target), Brier score and ECE of P(unsafe) and P(fix)."""
+    out = {}
+    for name, yt, pt in zip(("unsafe", "fix"), y, p):
+        yt, pt = np.asarray(yt), np.asarray(pt)
+        if mask is not None:
+            yt, pt = yt[mask], pt[mask]
+        out[name] = {"auroc": outcome.auroc(yt, pt), "brier": outcome.brier(yt, pt), "ece": outcome.ece(yt, pt)}
+    return out
+
+
 def _ci(records: Sequence, actions: Sequence[str], key: str, seed: int) -> list[float]:
     pairs = list(zip(records, actions))
 
@@ -174,21 +185,30 @@ def run(records: Sequence, alpha: float = 0.10, delta: float = 0.05, kinds=("lig
         p = {s: models.predict(x) for s, x in (("tune", tune), ("cal", cal), ("test", test))}
         preds[kind] = p
         result[f"_models_{kind}"] = models
-        y_unsafe, y_fix = outcome.targets(test)
+        y = outcome.targets(test)
+        errors = np.array([r.error or "" for r in test])
+        keep = errors != "missing_operand"
         result["models"][kind] = {
             "rows": models.info["rows"],
-            "unsafe": {"auroc": outcome.auroc(y_unsafe, p["test"][0]), "brier": outcome.brier(y_unsafe, p["test"][0]), "ece": outcome.ece(y_unsafe, p["test"][0])},
-            "fix": {"auroc": outcome.auroc(y_fix, p["test"][1]), "brier": outcome.brier(y_fix, p["test"][1]), "ece": outcome.ece(y_fix, p["test"][1])},
+            **_quality(y, p["test"]),
+            # The injector deletes the cell a missing_operand item needs, which the neural model's text shows as a
+            # short table row and the checker's features mostly miss (D-098): without those items, like for like.
+            "excluding_missing_operand": {"items": int(keep.sum()), **_quality(y, p["test"], keep)} if keep.any() else None,
+            "by_error": {e: {"items": int((errors == e).sum()), **_quality(y, p["test"], errors == e)} for e in sorted(set(errors) - {""})},
         }
         add(f"outcome_aware[{kind}]", tuple(families.outcome_aware(*p[s]) for s in ("tune", "cal", "test")))
 
-    # how many calibration labels each outcome model's certified policy needs
-    result["budget_curve"] = {}
+    # how many calibration labels each outcome model's certified policy needs, and its chosen setting by planted error
+    result["budget_curve"], result["chosen_by_error"] = {}, {}
     for kind, p in preds.items():
-        if next(f for f in result["families"] if f["family"] == f"outcome_aware[{kind}]").get("chosen"):
+        chosen = next(f for f in result["families"] if f["family"] == f"outcome_aware[{kind}]").get("chosen")
+        if chosen:
             cands = {s: families.outcome_aware(*p[s]) for s in ("tune", "cal", "test")}
             order = order_settings(tune, cands["tune"])
             result["budget_curve"][kind] = budget_curve(cal, test, cands["cal"], cands["test"], order, alpha, delta, budget_sizes, budget_repeats, seed)
+            acts = cands["test"][chosen]
+            result["chosen_by_error"][kind] = {g: policy_metrics([r.outcomes[a] for r, a in zip(test, acts) if r.error == g])
+                                               for g in sorted({r.error for r in test if r.error})}
 
     # the chosen outcome-aware policy, in more detail
     main = next((f for f in result["families"] if f["family"] == "outcome_aware[lightgbm]"), None)
@@ -222,6 +242,10 @@ def run(records: Sequence, alpha: float = 0.10, delta: float = 0.05, kinds=("lig
 
 def _pct(x) -> str:
     return "–" if x is None else f"{100 * x:.1f}%"
+
+
+def _num(x, digits: int = 4) -> str:
+    return "–" if x is None else f"{x:.{digits}f}"
 
 
 def report(result: dict) -> str:
@@ -262,15 +286,45 @@ def report(result: dict) -> str:
     o = result["oracle_test"]
     lines += [f"| oracle (hindsight) | – | – | {_pct(o['emission_coverage'])} | {_pct(o['residual_risk'])} | {_pct(o['useful_coverage'])} | 0 |", ""]
 
-    lines += ["## Outcome models on test", "", "| Model | Target | AUROC | Brier | ECE |", "| --- | --- | --- | --- | --- |"]
+    n_test = result["counts"]["test"]["items"]
+    lines += ["## Outcome models on test", ""]
+    if any((m.get("excluding_missing_operand") or {}).get("items", n_test) < n_test for m in result["models"].values()):
+        lines += ["The injector deletes the cell a missing_operand item needs, so that row reads shorter than the others. A model that reads the "
+                  "evidence text can see this, the checker's features mostly do not, and natural answers do not have the cue: the rows "
+                  "without those items are the like-for-like comparison.", ""]
+    lines += ["| Model | Target | Test items | AUROC | Brier | ECE |", "| --- | --- | --- | --- | --- | --- |"]
     for kind, m in result["models"].items():
         if "skipped" in m:
-            lines.append(f"| {kind} | skipped: {m['skipped']} | | | |")
+            lines.append(f"| {kind} | skipped: {m['skipped']} | | | | |")
             continue
+        ex = m.get("excluding_missing_operand")
         for target in ("unsafe", "fix"):
-            q = m[target]
-            lines.append(f"| {kind} | P({target}) | {q['auroc']:.3f} | {q['brier']:.3f} | {q['ece']:.3f} |")
+            shown = [("all", n_test, m[target])] + ([("excl. missing_operand", ex["items"], ex[target])] if ex and ex["items"] < n_test else [])
+            for label, n, q in shown:
+                lines.append(f"| {kind} | P({target}), {label} | {n:,} | {_num(q['auroc'], 3)} | {_num(q['brier'])} | {_num(q['ece'])} |")
     lines.append("")
+    by_error = {k: m["by_error"] for k, m in result["models"].items() if m.get("by_error")}
+    if by_error:
+        kinds = list(by_error)
+        lines += ["Brier score by planted error (AUROC is undefined where every item has the same target):", "",
+                  "| Planted error | Items | " + " | ".join(f"P({t}), {k}" for t in ("unsafe", "fix") for k in kinds) + " |",
+                  "| --- | --- |" + " --- |" * (2 * len(kinds))]
+        for e in sorted({e for d in by_error.values() for e in d}):
+            n = next(d[e]["items"] for d in by_error.values() if e in d)
+            cells = [_num(by_error[k].get(e, {}).get(t, {}).get("brier")) for t in ("unsafe", "fix") for k in kinds]
+            lines.append(f"| {e} | {n:,} | " + " | ".join(cells) + " |")
+        lines.append("")
+    chosen = result.get("chosen_by_error") or {}
+    if chosen:
+        kinds = list(chosen)
+        lines += ["## Certified outcome-aware policies by planted error", "", "Each outcome model's chosen setting, on test.", "",
+                  "| Planted error | Items | " + " | ".join(f"Wrong among sent ({k}) | Useful ({k})" for k in kinds) + " |",
+                  "| --- | --- |" + " --- | --- |" * len(kinds)]
+        for e in sorted({e for d in chosen.values() for e in d}):
+            n = next(d[e]["items"] for d in chosen.values() if e in d)
+            cells = [_pct(chosen[k].get(e, {}).get(key)) for k in kinds for key in ("residual_risk", "useful_coverage")]
+            lines.append(f"| {e} | {n:,} | " + " | ".join(cells) + " |")
+        lines.append("")
 
     if "chosen_detail" in result:
         d = result["chosen_detail"]

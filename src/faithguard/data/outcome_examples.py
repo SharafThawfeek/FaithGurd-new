@@ -1,9 +1,11 @@
 """Inputs for the neural outcome model (D-096): one row per controlled-track replay record.
 
-Each row holds the record's track split, the text pair the encoder reads (faithguard.policy.neural)
-and, for the fit and tune splits only, the targets: the original answer is unsupported, and repair
-returns a supported, useful answer. Calibration and test rows carry no targets, so the GPU run that
-trains on these rows cannot see the labels the policy is certified and reported on.
+Each row holds an opaque key for the record (policy.neural.row_key: item ids name the planted error),
+its track split, the text pair the encoder reads (faithguard.policy.neural) and, for the fit and tune
+splits only, the targets of outcome.targets: the original answer is unsupported, and repair returns a
+supported, useful answer. Calibration and test rows carry no targets and nothing that names their
+error, so the GPU run that trains on these rows cannot see the labels the policy is certified and
+reported on.
 
 Offline code: the targets come from replay outcomes, scored against the gold store.
 """
@@ -22,7 +24,7 @@ LABELLED = ("fit", "tune")
 def rows(items: Iterable[Item], records: Sequence) -> Iterator[dict]:
     from faithguard.detect import detect
     from faithguard.focus import focus_rows
-    from faithguard.policy.neural import inputs
+    from faithguard.policy.neural import inputs, row_key
 
     by_id = {r.item_id: r for r in records}
     for item in items:
@@ -30,7 +32,7 @@ def rows(items: Iterable[Item], records: Sequence) -> Iterator[dict]:
         if r is None:
             continue
         focus = focus_rows(item.evidence, detect(item), item.question.text)  # the rule checker, as in the replay
-        row = {"item_id": r.item_id, "split": r.split, "text": inputs(item, r.features, focus)}
+        row = {"key": row_key(r.item_id), "split": r.split, "text": inputs(item, r.features, focus)}
         if r.split in LABELLED:
             row["labels"] = [int(r.outcomes["send"] == "unsupported"), int(r.outcomes["repair"] == "supported_useful")]
         yield row

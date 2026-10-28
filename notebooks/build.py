@@ -211,7 +211,7 @@ NOTEBOOKS = {
                  "calibration and test records; on a laptop, `faithguard policy --models lightgbm,neural` certifies it on the same "
                  "grid as LightGBM. Attach the faithguard-outcome-data dataset (the rows `faithguard outcome-data` wrote from the "
                  "laptop's cache, so both models see the same records; calibration and test rows carry no labels). "
-                 "Resumable. Expect about 3 GPU hours.",
+                 "Trains on one T4 in fp16 (D-098). Resumable. Expect about 1.5 GPU hours.",
         "cells": [
             ("The rows from the laptop (faithguard-outcome-data), or rebuilt here",
              "import glob\nfound = sorted(glob.glob('/kaggle/input/**/outcome-data.jsonl', recursive=True))\n"

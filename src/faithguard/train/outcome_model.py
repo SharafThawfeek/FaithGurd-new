@@ -9,8 +9,13 @@ kept, and training stops after --patience evaluations without improvement. Then 
 are written for every tune, calibration and test row (the last two carry no labels) to
 <out>/predictions.jsonl, which `faithguard policy --models lightgbm,neural` certifies on the same grid.
 
-Resumable: a checkpoint at every evaluation, the latest picked up on restart; a saved model is not
-trained again. The model goes to <out>/model, and the checkpoints are deleted once it is saved (D-075).
+One GPU in fp16 (D-098): on Kaggle's T4 x2 the Trainer would wrap the model in DataParallel, which
+skips accelerate's fp16 autocast, so both GPUs would train in fp32, slower than one T4 in fp16.
+
+Resumable: a checkpoint at every evaluation, the latest picked up on restart with the early-stopping
+count; a resume inside an epoch draws that epoch's order again, so it is not an exact continuation.
+A saved model is not trained again. The model goes to <out>/model, and the checkpoints are deleted
+once it is saved (D-075).
 """
 
 from __future__ import annotations
@@ -67,7 +72,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--max-len", type=int, default=1024)
     parser.add_argument("--epochs", type=float, default=2.0)
     parser.add_argument("--max-steps", type=int, default=-1)
-    parser.add_argument("--batch", type=int, default=8)
+    parser.add_argument("--batch", type=int, default=16, help="rows per micro-batch; with --grad-accum 2, 32 a step")
     parser.add_argument("--grad-accum", type=int, default=2)
     parser.add_argument("--lr", type=float, default=3e-5)
     parser.add_argument("--evals-per-epoch", type=int, default=2)
@@ -78,11 +83,13 @@ def main(argv: list[str] | None = None) -> None:
     if args.tiny:
         args.max_steps, args.batch, args.grad_accum, args.max_len = 4, 2, 1, 256
 
+    from faithguard.train.common import latest_checkpoint, one_gpu
+
+    one_gpu()  # before torch starts CUDA: under the Trainer's DataParallel, fp16=True would only scale the loss (D-098)
     import torch
     from transformers import AutoModelForSequenceClassification, AutoTokenizer, EarlyStoppingCallback, Trainer, TrainingArguments
 
     from faithguard.policy.neural import build_model, collate, encode
-    from faithguard.train.common import latest_checkpoint
 
     random.seed(args.seed)
     torch.manual_seed(args.seed)
@@ -108,6 +115,9 @@ def main(argv: list[str] | None = None) -> None:
         train = [e for e, r in zip(encoded, rows) if r["split"] == "fit"]
         tune = [e for e, r in zip(encoded, rows) if r["split"] == "tune"]
         model = build_model(args.checkpoint, tiny=args.tiny)
+        # Its forward takes **kwargs, so transformers 5.19 would assume the BCE is normalised by num_items_in_batch,
+        # skip the division by --grad-accum and multiply by the GPU count. It is a plain batch mean (D-098).
+        model.accepts_loss_kwargs = False
         model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
         every = max(1, args.max_steps // 2) if args.max_steps > 0 else 1 / (args.epochs * args.evals_per_epoch)  # a ratio of all steps
         targs = TrainingArguments(
@@ -116,8 +126,8 @@ def main(argv: list[str] | None = None) -> None:
             num_train_epochs=args.epochs, max_steps=args.max_steps, lr_scheduler_type="linear", warmup_steps=0.05,
             eval_strategy="steps", eval_steps=every, save_strategy="steps", save_steps=every, save_total_limit=1,
             load_best_model_at_end=True, metric_for_best_model="eval_loss", greater_is_better=False,
-            train_sampling_strategy="group_by_length", logging_steps=25, fp16=torch.cuda.is_available() and not args.tiny,
-            report_to="none", remove_unused_columns=False, dataloader_num_workers=0, seed=args.seed, use_cpu=args.tiny,
+            restore_callback_states_from_checkpoint=True, train_sampling_strategy="group_by_length", logging_steps=25,
+            fp16=torch.cuda.is_available() and not args.tiny, report_to="none", remove_unused_columns=False, dataloader_num_workers=0, seed=args.seed, use_cpu=args.tiny,
         )
         trainer = Trainer(model=model, args=targs, train_dataset=train, eval_dataset=tune, data_collator=collate_fn,
                           callbacks=[EarlyStoppingCallback(early_stopping_patience=args.patience)])
@@ -140,7 +150,7 @@ def main(argv: list[str] | None = None) -> None:
     probs = predict(model, [encoded[i] for i in scored], 4 * args.batch, collate_fn)
     with open(out / "predictions.jsonl", "w", encoding="utf-8", newline="\n") as f:
         for i, (p_unsafe, p_fix) in zip(scored, probs):
-            f.write(json.dumps({"item_id": rows[i]["item_id"], "split": rows[i]["split"], "p_unsafe": p_unsafe, "p_fix": p_fix}) + "\n")
+            f.write(json.dumps({"key": rows[i]["key"], "split": rows[i]["split"], "p_unsafe": p_unsafe, "p_fix": p_fix}) + "\n")
     summary = {"rows": counts, "tune": quality([rows[i] for i in scored], probs), "best_tune_loss": log.get("best_tune_loss"),
                "train_seconds": log.get("seconds"), "predict_seconds": round(time.time() - started, 1)}
     (out / "results.json").write_text(json.dumps({"summary": summary, "settings": vars(args)}, indent=2), encoding="utf-8")

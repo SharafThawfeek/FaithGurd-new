@@ -45,8 +45,10 @@ def test_outcome_aware_policy_is_certified_and_beats_send_or_abstain():
 
 
 def neural_predictions(rs, path, noise: float = 0.1, seed: int = 1):
-    """What the GPU run writes: P(unsafe) and P(fix) for every tune, calibration and test record."""
+    """What the GPU run writes: P(unsafe) and P(fix) for every tune, calibration and test record, by its key."""
     import json
+
+    from faithguard.policy.neural import row_key
 
     rng = random.Random(seed)
     y_unsafe, y_fix = outcome.targets(rs)
@@ -54,12 +56,15 @@ def neural_predictions(rs, path, noise: float = 0.1, seed: int = 1):
         for r, u, x in zip(rs, y_unsafe, y_fix):
             if r.split != "fit":
                 p = [min(1.0, max(0.0, float(y) + rng.uniform(-noise, noise))) for y in (u, x)]
-                f.write(json.dumps({"item_id": r.item_id, "split": r.split, "p_unsafe": p[0], "p_fix": p[1]}) + "\n")
+                f.write(json.dumps({"key": row_key(r.item_id), "split": r.split, "p_unsafe": p[0], "p_fix": p[1]}) + "\n")
     return path
 
 
 def test_neural_challenger_is_certified_on_the_same_grid_beside_lightgbm(tmp_path):
-    rs = records()
+    # planted errors as in the controlled track: clean items "none", fixable "period", hopeless "missing_operand"
+    error = {"supported_useful": "none", "unsupported": None}
+    rs = [r.model_copy(update={"error": error[r.outcomes["send"]] or ("period" if r.outcomes["repair"] == "supported_useful" else "missing_operand")})
+          for r in records()]
     path = neural_predictions(rs, tmp_path / "predictions.jsonl")
     result = study.run(rs, kinds=("lightgbm", "neural"), predictions={"neural": str(path)},
                        budget_sizes=(50, 200), budget_repeats=10, use_score=False)
@@ -70,8 +75,15 @@ def test_neural_challenger_is_certified_on_the_same_grid_beside_lightgbm(tmp_pat
     assert result["models"]["neural"]["unsafe"]["auroc"] > 0.95
     assert set(result["budget_curve"]) == {"lightgbm", "neural"}
     assert result["deployable"].names == outcome.feature_names([r for r in rs if r.split == "fit"])  # LightGBM stays the deployed model
+    neural = result["models"]["neural"]
+    n_mo = sum(r.split == "test" and r.error == "missing_operand" for r in rs)
+    assert neural["excluding_missing_operand"]["items"] == result["counts"]["test"]["items"] - n_mo
+    assert set(neural["by_error"]) == {"none", "period", "missing_operand"} and neural["by_error"]["period"]["unsafe"]["auroc"] is None
+    assert set(result["chosen_by_error"]) == {"lightgbm", "neural"}
     report = study.report(result)
-    assert "outcome_aware[neural]" in report and "| neural | P(unsafe) |" in report and "Certified (neural)" in report
+    assert "outcome_aware[neural]" in report and "| neural | P(unsafe), all |" in report and "Certified (neural)" in report
+    assert "| neural | P(fix), excl. missing_operand |" in report and "Brier score by planted error" in report
+    assert "Wrong among sent (neural)" in report
 
 
 def test_neural_challenger_needs_a_prediction_for_every_record(tmp_path):

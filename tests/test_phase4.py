@@ -202,7 +202,10 @@ def test_transfer_replays_pick_a_fixed_sample_and_fill_in_the_track_split():
 
 
 def test_neural_outcome_inputs_hold_only_pre_action_text_and_fit_tune_labels():
+    import json
+
     from faithguard.data.outcome_examples import rows
+    from faithguard.policy.neural import row_key
     from faithguard.replay import replay
 
     pairs, gold = injected()
@@ -211,13 +214,13 @@ def test_neural_outcome_inputs_hold_only_pre_action_text_and_fit_tune_labels():
     for r, split in zip(records, ("fit", "tune", "calibration", "test") * len(records)):
         r.split = split
     out = list(rows(items, records))
-    assert [r["item_id"] for r in out] == [i.id for i in items]
+    assert [r["key"] for r in out] == [row_key(i.id) for i in items]
     for row, item, record in zip(out, items, records):
         prompt, answer = row["text"]
         assert item.question.text in prompt and answer.startswith(item.answer.text)
         assert f"risk {record.risk:.2f}" in answer and "Question type:" in answer
-        text = prompt + answer
-        assert item.id not in text and item.answer.generator not in text
+        text = json.dumps(row)
+        assert item.id not in text and item.answer.generator not in text  # nothing in the row names the planted error
         if record.repair_text and record.repair_text != item.answer.text:
             assert record.repair_text not in text  # nothing from the repair attempt
         assert ("labels" in row) == (record.split in ("fit", "tune"))  # calibration and test labels never reach the GPU run

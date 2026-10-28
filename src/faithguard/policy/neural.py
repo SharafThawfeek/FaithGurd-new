@@ -12,6 +12,8 @@ probabilities it wrote (faithguard.policy.outcome, kind "neural").
 
 from __future__ import annotations
 
+import hashlib
+
 from faithguard.detect.channel_a import evidence_passages, lettuce_prompt
 from faithguard.policy.features import QUESTION_TYPES
 from faithguard.records import SLOTS, Item
@@ -47,9 +49,16 @@ def inputs(item: Item, features: dict[str, float], focus: dict[str, set[int]] | 
     return [prompt, f"{item.answer.text}\n{signals_text(features)}"]
 
 
+def row_key(item_id: str) -> str:
+    """An opaque key for a record. Item ids name the planted error ("<question>:period"), so rows that
+    leave the laptop carry this instead (faithguard.data.outcome_examples)."""
+    return hashlib.sha256(item_id.encode()).hexdigest()[:16]
+
+
 def encode(tokenizer, pair: list[str], max_len: int) -> dict:
-    enc = tokenizer(*pair, truncation="only_first", max_length=max_len)
-    if len(enc["input_ids"]) > max_len:  # the answer and signals alone are too long: cut both
+    try:
+        enc = tokenizer(*pair, truncation="only_first", max_length=max_len)
+    except Exception:  # the answer and signals alone are too long, and the tokenizer will not cut only the first: cut both
         enc = tokenizer(*pair, truncation="longest_first", max_length=max_len)
     return {"input_ids": enc["input_ids"], "attention_mask": enc["attention_mask"]}
 

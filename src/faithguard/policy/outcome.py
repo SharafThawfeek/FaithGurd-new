@@ -66,7 +66,8 @@ MAKERS = {"lightgbm": _lightgbm}
 class Scores:
     """Probabilities a model trained elsewhere wrote for each record (faithguard.train.outcome_model).
 
-    Unlike a fitted classifier it is looked up by item id, so it needs the records, not their features.
+    Unlike a fitted classifier it is looked up by the record's key (policy.neural.row_key), so it needs
+    the records, not their features.
     """
 
     def __init__(self, path: str | Path):
@@ -75,14 +76,17 @@ class Scores:
         for line in Path(path).read_text(encoding="utf-8").splitlines():
             if line.strip():
                 row = json.loads(line)
-                self.p[row["item_id"]] = (float(row["p_unsafe"]), float(row["p_fix"]))
+                self.p[row["key"]] = (float(row["p_unsafe"]), float(row["p_fix"]))
 
     def predict(self, records: Sequence) -> tuple[np.ndarray, np.ndarray]:
-        missing = [r.item_id for r in records if r.item_id not in self.p]
+        from faithguard.policy.neural import row_key
+
+        keys = [row_key(r.item_id) for r in records]
+        missing = [r.item_id for r, k in zip(records, keys) if k not in self.p]
         if missing:
             raise ValueError(f"{len(missing)} records have no prediction in {self.path} (first: {missing[0]}); "
                              "it must come from `faithguard outcome-data` on the same controlled-track cache")
-        p = np.array([self.p[r.item_id] for r in records], dtype=float).reshape(-1, 2)
+        p = np.array([self.p[k] for k in keys], dtype=float).reshape(-1, 2)
         return p[:, 0], p[:, 1]
 
 
