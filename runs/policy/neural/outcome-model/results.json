@@ -1,0 +1,41 @@
+{
+  "summary": {
+    "rows": {
+      "calibration": 5423,
+      "fit": 13383,
+      "test": 6450,
+      "tune": 2447
+    },
+    "tune": {
+      "rows": 2447,
+      "unsafe": {
+        "auroc": 0.9986812658277548,
+        "brier": 0.0054806043707884685,
+        "ece": 0.004260607044336027
+      },
+      "fix": {
+        "auroc": 0.9888597577021666,
+        "brier": 0.016881104773264433,
+        "ece": 0.011830919651887739
+      }
+    },
+    "best_tune_loss": 0.05202585458755493,
+    "train_seconds": 3094.3,
+    "predict_seconds": 388.9
+  },
+  "settings": {
+    "data": "/kaggle/input/datasets/sharafthawfeek/faithguard-outcome-data/outcome-data.jsonl",
+    "out": "/kaggle/working/outputs/outcome-model",
+    "checkpoint": "KRLabsOrg/lettucedect-v2-mmbert-base",
+    "max_len": 1024,
+    "epochs": 2.0,
+    "max_steps": -1,
+    "batch": 16,
+    "grad_accum": 2,
+    "lr": 3e-05,
+    "evals_per_epoch": 2,
+    "patience": 2,
+    "seed": 13,
+    "tiny": false
+  }
+}

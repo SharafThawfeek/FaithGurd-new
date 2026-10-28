@@ -23,14 +23,49 @@ Each family's grid is ordered on the tune split and certified on the calibration
 | threshold_v0 | 1 of 3 | `risk<0.25` | 74.0% | 1.6% [1.0%, 2.2%] | 72.7% [70.4%, 74.7%] | 0.1% |
 | four_state | 6 of 6 | `conf>=0.5` | 73.8% | 1.5% [0.9%, 2.2%] | 72.7% [70.4%, 74.6%] | 0.2% |
 | outcome_aware[lightgbm] | 56 of 56 | `send<0.5,fix>0.6` | 73.8% | 1.6% [1.0%, 2.2%] | 72.7% [70.4%, 74.6%] | 0.2% |
+| outcome_aware[neural] | 56 of 56 | `send<0.005,fix>0.7` | 73.5% | 1.3% [0.7%, 1.9%] | 72.5% [70.2%, 74.5%] | 0.3% |
 | oracle (hindsight) | – | – | 72.9% | 0.0% | 72.9% | 0 |
 
 ## Outcome models on test
 
-| Model | Target | AUROC | Brier | ECE |
-| --- | --- | --- | --- | --- |
-| lightgbm | P(unsafe) | 0.997 | 0.008 | 0.005 |
-| lightgbm | P(fix) | 0.991 | 0.013 | 0.006 |
+The injector deletes the cell a missing_operand item needs, so that row reads shorter than the others. A model that reads the evidence text can see this, the checker's features mostly do not, and natural answers do not have the cue: the rows without those items are the like-for-like comparison.
+
+| Model | Target | Test items | AUROC | Brier | ECE |
+| --- | --- | --- | --- | --- | --- |
+| lightgbm | P(unsafe), all | 6,450 | 0.997 | 0.0075 | 0.0052 |
+| lightgbm | P(unsafe), excl. missing_operand | 5,114 | 0.996 | 0.0079 | 0.0057 |
+| lightgbm | P(fix), all | 6,450 | 0.991 | 0.0127 | 0.0063 |
+| lightgbm | P(fix), excl. missing_operand | 5,114 | 0.967 | 0.0123 | 0.0062 |
+| neural | P(unsafe), all | 6,450 | 0.997 | 0.0069 | 0.0056 |
+| neural | P(unsafe), excl. missing_operand | 5,114 | 0.997 | 0.0072 | 0.0055 |
+| neural | P(fix), all | 6,450 | 0.993 | 0.0123 | 0.0062 |
+| neural | P(fix), excl. missing_operand | 5,114 | 0.973 | 0.0116 | 0.0052 |
+
+Brier score by planted error (AUROC is undefined where every item has the same target):
+
+| Planted error | Items | P(unsafe), lightgbm | P(unsafe), neural | P(fix), lightgbm | P(fix), neural |
+| --- | --- | --- | --- | --- | --- |
+| basis | 434 | 0.0020 | 0.0023 | 0.0106 | 0.0095 |
+| metric | 1,309 | 0.0015 | 0.0014 | 0.0128 | 0.0125 |
+| missing_operand | 1,336 | 0.0060 | 0.0057 | 0.0145 | 0.0149 |
+| none | 1,356 | 0.0097 | 0.0127 | 0.0057 | 0.0091 |
+| period | 858 | 0.0102 | 0.0101 | 0.0170 | 0.0164 |
+| scale | 327 | 0.0000 | 0.0000 | 0.0123 | 0.0117 |
+| sign | 830 | 0.0189 | 0.0096 | 0.0181 | 0.0102 |
+
+## Certified outcome-aware policies by planted error
+
+Each outcome model's chosen setting, on test.
+
+| Planted error | Items | Wrong among sent (lightgbm) | Useful (lightgbm) | Wrong among sent (neural) | Useful (neural) |
+| --- | --- | --- | --- | --- | --- |
+| basis | 434 | 0.7% | 98.8% | 0.7% | 99.1% |
+| metric | 1,309 | 0.8% | 83.3% | 0.8% | 83.3% |
+| missing_operand | 1,336 | 100.0% | 0.0% | 100.0% | 0.0% |
+| none | 1,356 | 0.3% | 99.3% | 0.3% | 98.6% |
+| period | 858 | 1.8% | 80.9% | 1.6% | 80.9% |
+| scale | 327 | 0.9% | 98.2% | 0.9% | 98.2% |
+| sign | 830 | 2.2% | 97.0% | 1.0% | 97.1% |
 
 ## The chosen outcome-aware policy
 
@@ -74,17 +109,17 @@ By planted error:
 
 ## Certification budget
 
-Random calibration subsets of each size; share of draws in which at least one setting is certified, and the useful coverage on test of the setting then chosen.
+Random calibration subsets of each size, for each outcome model whose policy certified: share of draws in which at least one setting is certified, and the useful coverage on test of the setting then chosen.
 
-| Calibration answers | Certified | Useful coverage on test |
-| --- | --- | --- |
-| 50 | 0.0% | – |
-| 100 | 1.0% | 59.7% |
-| 200 | 75.0% | 67.6% |
-| 400 | 100.0% | 72.5% |
-| 800 | 100.0% | 72.6% |
-| 1600 | 100.0% | 72.7% |
-| 3200 | 100.0% | 72.7% |
+| Calibration answers | Certified (lightgbm) | Useful coverage on test (lightgbm) | Certified (neural) | Useful coverage on test (neural) |
+| --- | --- | --- | --- | --- |
+| 50 | 0.0% | – | 0.0% | – |
+| 100 | 1.0% | 59.7% | 6.0% | 61.8% |
+| 200 | 75.0% | 67.6% | 84.0% | 70.8% |
+| 400 | 100.0% | 72.5% | 100.0% | 72.5% |
+| 800 | 100.0% | 72.6% | 100.0% | 72.5% |
+| 1600 | 100.0% | 72.7% | 100.0% | 72.5% |
+| 3200 | 100.0% | 72.7% | 100.0% | 72.5% |
 
 ## Issuer-level sensitivity check
 
@@ -96,4 +131,4 @@ SCoRE-SDR (score-select 0.1.1) with the same P(unsafe) scores, alpha = gamma = 0
 
 Answers sent 22.7%; wrong among sent 5.5%; useful 21.4%. It decides only send or abstain, so compare it with verified_only; repair is what lifts the other policies' useful coverage.
 
-Run time: 58.9 s.
+Run time: 87.5 s.

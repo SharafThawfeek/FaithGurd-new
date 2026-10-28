@@ -257,6 +257,48 @@
         ]
       },
       "cluster_p_calibration": 0.001999495423000254
+    },
+    {
+      "family": "outcome_aware[neural]",
+      "settings": 56,
+      "certified": 56,
+      "chosen": "send<0.005,fix>0.7",
+      "calibration": {
+        "items": 5423,
+        "emitted": 3912,
+        "emission_coverage": 0.7213719343536787,
+        "residual_risk": 0.016615541922290387,
+        "useful_coverage": 0.7090171491794209,
+        "unsafe_emitted": 65
+      },
+      "p_chosen": 1.762438763011152e-55,
+      "test": {
+        "items": 6450,
+        "emitted": 4742,
+        "emission_coverage": 0.7351937984496124,
+        "residual_risk": 0.012863770560944749,
+        "useful_coverage": 0.7254263565891473,
+        "unsafe_emitted": 61,
+        "regret": 0.0032558139534882846
+      },
+      "test_ci": {
+        "residual_risk": [
+          0.0129,
+          0.0074,
+          0.0192
+        ],
+        "useful_coverage": [
+          0.7254,
+          0.702,
+          0.7449
+        ],
+        "emission_coverage": [
+          0.7352,
+          0.7128,
+          0.7552
+        ]
+      },
+      "cluster_p_calibration": 0.00042435742504865956
     }
   ],
   "models": {
@@ -271,6 +313,425 @@
         "auroc": 0.9905346233561931,
         "brier": 0.012709866596181398,
         "ece": 0.006257294830950805
+      },
+      "excluding_missing_operand": {
+        "items": 5114,
+        "unsafe": {
+          "auroc": 0.9964270912319205,
+          "brier": 0.007895704347032791,
+          "ece": 0.005692785104438421
+        },
+        "fix": {
+          "auroc": 0.9666584849476572,
+          "brier": 0.012253842230079963,
+          "ece": 0.006249605654441131
+        }
+      },
+      "by_error": {
+        "basis": {
+          "items": 434,
+          "unsafe": {
+            "auroc": null,
+            "brier": 0.0020036213602638874,
+            "ece": 0.002282359575618346
+          },
+          "fix": {
+            "auroc": 0.8982558139534884,
+            "brier": 0.010610200347910975,
+            "ece": 0.011973223941035806
+          }
+        },
+        "metric": {
+          "items": 1309,
+          "unsafe": {
+            "auroc": null,
+            "brier": 0.0014856281238554276,
+            "ece": 0.0015987774489400217
+          },
+          "fix": {
+            "auroc": 0.9806801268090044,
+            "brier": 0.012752991178237092,
+            "ece": 0.00875703827702999
+          }
+        },
+        "missing_operand": {
+          "items": 1336,
+          "unsafe": {
+            "auroc": null,
+            "brier": 0.0060038703504579375,
+            "ece": 0.006750723594088157
+          },
+          "fix": {
+            "auroc": null,
+            "brier": 0.014455456871812206,
+            "ece": 0.016790570430324673
+          }
+        },
+        "none": {
+          "items": 1356,
+          "unsafe": {
+            "auroc": 0.20214338507021434,
+            "brier": 0.009671283925987283,
+            "ece": 0.02347359998627715
+          },
+          "fix": {
+            "auroc": 0.7221397343891776,
+            "brier": 0.005692274348294703,
+            "ece": 0.02042536379149764
+          }
+        },
+        "period": {
+          "items": 858,
+          "unsafe": {
+            "auroc": null,
+            "brier": 0.01017919613167663,
+            "ece": 0.011479512611363091
+          },
+          "fix": {
+            "auroc": 0.9808961260110685,
+            "brier": 0.017003060222289194,
+            "ece": 0.010469256541308017
+          }
+        },
+        "scale": {
+          "items": 327,
+          "unsafe": {
+            "auroc": null,
+            "brier": 2.81672447222791e-09,
+            "ece": 3.9545896047266105e-05
+          },
+          "fix": {
+            "auroc": 0.8408618899273105,
+            "brier": 0.01227685741884774,
+            "ece": 0.004760384891018753
+          }
+        },
+        "sign": {
+          "items": 830,
+          "unsafe": {
+            "auroc": 0.36436920596533656,
+            "brier": 0.01893537462717857,
+            "ece": 0.020484639633000568
+          },
+          "fix": {
+            "auroc": 0.9470664296104737,
+            "brier": 0.018127439395600298,
+            "ece": 0.017718918481168803
+          }
+        }
+      }
+    },
+    "neural": {
+      "rows": 13383,
+      "unsafe": {
+        "auroc": 0.9968089591201633,
+        "brier": 0.00686202841433134,
+        "ece": 0.005568625367586819
+      },
+      "fix": {
+        "auroc": 0.9926155986953322,
+        "brier": 0.0122675103059087,
+        "ece": 0.006164316353128337
+      },
+      "excluding_missing_operand": {
+        "items": 5114,
+        "unsafe": {
+          "auroc": 0.9967643265654705,
+          "brier": 0.007171627358782685,
+          "ece": 0.005546132697097408
+        },
+        "fix": {
+          "auroc": 0.9732073954659135,
+          "brier": 0.011579238360939584,
+          "ece": 0.005230719462022618
+        }
+      },
+      "by_error": {
+        "basis": {
+          "items": 434,
+          "unsafe": {
+            "auroc": null,
+            "brier": 0.002277198111962344,
+            "ece": 0.00231270772975784
+          },
+          "fix": {
+            "auroc": 0.7537790697674419,
+            "brier": 0.00950875333200462,
+            "ece": 0.007531618742349559
+          }
+        },
+        "metric": {
+          "items": 1309,
+          "unsafe": {
+            "auroc": null,
+            "brier": 0.0013789915546952014,
+            "ece": 0.0015681311402774905
+          },
+          "fix": {
+            "auroc": 0.984399044727924,
+            "brier": 0.012462001280565857,
+            "ece": 0.008466750634115183
+          }
+        },
+        "missing_operand": {
+          "items": 1336,
+          "unsafe": {
+            "auroc": null,
+            "brier": 0.005676931856004854,
+            "ece": 0.005997800648499585
+          },
+          "fix": {
+            "auroc": null,
+            "brier": 0.014902108155139279,
+            "ece": 0.016354448923705703
+          }
+        },
+        "none": {
+          "items": 1356,
+          "unsafe": {
+            "auroc": 0.5234047795023405,
+            "brier": 0.012725027737499743,
+            "ece": 0.014966839846222048
+          },
+          "fix": {
+            "auroc": 0.845005361709148,
+            "brier": 0.0091482366263188,
+            "ece": 0.010295829938453151
+          }
+        },
+        "period": {
+          "items": 858,
+          "unsafe": {
+            "auroc": null,
+            "brier": 0.010074571089132553,
+            "ece": 0.010456241488170167
+          },
+          "fix": {
+            "auroc": 0.9740891514119483,
+            "brier": 0.016433885364403655,
+            "ece": 0.006277909106463126
+          }
+        },
+        "scale": {
+          "items": 327,
+          "unsafe": {
+            "auroc": null,
+            "brier": 4.3235198364042265e-09,
+            "ece": 6.135614640123688e-05
+          },
+          "fix": {
+            "auroc": 0.9730010384215991,
+            "brier": 0.011668418774957721,
+            "ece": 0.004256377445898513
+          }
+        },
+        "sign": {
+          "items": 830,
+          "unsafe": {
+            "auroc": 0.635429262394196,
+            "brier": 0.009618285984109168,
+            "ece": 0.009215901440278711
+          },
+          "fix": {
+            "auroc": 0.9684284251926082,
+            "brier": 0.010187723985706642,
+            "ece": 0.009927549858026881
+          }
+        }
+      }
+    }
+  },
+  "budget_curve": {
+    "lightgbm": [
+      {
+        "calibration_items": 50,
+        "certified_share": 0.0,
+        "mean_test_useful_coverage_when_certified": null
+      },
+      {
+        "calibration_items": 100,
+        "certified_share": 0.01,
+        "mean_test_useful_coverage_when_certified": 0.5969
+      },
+      {
+        "calibration_items": 200,
+        "certified_share": 0.75,
+        "mean_test_useful_coverage_when_certified": 0.676
+      },
+      {
+        "calibration_items": 400,
+        "certified_share": 1.0,
+        "mean_test_useful_coverage_when_certified": 0.7253
+      },
+      {
+        "calibration_items": 800,
+        "certified_share": 1.0,
+        "mean_test_useful_coverage_when_certified": 0.7263
+      },
+      {
+        "calibration_items": 1600,
+        "certified_share": 1.0,
+        "mean_test_useful_coverage_when_certified": 0.7267
+      },
+      {
+        "calibration_items": 3200,
+        "certified_share": 1.0,
+        "mean_test_useful_coverage_when_certified": 0.7268
+      }
+    ],
+    "neural": [
+      {
+        "calibration_items": 50,
+        "certified_share": 0.0,
+        "mean_test_useful_coverage_when_certified": null
+      },
+      {
+        "calibration_items": 100,
+        "certified_share": 0.06,
+        "mean_test_useful_coverage_when_certified": 0.6181
+      },
+      {
+        "calibration_items": 200,
+        "certified_share": 0.84,
+        "mean_test_useful_coverage_when_certified": 0.708
+      },
+      {
+        "calibration_items": 400,
+        "certified_share": 1.0,
+        "mean_test_useful_coverage_when_certified": 0.7248
+      },
+      {
+        "calibration_items": 800,
+        "certified_share": 1.0,
+        "mean_test_useful_coverage_when_certified": 0.7252
+      },
+      {
+        "calibration_items": 1600,
+        "certified_share": 1.0,
+        "mean_test_useful_coverage_when_certified": 0.7254
+      },
+      {
+        "calibration_items": 3200,
+        "certified_share": 1.0,
+        "mean_test_useful_coverage_when_certified": 0.7254
+      }
+    ]
+  },
+  "chosen_by_error": {
+    "lightgbm": {
+      "basis": {
+        "items": 434,
+        "emitted": 432,
+        "emission_coverage": 0.9953917050691244,
+        "residual_risk": 0.006944444444444444,
+        "useful_coverage": 0.988479262672811,
+        "unsafe_emitted": 3
+      },
+      "metric": {
+        "items": 1309,
+        "emitted": 1100,
+        "emission_coverage": 0.8403361344537815,
+        "residual_risk": 0.008181818181818182,
+        "useful_coverage": 0.8326967150496563,
+        "unsafe_emitted": 9
+      },
+      "missing_operand": {
+        "items": 1336,
+        "emitted": 24,
+        "emission_coverage": 0.017964071856287425,
+        "residual_risk": 1.0,
+        "useful_coverage": 0.0,
+        "unsafe_emitted": 24
+      },
+      "none": {
+        "items": 1356,
+        "emitted": 1351,
+        "emission_coverage": 0.9963126843657817,
+        "residual_risk": 0.0029607698001480384,
+        "useful_coverage": 0.9933628318584071,
+        "unsafe_emitted": 4
+      },
+      "period": {
+        "items": 858,
+        "emitted": 707,
+        "emission_coverage": 0.824009324009324,
+        "residual_risk": 0.018387553041018388,
+        "useful_coverage": 0.8088578088578089,
+        "unsafe_emitted": 13
+      },
+      "scale": {
+        "items": 327,
+        "emitted": 325,
+        "emission_coverage": 0.9938837920489296,
+        "residual_risk": 0.009230769230769232,
+        "useful_coverage": 0.981651376146789,
+        "unsafe_emitted": 3
+      },
+      "sign": {
+        "items": 830,
+        "emitted": 823,
+        "emission_coverage": 0.9915662650602409,
+        "residual_risk": 0.02187120291616039,
+        "useful_coverage": 0.9698795180722891,
+        "unsafe_emitted": 18
+      }
+    },
+    "neural": {
+      "basis": {
+        "items": 434,
+        "emitted": 433,
+        "emission_coverage": 0.9976958525345622,
+        "residual_risk": 0.006928406466512702,
+        "useful_coverage": 0.9907834101382489,
+        "unsafe_emitted": 3
+      },
+      "metric": {
+        "items": 1309,
+        "emitted": 1101,
+        "emission_coverage": 0.841100076394194,
+        "residual_risk": 0.008174386920980926,
+        "useful_coverage": 0.8334606569900688,
+        "unsafe_emitted": 9
+      },
+      "missing_operand": {
+        "items": 1336,
+        "emitted": 23,
+        "emission_coverage": 0.01721556886227545,
+        "residual_risk": 1.0,
+        "useful_coverage": 0.0,
+        "unsafe_emitted": 23
+      },
+      "none": {
+        "items": 1356,
+        "emitted": 1341,
+        "emission_coverage": 0.9889380530973452,
+        "residual_risk": 0.002982848620432513,
+        "useful_coverage": 0.9859882005899705,
+        "unsafe_emitted": 4
+      },
+      "period": {
+        "items": 858,
+        "emitted": 705,
+        "emission_coverage": 0.8216783216783217,
+        "residual_risk": 0.015602836879432624,
+        "useful_coverage": 0.8088578088578089,
+        "unsafe_emitted": 11
+      },
+      "scale": {
+        "items": 327,
+        "emitted": 325,
+        "emission_coverage": 0.9938837920489296,
+        "residual_risk": 0.009230769230769232,
+        "useful_coverage": 0.981651376146789,
+        "unsafe_emitted": 3
+      },
+      "sign": {
+        "items": 830,
+        "emitted": 814,
+        "emission_coverage": 0.980722891566265,
+        "residual_risk": 0.009828009828009828,
+        "useful_coverage": 0.9710843373493976,
+        "unsafe_emitted": 8
       }
     }
   },
@@ -411,43 +872,6 @@
       }
     }
   },
-  "budget_curve": [
-    {
-      "calibration_items": 50,
-      "certified_share": 0.0,
-      "mean_test_useful_coverage_when_certified": null
-    },
-    {
-      "calibration_items": 100,
-      "certified_share": 0.01,
-      "mean_test_useful_coverage_when_certified": 0.5969
-    },
-    {
-      "calibration_items": 200,
-      "certified_share": 0.75,
-      "mean_test_useful_coverage_when_certified": 0.676
-    },
-    {
-      "calibration_items": 400,
-      "certified_share": 1.0,
-      "mean_test_useful_coverage_when_certified": 0.7253
-    },
-    {
-      "calibration_items": 800,
-      "certified_share": 1.0,
-      "mean_test_useful_coverage_when_certified": 0.7263
-    },
-    {
-      "calibration_items": 1600,
-      "certified_share": 1.0,
-      "mean_test_useful_coverage_when_certified": 0.7267
-    },
-    {
-      "calibration_items": 3200,
-      "certified_share": 1.0,
-      "mean_test_useful_coverage_when_certified": 0.7268
-    }
-  ],
   "score_comparator": {
     "guarantee": "expected risk among sent answers <= alpha (not a high-probability bound)",
     "subsample": {
@@ -460,5 +884,5 @@
     "residual_risk": 0.0546,
     "useful_coverage": 0.214
   },
-  "seconds": 58.9
+  "seconds": 87.5
 }

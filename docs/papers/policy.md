@@ -117,7 +117,7 @@ A second shift, between generators, trains on Qwen answers and tests on Gemma an
 
 ### 6.1 Development rehearsal (controlled track; not a test of the hypotheses)
 
-On template answers the rule checker almost determines the outcomes, so every outcome model is near-perfect (P(unsafe) AUROC 0.997, P(fix) 0.991) and policies that repair look alike. The rehearsal checks the machinery; the comparison that matters is on natural answers.
+On template answers the rule checker almost determines the outcomes, so every outcome model is near-perfect (P(unsafe) AUROC 0.997 for LightGBM and the neural model; P(fix) 0.991 and 0.993) and policies that repair look alike. The rehearsal checks the machinery; the comparison that matters is on natural answers.
 
 | Policy (certified at α = 0.10) | Sent | Wrong among sent | Useful |
 | --- | --- | --- | --- |
@@ -125,9 +125,12 @@ On template answers the rule checker almost determines the outcomes, so every ou
 | Always repair | 74.0% | 1.6% | 72.7% |
 | Calibrated detector threshold | 21.5% | 2.9% | 20.9% |
 | Outcome-aware (LightGBM) | 73.8% | 1.6% | 72.7% |
+| Outcome-aware (neural outcome model) | 73.5% | 1.3% | 72.5% |
 | Oracle (hindsight) | 72.9% | 0.0% | 72.9% |
 
-SCoRE, deciding only send or abstain with the same P(unsafe) scores, sent 22.7% with 5.5% wrong among sent. Certification succeeded in 1% of draws with 100 calibration answers, 75% with 200 and every draw from 400. Treated issuer by issuer, the chosen setting's p-value was 0.002 (certified).
+SCoRE, deciding only send or abstain with the same P(unsafe) scores, sent 22.7% with 5.5% wrong among sent. With LightGBM, certification succeeded in 1% of draws with 100 calibration answers, 75% with 200 and every draw from 400. Treated issuer by issuer, the chosen setting's p-value was 0.002 (certified).
+
+The neural outcome model's probabilities are slightly better than LightGBM's on test (Brier score 0.0069 against 0.0075 for P(unsafe), 0.0123 against 0.0127 for P(fix)). Its certified policy sends 1.3% wrong answers [0.7%, 1.9%] against 1.6% [1.0%, 2.2%], at the same useful coverage within the intervals, and it certifies on smaller calibration sets more often (6% of draws at 100 answers, 84% at 200). One feature of the controlled track favours a model that reads the evidence: the error injector creates a missing operand by deleting the needed cell, so that table row reads shorter than its neighbours, a cue natural answers lack and the checker's features mostly miss. Without those items the comparison is unchanged (P(fix) AUROC 0.973 against 0.967, Brier 0.0116 against 0.0123), and on those items the two models are level. The gain comes mostly from sign errors (P(unsafe) Brier 0.0096 against 0.0189), while the encoder is slightly worse on clean answers.
 
 **Transfer rehearsal.** 4,000 items (1,000 per split) were replayed with the trained stage A repairer standing in for v1 and paired with the rule repairer's replays of the same items. The v0 policy sent 72.2% of v0's test answers with 1.9% wrong among them; unchanged on v1's test answers, it sent 71.6% with 1.0% wrong. Recalibrated on v1's labels it certified in 76% of draws with 100 labels and in every draw from 200; refitted, it sent 73.2% with 1.0% wrong. On template answers the trained repairer is at least as safe as the rules, so the old policy transfers as it is; the predicted failure of P-H3 does not occur in rehearsal.
 
