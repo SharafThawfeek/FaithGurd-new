@@ -1,16 +1,22 @@
-"""Outcome models: P(unsafe) and P(fix) from pre-action features.
+"""Outcome models: P(unsafe) and P(fix) from pre-action information.
 
     P(unsafe)  the chance the original answer is unsafe to send (it contains an unsupported number)
     P(fix)     the chance the repairer returns a safe and useful answer
 
 Both are trained on replay records (every action played out on every item), using
-only the features known before any action. LightGBM is the main model; TabICLv2,
-a tabular foundation model, is the challenger (cut-list item 1).
+only what is known before any action. LightGBM, on the pre-action features, is the
+main model. The challenger (D-096, in place of TabICLv2) is a neural outcome model:
+an mmBERT encoder fine-tuned on a GPU on the question, evidence, answer and the same
+features as text (faithguard.policy.neural). It is trained on the fit records, with the
+tune records for early stopping; like LightGBM it never sees a calibration or test label.
+Here it is read back as the probabilities it wrote for every record.
 """
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Sequence
 
 import numpy as np
@@ -54,14 +60,34 @@ def _lightgbm(seed: int):
     )
 
 
-def _tabicl(seed: int):
-    from tabicl import TabICLClassifier  # optional: pip install -r requirements/challenger.txt
-
-    return TabICLClassifier(random_state=seed)
+MAKERS = {"lightgbm": _lightgbm}
 
 
-MAKERS = {"lightgbm": _lightgbm, "tabicl": _tabicl}
-MAX_CONTEXT = {"tabicl": 4000}  # in-context learners read their training rows at prediction time
+class Scores:
+    """Probabilities a model trained elsewhere wrote for each record (faithguard.train.outcome_model).
+
+    Unlike a fitted classifier it is looked up by item id, so it needs the records, not their features.
+    """
+
+    def __init__(self, path: str | Path):
+        self.path = str(path)
+        self.p: dict[str, tuple[float, float]] = {}
+        for line in Path(path).read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                row = json.loads(line)
+                self.p[row["item_id"]] = (float(row["p_unsafe"]), float(row["p_fix"]))
+
+    def predict(self, records: Sequence) -> tuple[np.ndarray, np.ndarray]:
+        missing = [r.item_id for r in records if r.item_id not in self.p]
+        if missing:
+            raise ValueError(f"{len(missing)} records have no prediction in {self.path} (first: {missing[0]}); "
+                             "it must come from `faithguard outcome-data` on the same controlled-track cache")
+        p = np.array([self.p[r.item_id] for r in records], dtype=float).reshape(-1, 2)
+        return p[:, 0], p[:, 1]
+
+
+# Kinds trained on a GPU, and where `faithguard policy` finds their probabilities by default.
+PRECOMPUTED = {"neural": "runs/policy/neural/outcome-model/predictions.jsonl"}  # `kaggle_run.py fetch outcome_model`
 
 
 @dataclass
@@ -73,16 +99,22 @@ class OutcomeModels:
     info: dict = field(default_factory=dict)
 
     def predict(self, records: Sequence) -> tuple[np.ndarray, np.ndarray]:
+        if isinstance(self.unsafe, Scores):
+            return self.unsafe.predict(records)
         X = matrix(records, self.names)
         return self.unsafe.predict_proba(X)[:, 1], self.fix.predict_proba(X)[:, 1]
 
 
-def fit(records: Sequence, kind: str = "lightgbm", seed: int = 0) -> OutcomeModels:
-    names = feature_names(records)
+def fit(records: Sequence, kind: str = "lightgbm", seed: int = 0, predictions: str | Path | None = None) -> OutcomeModels:
+    """Fit both outcome models on these records; for a PRECOMPUTED kind, read the probabilities a GPU run wrote."""
     rows = list(records)
-    if kind in MAX_CONTEXT and len(rows) > MAX_CONTEXT[kind]:
-        rng = np.random.default_rng(seed)
-        rows = [rows[i] for i in sorted(rng.choice(len(rows), MAX_CONTEXT[kind], replace=False))]
+    if kind in PRECOMPUTED:
+        path = Path(predictions or PRECOMPUTED[kind])
+        if not path.exists():
+            raise FileNotFoundError(f"no {kind} predictions at {path}: run the outcome_model notebook and fetch them")
+        scores = Scores(path)  # trained on these fit records; predict() checks it covers the records scored
+        return OutcomeModels(kind=kind, names=[], unsafe=scores, fix=scores, info={"rows": len(rows), "predictions": str(path)})
+    names = feature_names(rows)
     X = matrix(rows, names)
     y_unsafe, y_fix = targets(rows)
     models = []

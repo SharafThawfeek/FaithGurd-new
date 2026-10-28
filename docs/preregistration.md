@@ -67,7 +67,7 @@ From `faithguard.policy` and `faithguard.stats` at the code version named at fil
 - **Issuer-level sensitivity check (risk R-14):** the same certification with each issuer as one draw; reported next to the main certificate.
 - **Comparator:** SCoRE (`score-select`), whose guarantee is on expected risk, not a high-probability bound.
 - **When no setting certifies:** the grid has no setting that never repairs, and none is added (D-082, D-093). If no setting certifies, the policy withholds every answer and this is reported; in the transfer study, refitting is the remedy reported. The controlled-track rehearsal with real trained-repairer replays found the v0 policy safe as it is (D-093).
-- **Outcome models:** LightGBM for P(unsafe) and P(fix), from pre-action features only; TabICLv2 as the one challenger.
+- **Outcome models:** LightGBM for P(unsafe) and P(fix), from pre-action features only, is the primary model and the one deployed. The one challenger is a neural outcome model (D-096): the v2 mmBERT encoder Channel A starts from, fine-tuned on a GPU with one output per target, reading the question, the evidence (focused as for Channel A), the answer and the same pre-action features written as text. It is trained on the fit split with early stopping on the tune split, never sees a calibration or test label, and is certified on the same grid with the same α and δ.
 
 ## 5. Metrics
 
@@ -96,7 +96,7 @@ Not hypothesis tests; reported with the same intervals.
 
 - Detection: A alone, B alone and A + B; with vs without the slot head; four released baselines (LettuceDetect v1-large and v2, HHEM-2.1-Open, Granite Guardian 4.1-8B). Every detector reads the same evidence text: above 30 rows, only the rows the rule checker traced the claims to and the line items the claims or the question name (`faithguard.focus`, D-084, D-091).
 - Repair: rule-only COPY and CALCULATE; zero-shot programs (2B and 9B); supervised vs self-trained; gold vs predicted spans; with vs without KEEP training; dependency closure on vs off.
-- Policy: always keep; always repair; static four-state classifier; stored-outcome oracle; LightGBM vs TabICLv2; v0 policy on v1 outputs as-is, recalibrated and refitted; train on Qwen answers, test on Gemma answers.
+- Policy: always keep; always repair; static four-state classifier; stored-outcome oracle; LightGBM vs the neural outcome model (AUROC, Brier score, ECE, certified useful coverage and the certification-budget curve, D-096); v0 policy on v1 outputs as-is, recalibrated and refitted; train on Qwen answers, test on Gemma answers.
 - The real-world condition (D-070): the full pipeline with automatically extracted Sri Lankan tables, reporting emission coverage, residual risk and useful coverage.
 
 ## Frozen inputs

@@ -203,6 +203,25 @@ NOTEBOOKS = {
             ("Replay 4,000 items", "!python -m faithguard.train.replays --adapter $ADAPTER --load $MODE --per-split 1000 --out {OUT}/transfer-replays"),
         ],
     },
+    "outcome_model": {
+        "title": "Decision policy: fine-tune the neural outcome model (the challenger to LightGBM)",
+        "about": "The policy's trained challenger (D-096): an mmBERT encoder (Channel A's warm start) fine-tuned with two heads, "
+                 "P(unsafe) and P(fix), on the question, evidence, answer and the pre-action features written as text, for the "
+                 "controlled track's 13,383 fit records, with the 2,447 tune records for early stopping. It then scores the tune, "
+                 "calibration and test records; on a laptop, `faithguard policy --models lightgbm,neural` certifies it on the same "
+                 "grid as LightGBM. Attach the faithguard-outcome-data dataset (the rows `faithguard outcome-data` wrote from the "
+                 "laptop's cache, so both models see the same records; calibration and test rows carry no labels). "
+                 "Resumable. Expect about 3 GPU hours.",
+        "cells": [
+            ("The rows from the laptop (faithguard-outcome-data), or rebuilt here",
+             "import glob\nfound = sorted(glob.glob('/kaggle/input/**/outcome-data.jsonl', recursive=True))\n"
+             "if found:\n    DATA = found[0]\n"
+             "else:  # rebuilt from the downloaded datasets: slower, and TAT-QA items can differ slightly from the laptop's cache (D-088)\n"
+             "    !faithguard outcome-data\n    DATA = 'runs/policy/neural/outcome-data.jsonl'\nprint(DATA)"),
+            ("Fine-tune, then score the tune, calibration and test rows (resumable)",
+             "!python -m faithguard.train.outcome_model --data $DATA --out {OUT}/outcome-model"),
+        ],
+    },
     "repair_v1": {
         "title": "Repair v1: stage A with arithmetic slips",
         "about": "Repairer v1's candidate (D-088): stage A's recipe with the repair-only arithmetic slips added to training (a growth "

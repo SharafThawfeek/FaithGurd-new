@@ -10,7 +10,8 @@ Fill in a row only after opening the work itself. Mark preprints. The "Plan says
 | Learn-then-Test | | | The certification method | | | |
 | Hoeffding–Bentkus bounds | | | p-values used in Learn-then-Test | | | |
 | Conformal Policy Control | | | Stretch: a fourth transfer arm | | | |
-| TabICLv2 | | | Challenger to LightGBM (cut-list item 1) | | | |
+| TabICLv2 | | | Challenger to LightGBM (cut-list item 1); replaced by the neural outcome model (D-096), not used | | | |
+| ModernBERT, mmBERT | | | Not in the plan: the encoder of the neural outcome model, the challenger to LightGBM (D-096), as in Channel A | | | |
 
 **Claims to avoid** (from the plan): the first accept-repair-abstain policy, the first risk-controlled abstention, and calling the replay study causal inference.
 

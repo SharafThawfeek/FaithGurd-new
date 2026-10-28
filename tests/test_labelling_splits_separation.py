@@ -94,7 +94,7 @@ def test_finqa_companies_cannot_enter_test_or_calibration(tmp_path):
 # (policy/study.py, policy/certify.py, policy/outcome.py fitting) may read replay outcomes.
 DECISION_TIME = (
     "detect", "repair", "executor.py", "claims.py", "pipeline.py", "calc", "tables.py", "records.py",
-    "policy/features.py", "policy/threshold.py", "policy/deployed.py",
+    "policy/features.py", "policy/threshold.py", "policy/deployed.py", "policy/neural.py",
 )
 
 

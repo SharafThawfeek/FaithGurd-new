@@ -5,7 +5,10 @@ each family: order its grid on tune, certify on calibration with Learn-then-Test
 alpha, then report the chosen setting on test with issuer-clustered intervals.
 Also: outcome-model quality, regret against the oracle, the flip matrix, results by
 group, the certification-budget curve, the issuer-level sensitivity check, and
-SCoRE as a comparator for the send-or-abstain decision.
+SCoRE as a comparator for the send-or-abstain decision. Each outcome model in `kinds`
+(LightGBM, and the neural challenger when its GPU predictions are given, D-096) gets
+its own outcome-aware family, certified on the same grid, and its own budget curve;
+the detail, the SCoRE comparator and the deployable policy use LightGBM.
 """
 
 from __future__ import annotations
@@ -19,7 +22,7 @@ import numpy as np
 
 from faithguard.evaluate import flip_matrix, policy_metrics
 from faithguard.policy import families, outcome
-from faithguard.policy.certify import certify, cluster_pvalue, indicators, states
+from faithguard.policy.certify import certify, cluster_pvalue, indicators, order_settings, states
 from faithguard.stats import cluster_bootstrap, fixed_sequence, selective_risk_pvalue
 
 QTYPES = ("lookup", "difference", "growth", "share", "ratio", "sum", "average", "other")
@@ -128,7 +131,9 @@ def score_comparator(cal, test, p_cal, p_test, alpha, seed, n_test=500, repeats=
 
 
 def run(records: Sequence, alpha: float = 0.10, delta: float = 0.05, kinds=("lightgbm",), seed: int = 0,
-        budget_sizes=(50, 100, 200, 400, 800, 1600, 3200), budget_repeats: int = 100, use_score: bool = True) -> dict:
+        budget_sizes=(50, 100, 200, 400, 800, 1600, 3200), budget_repeats: int = 100, use_score: bool = True,
+        predictions: dict[str, str] | None = None) -> dict:
+    """`predictions`: for kinds trained on a GPU (outcome.PRECOMPUTED), the file of probabilities to read."""
     t0 = time.time()
     split = {s: [r for r in records if r.split == s] for s in ("fit", "tune", "calibration", "test")}
     fit, tune, cal, test = split["fit"], split["tune"], split["calibration"], split["test"]
@@ -162,8 +167,8 @@ def run(records: Sequence, alpha: float = 0.10, delta: float = 0.05, kinds=("lig
     preds = {}
     for kind in kinds:
         try:
-            models = outcome.fit(fit, kind, seed)
-        except ImportError as err:
+            models = outcome.fit(fit, kind, seed, (predictions or {}).get(kind))
+        except (ImportError, FileNotFoundError) as err:
             result["models"][kind] = {"skipped": str(err)}
             continue
         p = {s: models.predict(x) for s, x in (("tune", tune), ("cal", cal), ("test", test))}
@@ -176,6 +181,14 @@ def run(records: Sequence, alpha: float = 0.10, delta: float = 0.05, kinds=("lig
             "fix": {"auroc": outcome.auroc(y_fix, p["test"][1]), "brier": outcome.brier(y_fix, p["test"][1]), "ece": outcome.ece(y_fix, p["test"][1])},
         }
         add(f"outcome_aware[{kind}]", tuple(families.outcome_aware(*p[s]) for s in ("tune", "cal", "test")))
+
+    # how many calibration labels each outcome model's certified policy needs
+    result["budget_curve"] = {}
+    for kind, p in preds.items():
+        if next(f for f in result["families"] if f["family"] == f"outcome_aware[{kind}]").get("chosen"):
+            cands = {s: families.outcome_aware(*p[s]) for s in ("tune", "cal", "test")}
+            order = order_settings(tune, cands["tune"])
+            result["budget_curve"][kind] = budget_curve(cal, test, cands["cal"], cands["test"], order, alpha, delta, budget_sizes, budget_repeats, seed)
 
     # the chosen outcome-aware policy, in more detail
     main = next((f for f in result["families"] if f["family"] == "outcome_aware[lightgbm]"), None)
@@ -190,7 +203,6 @@ def run(records: Sequence, alpha: float = 0.10, delta: float = 0.05, kinds=("lig
             "by_question_type": {g: policy_metrics([r.outcomes[a] for r, a in zip(test, acts) if _qtype(r) == g]) for g in sorted({_qtype(r) for r in test})},
             "by_error": {g: policy_metrics([r.outcomes[a] for r, a in zip(test, acts) if r.error == g]) for g in sorted({r.error for r in test if r.error})},
         }
-        from faithguard.policy.certify import order_settings
         from faithguard.policy.deployed import OutcomeAwarePolicy, parse_setting
 
         tau_send, tau_fix = parse_setting(main["chosen"])
@@ -199,8 +211,6 @@ def run(records: Sequence, alpha: float = 0.10, delta: float = 0.05, kinds=("lig
             names=lgbm.names, unsafe_model=lgbm.unsafe, fix_model=lgbm.fix, tau_send=tau_send, tau_fix=tau_fix,
             certificate={"alpha": alpha, "delta": delta, "p_value": main["p_chosen"], "setting": main["chosen"]},
         )
-        order = order_settings(tune, cands["tune"])
-        result["budget_curve"] = budget_curve(cal, test, cands["cal"], cands["test"], order, alpha, delta, budget_sizes, budget_repeats, seed)
         if use_score:
             try:
                 result["score_comparator"] = score_comparator(cal, test, p["cal"][0], p["test"][0], alpha, seed)
@@ -273,10 +283,18 @@ def report(result: dict) -> str:
             for g, m in d[key].items():
                 lines.append(f"| {g} | {m['items']} | {_pct(m['emission_coverage'])} | {_pct(m['residual_risk'])} | {_pct(m['useful_coverage'])} |")
         lines.append("")
-    if "budget_curve" in result:
-        lines += ["## Certification budget", "", "Random calibration subsets of each size; share of draws in which at least one setting is certified, and the useful coverage on test of the setting then chosen.", "", "| Calibration answers | Certified | Useful coverage on test |", "| --- | --- | --- |"]
-        for row in result["budget_curve"]:
-            lines.append(f"| {row['calibration_items']} | {_pct(row['certified_share'])} | {_pct(row['mean_test_useful_coverage_when_certified'])} |")
+    curves = result.get("budget_curve") or {}
+    if curves:
+        lines += ["## Certification budget", "", "Random calibration subsets of each size, for each outcome model whose policy certified: share of draws in which at least one setting is certified, and the useful coverage on test of the setting then chosen.", "",
+                  "| Calibration answers | " + " | ".join(f"Certified ({k}) | Useful coverage on test ({k})" for k in curves) + " |",
+                  "| --- |" + " --- | --- |" * len(curves)]
+        by_size = {k: {row["calibration_items"]: row for row in rows} for k, rows in curves.items()}
+        for n in sorted({n for rows in by_size.values() for n in rows}):
+            cells = []
+            for k in curves:
+                row = by_size[k].get(n, {})
+                cells += [_pct(row.get("certified_share")), _pct(row.get("mean_test_useful_coverage_when_certified"))]
+            lines.append(f"| {n} | " + " | ".join(cells) + " |")
         lines.append("")
     main = next((f for f in result["families"] if f["family"] == "outcome_aware[lightgbm]"), None)
     if main and main.get("chosen"):

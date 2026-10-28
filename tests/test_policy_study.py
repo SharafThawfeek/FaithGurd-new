@@ -1,5 +1,7 @@
 import random
 
+import pytest
+
 from faithguard.policy import families, outcome, study
 from faithguard.policy.certify import certify, cluster_pvalue
 from faithguard.replay import ReplayRecord
@@ -37,9 +39,52 @@ def test_outcome_aware_policy_is_certified_and_beats_send_or_abstain():
     assert ours["test"]["useful_coverage"] > by["verified_only"]["test"]["useful_coverage"] + 0.2
     assert by["send_all"]["chosen"] is None  # 60% unsafe: never certifiable
     assert result["oracle_test"]["useful_coverage"] >= ours["test"]["useful_coverage"]
-    assert {row["calibration_items"] for row in result["budget_curve"]} == {50, 200}
+    assert {row["calibration_items"] for row in result["budget_curve"]["lightgbm"]} == {50, 200}
     assert "flip_matrix_test" in result["chosen_detail"]
     assert "# Policy study" in study.report(result)
+
+
+def neural_predictions(rs, path, noise: float = 0.1, seed: int = 1):
+    """What the GPU run writes: P(unsafe) and P(fix) for every tune, calibration and test record."""
+    import json
+
+    rng = random.Random(seed)
+    y_unsafe, y_fix = outcome.targets(rs)
+    with open(path, "w", encoding="utf-8") as f:
+        for r, u, x in zip(rs, y_unsafe, y_fix):
+            if r.split != "fit":
+                p = [min(1.0, max(0.0, float(y) + rng.uniform(-noise, noise))) for y in (u, x)]
+                f.write(json.dumps({"item_id": r.item_id, "split": r.split, "p_unsafe": p[0], "p_fix": p[1]}) + "\n")
+    return path
+
+
+def test_neural_challenger_is_certified_on_the_same_grid_beside_lightgbm(tmp_path):
+    rs = records()
+    path = neural_predictions(rs, tmp_path / "predictions.jsonl")
+    result = study.run(rs, kinds=("lightgbm", "neural"), predictions={"neural": str(path)},
+                       budget_sizes=(50, 200), budget_repeats=10, use_score=False)
+    by = {f["family"]: f for f in result["families"]}
+    ours, challenger = by["outcome_aware[lightgbm]"], by["outcome_aware[neural]"]
+    assert challenger["settings"] == ours["settings"] == len(families.TAU_SEND) * len(families.TAU_FIX)
+    assert challenger["chosen"] is not None and challenger["test"]["residual_risk"] <= 0.10
+    assert result["models"]["neural"]["unsafe"]["auroc"] > 0.95
+    assert set(result["budget_curve"]) == {"lightgbm", "neural"}
+    assert result["deployable"].names == outcome.feature_names([r for r in rs if r.split == "fit"])  # LightGBM stays the deployed model
+    report = study.report(result)
+    assert "outcome_aware[neural]" in report and "| neural | P(unsafe) |" in report and "Certified (neural)" in report
+
+
+def test_neural_challenger_needs_a_prediction_for_every_record(tmp_path):
+    rs = records(400)
+    path = neural_predictions(rs, tmp_path / "predictions.jsonl")
+    lines = path.read_text(encoding="utf-8").splitlines()
+    path.write_text("\n".join(lines[1:]) + "\n", encoding="utf-8")
+    models = outcome.fit([r for r in rs if r.split == "fit"], "neural", predictions=path)
+    with pytest.raises(ValueError, match="no prediction"):
+        models.predict([r for r in rs if r.split != "fit"])
+    skipped = study.run(rs, kinds=("lightgbm", "neural"), predictions={"neural": str(tmp_path / "missing.jsonl")},
+                        budget_sizes=(50,), budget_repeats=2, use_score=False)
+    assert "skipped" in skipped["models"]["neural"] and "outcome_aware[neural]" not in {f["family"] for f in skipped["families"]}
 
 
 def test_nothing_is_certified_when_every_setting_is_unsafe():

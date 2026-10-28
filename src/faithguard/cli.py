@@ -132,7 +132,8 @@ def cmd_policy(args) -> None:
     for source in args.sources.split(","):
         for split in ("train", "dev", "test"):
             records += load_or_build(source, split, rebuild=args.rebuild)[2]
-    result = study.run(records, alpha=args.alpha, delta=args.delta, kinds=tuple(args.models.split(",")), seed=args.seed)
+    result = study.run(records, alpha=args.alpha, delta=args.delta, kinds=tuple(args.models.split(",")), seed=args.seed,
+                       predictions={"neural": args.neural_predictions})
     out = study.save(result, args.out)
     for f in result["families"]:
         t = f.get("test")
@@ -214,6 +215,21 @@ def cmd_detector_data(args) -> None:
             rows += [r for r in mined if (track_split(company(r)) == "tune") == (name == "dev")]
         counts = train_data.write(out / f"{name}.jsonl", rows)
         print(f"{name}: {sum(counts.values())} examples {dict(sorted(counts.items()))}")
+
+
+def cmd_outcome_data(args) -> None:
+    """Inputs for the neural outcome model (D-096), from the cached controlled track the policy study reads."""
+    from faithguard.controlled import load_or_build
+    from faithguard.data import outcome_examples
+
+    def rows():
+        for source in args.sources.split(","):
+            for split in ("train", "dev", "test"):
+                items, _, records = load_or_build(source, split)
+                yield from outcome_examples.rows(items, records)
+
+    counts = outcome_examples.write(args.out, rows())
+    print(f"{sum(counts.values())} rows {counts} -> {args.out}")
 
 
 def cmd_xbrl_mine(args) -> None:
@@ -534,7 +550,9 @@ def main(argv: list[str] | None = None) -> None:
 
     p = sub.add_parser("policy", help="the policy study on the controlled track")
     p.add_argument("--sources", default="tatqa,finqa")
-    p.add_argument("--models", default="lightgbm", help="comma-separated: lightgbm, tabicl")
+    p.add_argument("--models", default="lightgbm", help="comma-separated: lightgbm, neural (D-096)")
+    p.add_argument("--neural-predictions", help="the neural outcome model's probabilities, written on a GPU by "
+                   "faithguard.train.outcome_model (default: runs/policy/neural/outcome-model/predictions.jsonl, as fetched)")
     p.add_argument("--alpha", type=float, default=0.10)
     p.add_argument("--delta", type=float, default=0.05)
     p.add_argument("--seed", type=int, default=0)
@@ -568,6 +586,11 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--xbrl", default="runs/detector/xbrl.jsonl", help="XBRL-mined examples (or the committed .gz copy), included if present")
     p.add_argument("--out", default="runs/detector")
     p.set_defaults(fn=cmd_detector_data)
+
+    p = sub.add_parser("outcome-data", help="inputs for the neural outcome model, the policy's challenger (D-096)")
+    p.add_argument("--sources", default="tatqa,finqa")
+    p.add_argument("--out", default="runs/policy/neural/outcome-data.jsonl")
+    p.set_defaults(fn=cmd_outcome_data)
 
     p = sub.add_parser("xbrl-mine", help="XBRL-mined negatives from training-only US companies (needs FG_SEC_USER_AGENT)")
     p.add_argument("--tickers", help="comma-separated; default: FinQA's companies minus benchmark issuers")

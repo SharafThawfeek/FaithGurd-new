@@ -552,7 +552,7 @@ flowchart LR
 
 **Features** (pre-action only: nothing from gold, nothing from a repair attempt): the detector's risk; numbers of claims, supported, unsupported and unverifiable claims; evidence links; missing operands; *evidence sufficiency* (every failing claim has a correct value in the evidence); whether the answer addresses the question; evidence size; percentage and directional claims; Channel A's highest span score; counts of each failing slot; and the question type.
 
-**Outcome models.** Two LightGBM classifiers trained on replay records of the fit split. TabICLv2, a tabular foundation model, is the one challenger.
+**Outcome models.** Two LightGBM classifiers trained on replay records of the fit split. The one challenger is a neural outcome model (D-096, `policy/neural.py`): Channel A's v2 mmBERT encoder fine-tuned on a GPU with one output each for P(unsafe) and P(fix), reading the question, the focused evidence, the answer and the same features written as text. It trains on the fit split with early stopping on tune, and the study reads back the probabilities it wrote and certifies them on the same grid.
 
 ### 6.2 Policy families
 
@@ -944,6 +944,7 @@ flowchart LR
 | `repair_v1` | Repairer v1 (stage A with arithmetic slips) |
 | `systems_pilot` | Every trained system on the pilot answers (phase-6 dry run) |
 | `transfer_replays` | Controlled-track replays with the trained repairer |
+| `outcome_model` | The policy's neural outcome model (the challenger to LightGBM), trained on rows built on the laptop |
 | `generate_answers` | The 800 benchmark answers |
 
 Rules: at most two GPU sessions at once per account (D-052); every run's GPU hours go into `logs/gpu-hours.csv`; training saves one checkpoint at a time to stay inside Kaggle's 20 GB disk (D-075); repair training uses one GPU (D-074).
@@ -987,6 +988,7 @@ Had the Group's 2025 figure been missing from the evidence, the checker would ha
 | `focus.py` | Focusing large evidence |
 | `policy/features.py`, `outcome.py`, `families.py`, `certify.py`, `study.py` | Features, outcome models, policy families, Learn-then-Test, the policy study |
 | `policy/deployed.py`, `threshold.py`, `transfer.py` | Deployable policy, policy v0, transfer study |
+| `policy/neural.py` | The neural outcome model's input text and network (trained by `train/outcome_model.py`) |
 | `repair/prompting.py`, `model.py`, `gate.py`, `rules.py`, `rewrite.py`, `backends.py` | Prompt and parser, model repairer, gate, rule repairer, rewrite baseline, model backends |
 | `executor.py` | The deterministic executor |
 | `pipeline.py` | The online path |
@@ -995,7 +997,7 @@ Had the Group's 2025 figure been missing from the evidence, the checker would ha
 | `inject.py`, `controlled.py`, `replay.py` | Error injector, controlled track, replay harness |
 | `generation/` | Answer generation with llama.cpp |
 | `evaluate/`, `stats/` | Scoring, metrics, repair and systems evaluation, pilot summary; bootstrap, certification, agreement |
-| `train/` | GPU jobs: detector, repair SFT and self-training, evaluations, baselines, systems, replays |
+| `train/` | GPU jobs: detector, repair SFT and self-training, the policy's neural outcome model, evaluations, baselines, systems, replays |
 | `cli.py` | The `faithguard` command |
 
 ---

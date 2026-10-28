@@ -30,7 +30,7 @@ We do not claim the first accept-repair-abstain policy, nor the first risk-contr
 
 **Accept-repair-abstain policies.** `[CITE: CORA — open and verify]` and `[CITE: Release Control — open and verify]` already combine accepting, repairing and abstaining. We differ in certifying the whole pipeline's risk including repair-introduced errors, in reporting the label budget, and in studying transfer across a change of repairer. `[CITE: Conformal Policy Control — verify]` is a possible fourth transfer arm (stretch).
 
-**Outcome models.** We use gradient-boosted trees (LightGBM; Ke et al., 2017) and, as one challenger, the tabular foundation model `[CITE: TabICLv2 — verify]`.
+**Outcome models.** We use gradient-boosted trees (LightGBM; Ke et al., 2017) and, as one challenger, a fine-tuned encoder of the ModernBERT family `[CITE: ModernBERT — verify]`, `[CITE: mmBERT — verify]`: the one the companion detection paper's learned detector starts from `[CITE: LettuceDetect — verify]`.
 
 ## 3. Setting
 
@@ -60,7 +60,7 @@ Two LightGBM models are trained on the fit split:
 - **P(unsafe)**: the chance the original answer is unsupported;
 - **P(fix)**: the chance repair returns a supported, useful answer.
 
-TabICLv2, a tabular foundation model that runs on a CPU, is the one challenger.
+The one challenger is a neural outcome model trained for the policy. It is the multilingual ModernBERT encoder (mmBERT) that the detection paper's learned detector starts from, fine-tuned on a GPU with one sigmoid output per outcome on its mean-pooled representation, both trained together with binary cross-entropy. LightGBM sees only the detector's summary features. The encoder reads the question and the evidence (focused on the rows the claims need when the evidence is large), paired with the answer and the same pre-action features written as text, cut to 1,024 tokens from the end of the evidence. It is trained on the fit split for at most two epochs, keeping the checkpoint with the lowest loss on the tune split, and never sees a calibration or test label. Both models are certified on the same grid with the same α and δ, and compared by AUROC, Brier score, ECE, certified useful coverage and the certification budget. The comparison asks whether reading the text adds anything to the detector's summary. LightGBM remains the primary model and the one deployed.
 
 ### 4.3 Policy families
 
@@ -136,7 +136,7 @@ SCoRE, deciding only send or abstain with the same P(unsafe) scores, sent 22.7% 
 - P-H1: `[RESULT]`
 - P-H2, with the budget curve on natural answers: `[RESULT]`
 - P-H3, with repairer v1: `[RESULT]`
-- Flip matrix, regret, groups, TabICLv2 against LightGBM, the generator shift, the issuer-level check and SCoRE: `[RESULT]`
+- Flip matrix, regret, groups, the neural outcome model against LightGBM, the generator shift, the issuer-level check and SCoRE: `[RESULT]`
 
 ## Limitations
 
@@ -163,4 +163,6 @@ SCoRE, deciding only send or abstain with the same P(unsafe) scores, sent 22.7% 
 - `[CITE: CORA]`
 - `[CITE: Release Control]`
 - `[CITE: Conformal Policy Control]`
-- `[CITE: TabICLv2]`
+- `[CITE: ModernBERT]`
+- `[CITE: mmBERT]`
+- `[CITE: LettuceDetect]`

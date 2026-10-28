@@ -31,6 +31,15 @@ Phase-4 training runs the same way, for example the detector (results -> runs/de
     python pilots/kaggle_run.py push repair_sft         # stage A repair training (results -> runs/repair/kaggle/)
     python pilots/kaggle_run.py push repair_self_train --kernel repair_sft   # stage B starts from stage A's adapter
 
+The policy's neural outcome model (D-096) trains on rows built from the laptop's controlled-track
+cache, so it sees the same records as LightGBM (results -> runs/policy/neural/):
+
+    faithguard outcome-data
+    python pilots/kaggle_run.py dataset faithguard-outcome-data runs/policy/neural/outcome-data.jsonl
+    python pilots/kaggle_run.py push outcome_model --dataset faithguard-outcome-data
+    python pilots/kaggle_run.py fetch outcome_model
+    faithguard policy --models lightgbm,neural
+
 Kaggle charges GPU time for the whole session, so take the hours for
 logs/gpu-hours.csv from the notebook's page, not from the scripts.
 """
@@ -70,6 +79,8 @@ NOTEBOOKS = {
     "repair_v1": (ROOT / "notebooks", "FaithGuard repair v1", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl",
                   ROOT / "runs" / "repair" / "kaggle"),
     "transfer_replays": (ROOT / "notebooks", "FaithGuard transfer replays", r"replay[.]jsonl", ROOT / "runs" / "policy"),
+    "outcome_model": (ROOT / "notebooks", "FaithGuard neural outcome model", r"predictions[.]jsonl|train_log[.]json|results[.]json",
+                      ROOT / "runs" / "policy" / "neural"),
     "repair_zero_shot_9b": (ROOT / "notebooks", "FaithGuard repair zero-shot 9B", r"results[.]json|report[.]md|rows[.]jsonl",
                             ROOT / "runs" / "repair" / "kaggle"),
     "repair_baselines": (ROOT / "notebooks", "FaithGuard repair baselines", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl",
