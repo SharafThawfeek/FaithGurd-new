@@ -29,6 +29,10 @@ class RewriteRepairer:
         self.name = name
 
     def __call__(self, item: Item, det: DetectorOutput) -> RepairOutput:
+        if not det.claims and item.question.question_type == "narrative":
+            # outside every repair analysis (narrative questions are left out), and with no claim to focus the evidence on,
+            # the prompt carries all of it, up to 12,000 tokens, past a T4's memory (D-111); the edit repairer declines these too
+            return RepairOutput(item_id=item.id, repairer=self.name, status="cannot_fix", reason="non_numeric: no numbers to repair")
         editable = editable_claims(det)
         if det.claims and not editable:
             return RepairOutput(item_id=item.id, repairer=self.name, status="nothing_to_fix", text=item.answer.text)

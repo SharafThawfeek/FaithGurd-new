@@ -70,3 +70,18 @@ def test_marking_is_reversible():
     det = detect(item)
     marked = mark_claims(item.answer.text, det.claims)
     assert marked == "Group profit after tax rose [k1: 7.0%] to [k2: Rs. 12,450 million]."
+
+
+def test_rewrite_repairer_declines_narrative_answers_without_numbers_but_rewrites_numeric_ones():
+    from faithguard.records import Question
+    from faithguard.repair.rewrite import RewriteRepairer
+
+    prompts = []
+    repairer = RewriteRepairer(lambda p: prompts.append(p) or "Group profit after tax was Rs. 14,213 million.")
+    item = bank_item("The report does not give the figure.")
+    narrative = item.model_copy(update={"question": Question.model_validate(item.question.model_dump() | {"question_type": "narrative"})})
+    out = repairer(narrative, detect(narrative))
+    assert (out.status, prompts) == ("cannot_fix", [])  # D-111: no prompt, so no long evidence on the GPU
+    out = repairer(item, detect(item))  # a numeric question's answer with no numbers is still rewritten, as filed
+    assert out.status == "repaired" and len(prompts) == 1
+    assert repairer(bank_item(WORKED), detect(bank_item(WORKED))).status == "repaired" and len(prompts) == 2
