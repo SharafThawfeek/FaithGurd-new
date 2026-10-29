@@ -265,3 +265,36 @@ def test_released_detectors_see_the_same_focused_evidence(tmp_path, monkeypatch)
     rows = [json.loads(line) for line in (tmp_path / "out" / "scores.jsonl").read_text(encoding="utf-8").splitlines()]
     assert rows == [{"item_id": "demo-bank", "detector": "hhem", "risk": 0.25}, {"item_id": "demo-bank-big", "detector": "hhem", "risk": 0.25}]
     assert not (tmp_path / "out" / "results.json").exists()  # benchmark items: no gold, so no metrics
+
+
+def test_repair_check_samples_changed_test_repairs_and_compares_code_with_labels():
+    from decimal import Decimal
+
+    from faithguard.evaluate import repair_check
+    from faithguard.gold import GoldLabel, GoldQuestion, GoldStore, GoldValue
+
+    item = bank_item("Group profit after tax was Rs. 12,450 million.")
+    item.question.split = "test"
+    other = item.model_copy(update={"id": "demo-bank-2", "question": item.question.model_copy(update={"split": "calibration"})})
+    fixed = {"item_id": item.id, "repairer": "trained", "status": "repaired", "text": "Group profit after tax was Rs. 14,213 million."}
+    same = fixed | {"text": item.answer.text}
+    outputs = {"repair-v1": {"repair_gold_spans": {item.id: fixed, other.id: fixed | {"item_id": other.id}}, "repair_rule_spans": {item.id: same}},
+               "stage-b": {"repair_rule_spans": {item.id: fixed | {"status": "cannot_fix"}}, "repair_channel_a_spans": {item.id: fixed}}}
+    changes = repair_check.changed([item, other], outputs)
+    # only test answers sent changed: not calibration, not unchanged text, not a withheld repair
+    assert changes == {"repair-v1, gold_spans": {item.id: fixed["text"]}, "stage-b, channel_a_spans": {item.id: fixed["text"]}}
+    sample = repair_check.draw(changes)
+    assert sample == {"other variants": [f"{item.id}@stage-b, channel_a_spans"], "repair-v1, gold_spans": [f"{item.id}@repair-v1, gold_spans"]}
+    (task,) = repair_check.repair_items([item], changes, sample["repair-v1, gold_spans"])
+    assert task.id == f"{item.id}@repair-v1, gold_spans" and task.answer.text == fixed["text"]
+
+    gold = GoldStore("unused")
+    gold.add_question(GoldQuestion(question_id="q-bank", answer_text="Rs. 14,213 million", cells=["t1r3c1"],
+                                   values=[GoldValue(value=Decimal("14212560000"), kind="amount")], source="test"))
+    assert repair_check.compare([item], gold, changes, sample)["repair-v1, gold_spans"]["labelled"] == 0
+    gold.add_label(GoldLabel(item_id=task.id, target="repair", status="correct", useful=True, annotator="claude-labeller@d106"))
+    gold.add_label(GoldLabel(item_id=f"{item.id}@stage-b, channel_a_spans", target="repair", status="incorrect", annotator="claude-labeller@d106"))
+    result = repair_check.compare([item], gold, changes, sample)
+    assert result["repair-v1, gold_spans"] == {"planned": 1, "labelled": 1, "disagree": 0, "rate": 0.0,
+                                               "label_every_changed_repair": False, "disagreements": []}
+    assert result["other variants"]["disagree"] == 1 and result["other variants"]["label_every_changed_repair"]

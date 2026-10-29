@@ -547,6 +547,48 @@ def cmd_analyse(args) -> None:
     print(analysis.report(result))
 
 
+def cmd_repair_check(args) -> None:
+    """The repair check (pre-registration §6, D-106): draw a blind sample of changed repairs, then compare code with the labels."""
+    from faithguard import labelling
+    from faithguard.evaluate import analysis, repair_check
+    from faithguard.gold import GoldStore
+
+    items = list(read_jsonl(args.items, Item))
+    store = GoldStore.load(args.gold)
+    changes = repair_check.changed(items, analysis.load_outputs(args.systems))
+    plan = store.root / "repair-check.json"
+    if args.action == "draw":
+        if plan.exists():
+            sys.exit(f"{plan} exists: the sample is drawn once")
+        if not any(arm in changes for arm in repair_check.R_H1_ARMS):
+            sys.exit(f"no changed repairs on the labelled spans in {args.systems}: fetch systems_main with --gold-spans first")
+        sample = repair_check.draw(changes)
+        ids = sorted({rid for group in sample.values() for rid in group})
+        n = labelling.write_tasks(repair_check.repair_items(items, changes, ids), Path(args.out or "labelling/repair-tasks.json"),
+                                  store.root / "repair-task-mapping.json")
+        plan.write_text(json.dumps({"seed": repair_check.SEED, "per_group": repair_check.SAMPLE, "sample": sample,
+                                    "changed": {arm: len(v) for arm, v in changes.items()}}, indent=1) + "\n", encoding="utf-8")
+        print(f"wrote {n} blinded repair tasks ({', '.join(f'{g}: {len(v)}' for g, v in sample.items())}); "
+              f"import their labels with --target repair --mapping {store.root / 'repair-task-mapping.json'}")
+        return
+    sample = json.loads(plan.read_text(encoding="utf-8"))["sample"]
+    result = repair_check.compare(items, store, changes, sample)
+    (store.root / "repair-check-result.json").write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
+    for group, r in result.items():
+        rate = "n/a" if r["rate"] is None else f"{r['rate']:.1%}"
+        print(f"{group}: {r['labelled']} of {r['planned']} checked repairs labelled, code and labels disagree on {r['disagree']} ({rate})"
+              + ("; every changed repair of this group is labelled" if r["label_every_changed_repair"] else ""))
+    todo = [f"{i}@{arm}" for arm, v in sorted(changes.items()) for i in sorted(v)
+            if result.get(repair_check.group_of(arm), {}).get("label_every_changed_repair")
+            and repair_check.repair_label(store, f"{i}@{arm}") is None]
+    if todo:
+        mapping = store.root / "repair-task-mapping-all.json"
+        if mapping.exists():
+            sys.exit(f"{mapping} exists: import those labels, then run compare again")
+        n = labelling.write_tasks(repair_check.repair_items(items, changes, todo), Path(args.out or "labelling/repair-tasks-all.json"), mapping)
+        print(f"wrote {n} blinded tasks for the rest; import their labels with --target repair --mapping {mapping}")
+
+
 def cmd_labelling(args) -> None:
     from faithguard import labelling
     from faithguard.gold import GoldStore
@@ -821,6 +863,14 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--out", default="runs/main")
     p.set_defaults(fn=cmd_analyse)
+
+    p = sub.add_parser("repair-check", help="the repair check: a blind labelled sample of changed repairs against code (D-106)")
+    p.add_argument("action", choices=["draw", "compare"])
+    p.add_argument("--items", default="data/benchmark-build/main/items-locked.jsonl")
+    p.add_argument("--gold", default="data/benchmark-build/main/gold")
+    p.add_argument("--systems", default="data/benchmark-build/main/systems", help="folder of the fetched GPU outputs")
+    p.add_argument("--out", help="the blinded tasks (never overwritten)")
+    p.set_defaults(fn=cmd_repair_check)
 
     p = sub.add_parser("labelling", help="blinded Label Studio tasks, code labels with a person's audit (D-100), label import")
     p.add_argument("action", choices=["tasks", "triage", "audit", "import", "spans"])
