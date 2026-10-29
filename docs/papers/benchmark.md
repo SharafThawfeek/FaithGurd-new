@@ -6,7 +6,7 @@
 
 ## Abstract
 
-We release a benchmark for checking AI answers about annual reports from two markets: Sri Lanka, for which we found no comparable public resource, and the United States. It holds 394 question groups about the latest income statements and balance sheets of 48 listed companies, 24 per country; 400 were built and 6 with two readings were left out before the test set was locked. Each question is written with its gold answer as an expression over cells of hand-corrected tables, so code can check every number an answer states. Two open models answer every question, giving 788 answers. Each answer is labelled blind to the model, and each unsupported span is marked with the part of its context that fails: entity or scope, metric, period, scale or currency, sign, basis or missing operand. The labels are made by separate passes of an AI model, Claude, not by people. Questions are written to invite "right number, wrong context" errors, such as the Bank's figure given for the Group or last year's for this year. A second set of evidence, read from the reports by an automatic table extractor, measures how table-reading errors change a checker's decisions. Of the 788 answers, 177 (22.5%) are incorrect, and 170 of the 672 numeric answers (25.3%). Gemma and Qwen give 54 and 53 incorrect answers of 248 each on Sri Lankan questions, and 41 and 29 of 146 each on US questions. Growth questions err most: 88 answers incorrect against 65 correct. Two blind labelling passes agree on status for 95% of 80 double-labelled answers (kappa 0.89); this is agreement between passes of one model, not between people.
+We release a benchmark for checking AI answers about annual reports from two markets: Sri Lanka, for which we found no comparable public resource, and the United States. It holds 394 question groups about the latest income statements and balance sheets of 48 listed companies, 24 per country; 400 were built and 6 with two readings were left out before the test set was locked. Each question is written with its gold answer as an expression over cells of hand-corrected tables, so code can check every number an answer states. Two open models answer every question, giving 788 answers. Each answer is labelled blind to the model, and each unsupported span is marked with the part of its context that fails: entity or scope, metric, period, scale or currency, sign, basis or missing operand. The labels, and the second reading of every question and of the table rows it uses, are made by separate passes of an AI model, Claude, not by people. Questions are written to invite "right number, wrong context" errors, such as the Bank's figure given for the Group or last year's for this year. A second set of evidence, read from the reports by an automatic table extractor, measures how table-reading errors change a checker's decisions. Of the 788 answers, 177 (22.5%) are incorrect, and 170 of the 672 numeric answers (25.3%). Gemma and Qwen give 54 and 53 incorrect answers of 248 each on Sri Lankan questions, and 41 and 29 of 146 each on US questions. Growth questions err most: 88 answers incorrect against 65 correct. Two blind labelling passes agree on status for 95% of 80 double-labelled answers (kappa 0.89); this is agreement between passes of one model, not between people.
 
 ## 1. Introduction
 
@@ -16,8 +16,8 @@ Existing resources are almost all built on US filings. Sri Lankan listed compani
 
 This benchmark is built for faithfulness checking:
 
-1. **Questions with executable gold.** Each question's gold answer is an expression over table cells (`growth(t1r3c1, t1r3c2)`), recomputed by code and compared with the author's own reading of the report, so misread figures and wrong cells surface before anyone labels an answer.
-2. **Hand-corrected evidence.** The income statement and balance sheet of every report, copied exactly as printed and checked so that every subtotal and total adds up.
+1. **Questions with executable gold.** Each question's gold answer is an expression over table cells (`growth(t1r3c1, t1r3c2)`), recomputed by code and compared with the author's own reading of the report, so misread figures and wrong cells surface before any answer is labelled.
+2. **Hand-corrected evidence.** The income statement and balance sheet of every report, copied exactly as printed and checked so that every subtotal and total adds up. Their second reader is a pass by Claude, not a person (§3.2).
 3. **Natural answers with span labels.** Two open generators answer every question once; each answer is labelled with its unsupported spans and their relation slots, its status and its usefulness. The labelling passes are made by Claude, not people (§3.5).
 4. **Two markets and a held-out future.** Issuer-disjoint test, calibration and development splits in each country, and the next annual report of every test issuer held back unopened for a future refresh.
 5. **A real-world condition.** The same questions and answers with evidence read by an automatic table extractor, uncorrected.
@@ -45,7 +45,9 @@ Splits are issuer-disjoint: a company never appears in two. The manifest is fixe
 
 For each issuer we take its latest annual report: on the CSE, financial years ending 31 December 2025 or 31 March 2026 (the amended report where one supersedes the original); on SEC EDGAR, the original 10-K for fiscal years ending September 2025 to February 2026. Every file is listed with its link, size and checksum.
 
-From each report we copy two tables exactly as printed: the income statement and the statement of financial position (balance sheet), 96 tables in all. Sri Lankan tables are drafted from the PDF's own text by word position, and US tables from the 10-K's HTML tables, then corrected by hand cell by cell. A statement that runs over two pages is one table. Every table is also checked by arithmetic: each total must equal the rows above it, allowing for each figure being rounded on its own, and all 96 pass. Units are read from each page (thousands for most reports; whole rupees or millions for a few).
+From each report we copy two tables exactly as printed: the income statement and the statement of financial position (balance sheet), 96 tables in all. Sri Lankan tables are drafted from the PDF's own text by word position and then corrected by hand; US tables are drafted from the 10-K's HTML tables and then checked by hand the same way. A statement that runs over two pages is one table. Every table is also checked by arithmetic: each total must equal the rows above it, allowing for each figure being rounded on its own, and all 96 pass. Units are read from each page (thousands for most reports; whole rupees or millions for a few).
+
+The tables' second reader is not a person but a separate pass by Claude (D-103), the same pass that checked the questions (§3.3). It checked the table rows the questions use against the source pages and filings. It found note-reference marks inside some row labels of one report and one row label split from its category prefix in another; the generators saw the same evidence, so the tables were left as they are (D-104).
 
 ### 3.3 Questions
 
@@ -73,7 +75,7 @@ Every question is answered once by each of two open models: Qwen3.5-9B (Q4_K_M) 
 
 ### 3.5 Labels
 
-No person labels an answer. The plan gave the labelling and checking to people, but no labellers, second readers or adjudicator were available, so Claude (Anthropic) takes those roles (D-103). The labeller, the second labeller, the adjudicator and the second reader of questions and tables (§3.3) are separate, blind passes by Claude, not people. Every label, check and adjudication in the benchmark is AI-made.
+No person labels an answer. The plan gave the labelling and checking to people, but no labellers, second readers or adjudicator were available, so Claude (Anthropic) takes those roles (D-103). The labeller, the second labeller, the adjudicator and the second reader of questions and tables (§3.2, §3.3) are separate, blind passes by Claude, not people. Every label, check and adjudication in the benchmark is AI-made.
 
 Each labelling pass sees the question, the evidence (with each table's units note, as the generators saw it) and one answer, never which model wrote it nor any code label, and follows a written guide, version 2 ([annotation-guide.md](../annotation-guide.md)):
 
@@ -136,7 +138,7 @@ Labelling time is not reported. The passes were made by Claude, not people, so t
 
 ### 3.6 Real-world condition
 
-To measure how table-reading errors affect a checker, the Sri Lankan questions also come with evidence read by an automatic extractor, uncorrected. Three open tools were compared on 20 tables from 10 reports, with every table-finding strategy each offers and the same clean-up. Under a rule fixed before the run (most figures in the right row and column), PyMuPDF's text strategy was chosen. On all 48 Sri Lankan tables it places 94.2% of figures correctly, completes 23 tables, and detects the unit correctly for 42 of 48. US filings are HTML, whose tables read the same automatically as by hand, so US evidence is identical in both conditions. `[RESULT: on the locked Sri Lankan answers, how often a checker's decision changes with extracted rather than hand-corrected evidence — from the main runs.]`
+To measure how table-reading errors affect a checker, the Sri Lankan questions also come with evidence read by an automatic extractor, uncorrected. Three open tools were compared on 20 tables from 10 reports, with every table-finding strategy each offers and the same clean-up. Under a rule fixed before the run (most figures in the right row and column), PyMuPDF's text strategy was chosen. On all 48 Sri Lankan tables it places 94.2% of figures correctly, completes 23 tables, and detects the unit correctly for 42 of 48. US filings are HTML, whose tables read the same automatically as by hand, so US evidence is identical in both conditions. `[RESULT: on the locked Sri Lankan answers, the full pipeline's emission coverage, residual risk and useful coverage with extracted rather than hand-corrected evidence, the secondary analysis pre-registered in §7 (not a hypothesis test); also how often a checker's decision changes; from the main runs.]`
 
 | Tool (best strategy), 20 tables | Figures right | Wrong figures | Tables complete |
 | --- | --- | --- | --- |
@@ -154,7 +156,7 @@ Before the main questions were written, 60 pilot questions (33 Sri Lankan, 27 US
 
 ## 5. Uses
 
-The benchmark supports three companion studies, each with pre-registered hypotheses: span detection with relation slots (`[cross-reference]`), program-based repair (`[cross-reference]`), and certified accept-repair-abstain policies (`[cross-reference]`). Each answer's numbers can be scored automatically against the gold expressions, so repaired or regenerated answers can be evaluated without new labels. The labels of §3.5, made by Claude, remain the reference for the original answers.
+The benchmark supports three companion studies, each with pre-registered hypotheses: span detection with relation slots (`[cross-reference]`), program-based repair (`[cross-reference]`), and certified accept-repair-abstain policies (`[cross-reference]`). Each answer's numbers can be scored automatically against the gold expressions, so repaired or regenerated answers can be scored without labelling each one. The repair paper still checks the code's scores: a blind Claude pass labels 50 changed repairs from each arm of its main comparison and 50 across the other variants, and every changed repair of a group is labelled if code and labels disagree on more than 10% of its checked repairs (D-106). The labels of §3.5, made by Claude, remain the reference for the original answers.
 
 ## 6. Release
 
@@ -171,7 +173,7 @@ The benchmark supports three companion studies, each with pre-registered hypothe
 
 ## AI assistance statement
 
-`[Finalise before submission.]` Claude (Anthropic) drafted the questions and gold answers, wrote the project's code, produced provisional pilot labels used only for design decisions, and drafted this paper. Claude also took the roles the plan gave to people (D-103): the second reader of the 400 questions and 96 tables, the labeller of every answer and of the audit sample, the second labeller for agreement, and the adjudicator, each as a separate, blind pass. No released label, check or adjudication was made by a person. The authors take responsibility for all content.
+`[Finalise before submission.]` Claude (Anthropic) drafted the questions and gold answers, wrote the project's code, produced provisional pilot labels used only for design decisions, and drafted this paper. Claude also took the roles the plan gave to people (D-103): the second reader of the 400 questions and 96 tables, the labeller of every answer and of the audit sample, the second labeller for agreement, and the adjudicator, each as a separate, blind pass; it also checks a sample of repaired answers for the repair paper (D-106). No released label, check or adjudication was made by a person. The authors take responsibility for all content.
 
 ## References
 

@@ -174,8 +174,12 @@ def detection(items: Sequence[Item], gold: GoldStore, outputs: dict, seed: int =
     out["D-H2"] = {"span_f1_b": f1(lk_test, pred_b), "span_f1_a_plus_b": f1(lk_test, pred_ab), "difference": d_h2,
                    "verdict": decide(d_h2, "above") if fusion else "untestable (fusion could not be fitted)"}
 
-    # D-H3: a fused-risk threshold certified on US calibration answers, then on Sri Lanka as-is and recalibrated
-    out["D-H3"] = _threshold_transfer(cal, test, lab, outputs, fusion, claim_rows, seed) if fusion else {"verdict": "untestable"}
+    # D-H3: a fused-risk threshold certified on US calibration answers, then on Sri Lanka as-is and recalibrated;
+    # a risk metric, so ambiguous answers stay in and count as unsafe (pre-registration §5, D-089)
+    labelled = [i for i in items if i.id in lab]
+    out["D-H3"] = (_threshold_transfer([i for i in labelled if i.question.split == "calibration"],
+                                       [i for i in labelled if i.question.split == "test"], lab, outputs, fusion, claim_rows, seed)
+                   if fusion else {"verdict": "untestable"})
 
     # every detector on the test split: AUROC, clean false alarms at its calibration threshold
     scores = {"channel-a": full, "channel-a-noxbrl": noxbrl,
@@ -240,13 +244,21 @@ def _threshold_transfer(cal, test, lab, outputs, fusion, claim_rows, seed, alpha
     t_us = certify(us_cal)
     as_is = paired(lk_test, lambda s: test_risk(s, t_us), seed) if t_us is not None else None
     rng = random.Random(seed)
-    restored = []
-    for _ in range(50):
-        draw = rng.sample(lk_cal, min(100, len(lk_cal)))
-        t = certify(draw)
-        restored.append(t is not None and (test_risk(lk_test, t) or 0.0) <= alpha)
+
+    def restored_share(size: int | None) -> float:
+        """Share of 50 random draws of `size` Sri Lankan calibration labels (all of them: one draw) whose threshold holds on test."""
+        draws = [lk_cal] if size is None or size >= len(lk_cal) else [rng.sample(lk_cal, size) for _ in range(50)]
+        held = []
+        for draw in draws:
+            t = certify(draw)
+            held.append(t is not None and (test_risk(lk_test, t) or 0.0) <= alpha)
+        return float(np.mean(held))
+
+    restored = restored_share(100)  # the hypothesis: restored when at least half the 100-label draws hold
+    curve = {"100": restored, "200": restored_share(200), "all": restored_share(None)}  # pre-registration §6, reported
     fails = as_is is not None and as_is["ci95"][0] > alpha
-    return {"us_threshold": t_us, "lk_test_risk_as_is": as_is, "restored_share_with_100_lk_labels": float(np.mean(restored)),
+    return {"us_threshold": t_us, "lk_test_risk_as_is": as_is, "restored_share_with_100_lk_labels": restored,
+            "label_efficiency_curve": curve, "lk_calibration_labels": len(lk_cal),
             "verdict": "confirmed" if fails and np.mean(restored) >= 0.5 else
                        ("holds without recalibration" if as_is is not None and not fails else "untestable (no US threshold certified)")}
 
@@ -412,7 +424,9 @@ def report(result: dict) -> str:
     if "D-H3" in det:
         d = det["D-H3"]
         shown = ci(d["lk_test_risk_as_is"]) if d.get("lk_test_risk_as_is") else "-"
-        lines.append(f"| D-H3 US threshold on Sri Lanka (risk as-is; restored with 100 labels {f(d.get('restored_share_with_100_lk_labels'))}) | {shown} | {d['verdict']} |")
+        curve = ", ".join(f"{k}: {f(v)}" for k, v in d.get("label_efficiency_curve", {}).items())
+        lines.append(f"| D-H3 US threshold on Sri Lanka (risk as-is; restored with 100 labels {f(d.get('restored_share_with_100_lk_labels'))}"
+                     f"{'; curve ' + curve if curve else ''}) | {shown} | {d['verdict']} |")
     if "R-H1" in rep:
         lines.append(f"| R-H1 programs make fewer new errors (difference; correction {ci(rep['R-H1']['correction_difference'])}) | "
                      f"{ci(rep['R-H1']['new_error_difference'])} | {rep['R-H1']['verdict']} |")

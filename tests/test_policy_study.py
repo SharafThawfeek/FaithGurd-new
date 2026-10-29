@@ -157,3 +157,37 @@ def test_issuer_check_can_pass_with_24_issuers_where_the_issuer_p_value_cannot()
     assert cluster_upper(clean, sends) <= 0.10
     risky = [record(i, "fixable", "calibration") for i in range(24 * 5)]
     assert cluster_upper(risky, ["send"] * len(risky)) > 0.10
+
+
+def test_threshold_transfer_counts_ambiguous_answers_unsafe_and_reports_the_label_curve():
+    from faithguard.evaluate.analysis import _threshold_transfer
+    from faithguard.gold import GoldLabel
+    from fixtures import bank_item
+
+    rng = random.Random(0)
+    items, lab, risk = [], {}, {}
+    for n in range(900):
+        country, split = ("US", "LK")[n % 2], ("calibration", "test")[(n // 2) % 2]
+        base = bank_item("Group profit after tax was Rs. 14,213 million.")
+        item = base.model_copy(update={"id": f"a{n}", "question": base.question.model_copy(update={"country": country, "split": split, "issuer": f"i{n % 12}"})})
+        r = rng.random()
+        status = "ambiguous" if r > 0.97 else ("incorrect" if r > 0.9 else "correct")
+        items.append(item)
+        lab[item.id] = GoldLabel(item_id=item.id, status=status, annotator="claude-labeller@d103")
+        risk[item.id] = 0.95 if status != "correct" else rng.random() * 0.01
+
+    class Fusion:
+        def item_risk(self, rows):
+            return rows
+
+    cal = [i for i in items if i.question.split == "calibration"]
+    test = [i for i in items if i.question.split == "test"]
+    out = _threshold_transfer(cal, test, lab, {}, Fusion(), lambda xs: risk[xs[0].id], 0)
+    assert out["us_threshold"] is not None
+    assert set(out["label_efficiency_curve"]) == {"100", "200", "all"}
+    assert out["lk_calibration_labels"] == len([i for i in cal if i.question.country == "LK"])
+    # an ambiguous answer sent below the threshold counts as unsafe: give one a low risk and the test risk rises
+    worst = next(i for i in test if i.question.country == "LK" and lab[i.id].status == "ambiguous")
+    risk[worst.id] = 0.0
+    again = _threshold_transfer(cal, test, lab, {}, Fusion(), lambda xs: risk[xs[0].id], 0)
+    assert again["lk_test_risk_as_is"]["estimate"] > out["lk_test_risk_as_is"]["estimate"]

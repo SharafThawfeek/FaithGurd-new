@@ -2,11 +2,11 @@
 
 M.L Ahamed, M.S.A Ahamed, Sharaf
 
-> **Draft status (2026-10-29).** The test set is locked (394 questions, 788 answers; D-104) and labelled (D-105). Filled from the locked labels: the benchmark and label description (§5.1), the disclosure that every label, check and adjudication was made by separate Claude passes (§3, §5.1, Limitations), the limitations and the AI assistance statement. Still waiting for the main GPU runs, which are in progress: every detection result on the main answers, kept as placeholders, `[RESULT: …]`, and filled in phase 7 from the pre-registered analysis ([preregistration](../preregistration.md)). The introduction, related work and method are drafts to revise. Numbers marked *development* come from the controlled track or the pilot's development issuers and test no hypothesis. Citations marked `[verify]` or `[CITE: …]` must be checked against the source and entered in [related-work/detection.md](../related-work/detection.md) before submission.
+> **Draft status (2026-10-29).** The test set is locked (394 questions, 788 answers; D-104) and labelled (D-105). Filled from the locked labels: the benchmark and label description (§5.1), the disclosure that every label, check and adjudication was made by separate Claude passes (§3, §5.1, Limitations), the limitations and the AI assistance statement. Still waiting for the main GPU runs, which are in progress: every detection result on the main answers, kept as placeholders, `[RESULT: …]`, and filled in phase 7 from the pre-registered analysis ([preregistration](../preregistration.md)). D-H1 is untestable under its pre-registered rule (too few wrong-context answers; §5.3), so the abstract and introduction lead with D-H2 and D-H3. The introduction, related work and method are drafts to revise. Numbers marked *development* come from the controlled track or the pilot's development issuers and test no hypothesis. Citations marked `[verify]` or `[CITE: …]` must be checked against the source and entered in [related-work/detection.md](../related-work/detection.md) before submission.
 
 ## Abstract
 
-Answers about financial reports can quote a real figure from the evidence under the wrong context: the Bank's profit given as the Group's, last year's revenue given for this year, thousands read as millions. Such "right number, wrong context" errors are hard for general hallucination detectors, because the number does appear in the evidence. We train a span detector to catch them using supervision mined automatically from US XBRL filings: each fact is paired with a sibling fact that differs in one part of its context, and an answer stating the sibling's value under the original context becomes a labelled negative. A second head names the failing relation (entity or scope, metric, period, scale or currency, sign, basis, missing operand). The learned channel is fused with an exact rule checker and calibrated, and its threshold is certified with Learn-then-Test. On a new benchmark of 788 answers about 48 US and Sri Lankan annual reports, labelled by separate blind passes of Claude rather than by people, `[RESULT: wrong-context recall with vs without XBRL supervision at an equal clean false-alarm rate]`. `[RESULT: A + B against B alone on Sri Lankan reports]`. A threshold certified on US filings `[RESULT: holds / fails]` on Sri Lankan reports, and `[RESULT: n]` local labels restore it.
+Answers about financial reports can quote a real figure from the evidence under the wrong context: the Bank's profit given as the Group's, last year's revenue given for this year, thousands read as millions. Such "right number, wrong context" errors are hard for general hallucination detectors, because the number does appear in the evidence. We train a span detector to catch them using supervision mined automatically from US XBRL filings: each fact is paired with a sibling fact that differs in one part of its context, and an answer stating the sibling's value under the original context becomes a labelled negative. A second head names the failing relation (entity or scope, metric, period, scale or currency, sign, basis, missing operand). The learned channel is fused with an exact rule checker and calibrated, and its threshold is certified with Learn-then-Test. We evaluate on a new benchmark of 788 answers to 394 questions about 48 US and Sri Lankan annual reports, labelled by separate blind passes of Claude rather than by people. On Sri Lankan reports, which have no XBRL, the fused detector `[RESULT: beats / does not beat]` the rule checker alone on span F1 (`[RESULT: paired difference, 95% CI]`). A threshold certified on US filings `[RESULT: holds / fails]` on Sri Lankan reports, and recalibration on 100 local labels `[RESULT: restores / does not restore]` it. Our pre-registered primary comparison, wrong-context recall with and without XBRL supervision, could not be tested: the labels mark only 9 wrong-context spans across all 788 answers, so the test split holds fewer than the 20 such answers the pre-registered rule needs, and the comparison is reported as untestable.
 
 ## 1. Introduction
 
@@ -14,14 +14,16 @@ Retrieval-augmented question answering over annual reports is now routine, and i
 
 Two families of tools address answer faithfulness. Rule-based checkers recompute every number and trace it to a table cell; on template answers they are close to perfect, but they say nothing about claims without a printed number, and they reject correct claims phrased in ways their rules do not cover. Learned span detectors such as LettuceDetect (Kovács and Recski, 2025 `[verify]`) mark unsupported answer tokens and generalise across phrasing, but they are trained on general retrieval-augmented data (RAGTruth; Niu et al., 2024) in which the subtle failures of financial answers are rare.
 
-This paper asks whether free, automatically mined supervision closes that gap. US public companies file their financial statements in XBRL, where every fact carries its concept, period, unit and dimensional context. For any fact an answer might cite, the same filing usually holds siblings that differ in exactly one part of that context and carry a different value. Stating a sibling's value under the original fact's context produces a realistic wrong-context error, with an exact label for the part that differs. We use this as a *training* signal for a span detector, not as a lookup at inference.
+We built the detector around one way to close that gap: free, automatically mined supervision. US public companies file their financial statements in XBRL, where every fact carries its concept, period, unit and dimensional context. For any fact an answer might cite, the same filing usually holds siblings that differ in exactly one part of that context and carry a different value. Stating a sibling's value under the original fact's context produces a realistic wrong-context error, with an exact label for the part that differs. We use this as a *training* signal for a span detector, not as a lookup at inference.
+
+We registered three hypotheses before the test set was opened (§5.3). The first, and the primary comparison, was that XBRL-mined negatives raise recall on wrong-context errors (D-H1). Our benchmark cannot test it. Its questions were written around wrong-context traps, but the labels mark only 9 entity, period or metric spans in all 788 answers, against 130 value spans, and the rule needs 20 such answers on test. D-H1 is reported as untestable, as the rule says. The paper's results rest on the two hypotheses that remain testable: whether the learned channel adds to exact rules on Sri Lankan reports, which have no XBRL (D-H2), and whether a threshold certified on US filings holds there, and whether 100 local labels restore it (D-H3).
 
 Our contributions:
 
-1. **XBRL-mined wrong-context supervision** for a span detector: 14,512 labelled examples from the latest 10-Ks of 120 companies that never appear in the evaluation.
+1. **XBRL-mined wrong-context supervision** for a span detector: 14,512 labelled examples from the latest 10-Ks of 120 companies that never appear in the evaluation. Its pre-registered test (D-H1) proved untestable on our benchmark (§5.3).
 2. **A relation-slot head** that names the failing part of a flagged span, alongside the span head, so a downstream repairer or reviewer knows what to fix.
 3. **A two-channel detector**, the learned channel fused with an exact rule checker and calibrated, evaluated on natural answers (labelled by separate blind Claude passes, not by people; §5.1) with the false-alarm rate on correct answers as a headline metric.
-4. **A cross-market test**: a threshold certified on US filings, applied to Sri Lankan annual reports as it is and after recalibration with 25 to 200 local labels.
+4. **A cross-market test**: a threshold certified on US filings, applied to Sri Lankan annual reports as it is and after recalibration with 100 and 200 local labels and with all available.
 
 We do not claim the first financial hallucination detector, nor the first typed or span-plus-evidence detector; related systems exist (§2).
 
@@ -97,7 +99,7 @@ Facts come from the latest 10-K of each of 120 FinQA companies, which are traini
 
 ### 4.4 Fusion and calibration
 
-For each numeric claim, features from both channels (Channel B's verdict, the number of failing slots and whether it has a correct value for the claim; Channel A's highest and mean token probability over the claim and whether any token passes 0.5; whether the claim is a percentage and whether it carries a direction word) feed a logistic regression that predicts whether the claim is wrong. Isotonic regression calibrates it on the calibration split. An answer's risk is the probability that at least one claim is wrong, treating claims as independent (0.5 when there is nothing to check). The send-or-flag threshold is chosen by Learn-then-Test at α = 0.10 on the calibration split, so the share of unsupported answers among those passed is certified (companion policy paper).
+For each numeric claim, features from both channels (Channel B's verdict, the number of failing slots and whether it has a correct value for the claim; Channel A's highest and mean token probability over the claim and whether any token passes 0.5; whether the claim is a percentage and whether it carries a direction word) feed a logistic regression that predicts whether the claim is wrong. Isotonic regression calibrates it on the calibration split. On the benchmark the fusion has no frozen weights: it is refitted on the calibration answers. An answer's risk is the probability that at least one claim is wrong, treating claims as independent (0.5 when there is nothing to check). The send-or-flag threshold is chosen by Learn-then-Test at α = 0.10 and δ = 0.05 on the calibration split, so the share of unsupported answers among those passed is certified (companion policy paper).
 
 ## 5. Experimental setup
 
@@ -135,13 +137,13 @@ Growth questions hold 88 of the 177 incorrect answers. The labelled spans by slo
 
 ### 5.2 Systems
 
-- Channel A, with and without XBRL-mined negatives (the primary ablation), and without the slot head.
+- Channel A, with and without XBRL-mined negatives (the primary comparison, D-H1), and without the slot head.
 - Channel B alone; A alone; A + B fused.
 - Released detectors: LettuceDetect v1-large and v2 mmBERT (risk = highest span confidence), HHEM-2.1-Open (risk = 1 − consistency) and Granite Guardian 4.1-8B at 4-bit, groundedness criterion, no thinking (risk = 1 if it judges the answer ungrounded). Every detector reads the same evidence text, focused as in §4.2 above 30 rows.
 
 ### 5.3 Metrics and hypotheses
 
-Span F1 by slot (character overlap between predicted and gold spans; answers labelled ambiguous are left out and reported separately), wrong-context recall (entity_scope, metric and period spans), the false-alarm rate on correct answers, AUROC, Brier score, ECE, and coverage at certified selective risk (α = 0.10). Intervals come from an issuer-clustered bootstrap (2,000 resamples). The hypotheses and their decision rules were registered before the test set was opened:
+Span F1 by slot (character overlap between predicted and gold spans; answers labelled ambiguous are left out and reported separately), wrong-context recall (entity_scope, metric and period spans), the false-alarm rate on correct answers, AUROC, Brier score, ECE, and coverage at certified selective risk (α = 0.10). In risk metrics an answer labelled ambiguous counts as unsafe and is reported separately. Intervals come from an issuer-clustered bootstrap: whole issuers resampled with replacement, 2,000 resamples, 95% percentile intervals, seed 0. Issuers, questions and answers are reported separately. The hypotheses and their decision rules were registered before the test set was opened ([preregistration](../preregistration.md) §2; D-102):
 
 | Hypothesis | Confirmed if | Rejected if |
 | --- | --- | --- |
@@ -149,7 +151,13 @@ Span F1 by slot (character overlap between predicted and gold spans; answers lab
 | D-H2. A + B beats B alone on Sri Lankan reports | Higher span F1, intervals not overlapping | No gain; rules suffice, reported as such |
 | D-H3. The US threshold fails on Sri Lanka; about 100 local labels restore it | Risk above α before, within α after | Holds without recalibration; also reported |
 
-For D-H3, the threshold is certified on US calibration answers, applied unchanged to the Sri Lankan test answers, then recertified on random draws of 25, 50, 100 and 200 Sri Lankan calibration labels.
+D-H1 is the paper's pre-registered primary comparison (pre-registration §3). "Higher" means that the 95% interval of the paired difference on the test split excludes zero in the stated direction; otherwise the hypothesis is rejected as "no difference". For D-H2 this paired interval, not a comparison of two separate intervals, decides. In detail:
+
+- **D-H1.** Each model's threshold, with and without XBRL negatives, is set on the calibration split so that it flags 10% of the correct answers there. Wrong-context recall, over test answers with an entity_scope, metric or period span, is compared at those thresholds. If test has fewer than 20 such answers, D-H1 is reported as untestable. The labels mark 9 such spans across all 788 answers (§5.1), so test holds at most 9 such answers and D-H1 is untestable.
+- **D-H2.** Span F1 of A + B minus span F1 of B, on the Sri Lankan test answers. B's spans are the claims it flags; A + B's are the claims the fused probability puts at 0.5 or more.
+- **D-H3.** The threshold is certified on US calibration answers and applied unchanged to the Sri Lankan test answers. It fails if the lower end of its Sri Lankan test risk interval is above α. It is restored if, recalibrated on 100 Sri Lankan calibration labels, its Sri Lankan test risk is at most α. The label-efficiency curve recalibrates it on random draws of 100 and 200 Sri Lankan calibration labels and on all of them. Sizes 25 and 50 were dropped before filing: at the send rates seen, they cannot certify α = 0.10 even with no error.
+
+Every detection metric was to be reported again on answers not labelled by code; no code label decides any answer here (§5.1), so the main analysis is that analysis.
 
 ## 6. Results
 
@@ -171,9 +179,9 @@ On template answers the rule checker alone reaches AUROC 0.997, and the calibrat
 
 ### 6.2 Natural answers (test split)
 
-- D-H1: `[RESULT: pre-registered rule: untestable if test has fewer than 20 wrong-context answers; the labels carry 9 wrong-context spans across all 788 answers, so give the test count and report D-H1 as the rule says]`
 - D-H2: `[RESULT]`
-- D-H3, with the label-efficiency curve: `[RESULT]`
+- D-H3, with the label-efficiency curve at 100 and 200 labels and all available: `[RESULT]`
+- D-H1: untestable under its pre-registered rule. The test split holds fewer than 20 answers with an entity_scope, metric or period span (all 788 answers carry 9 such spans; test answers with one: `[RESULT: n from the test labels]`).
 - Released detectors and the slot head's typed output against LettuceDetect v2's taxonomy head: `[RESULT]`
 - Where the learned channel adds value (RQ2): Sri Lankan reports, claims with no printed number, correct claims the rules reject: `[RESULT]`
 
