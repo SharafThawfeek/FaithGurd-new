@@ -12,7 +12,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import socket
+import subprocess
 import sys
 import threading
 import traceback
@@ -36,11 +38,14 @@ TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=u
          ".svg": "image/svg+xml"}
 CHANNEL_A_DIR = ROOT / "data" / "demo-models" / "channel-a" / "model"
 ADAPTER_DIR = ROOT / "data" / "demo-models" / "repair-v1" / "adapter"
+MAX_FIGURES = 25  # an answer with hundreds of figures would tie up the checker for everyone
 
 
 def friendly(err: Exception) -> str:
     """A message for the screen; the details go to the console."""
     if isinstance(err, UnknownExample):
+        if str(err).startswith("ask-"):
+            return "The demo was restarted (or this question is too old), so ask it again."
         return f"Unknown example {err}."
     if isinstance(err, InvalidOperation):
         return "A number in this text has too many digits for the demo. Try a shorter one."
@@ -60,7 +65,19 @@ def bad_answer(answer) -> str | None:
         return "That answer is too long for the demo (4,000 characters at most)."
     if any(ord(ch) > 0xFFFF for ch in answer):
         return "Emoji and other symbols outside the basic character set are not supported in the demo."
+    if len(re.findall(r"\d[\d,.]*", answer)) > MAX_FIGURES:
+        return f"That answer has too many figures for the demo ({MAX_FIGURES} at most)."
     return None
+
+
+def version() -> str:
+    """The code the server runs: the commit, and whether demo/ or src/ had changes not committed when it started."""
+    try:
+        head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True, timeout=5).stdout.strip()
+        dirty = subprocess.run(["git", "status", "--porcelain", "--", "demo", "src"], cwd=ROOT, capture_output=True, text=True, timeout=5).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return f"{head}{' + local changes' if dirty else ''}"
 
 
 class Server(ThreadingHTTPServer):
@@ -174,6 +191,7 @@ def main(argv: list[str] | None = None) -> None:
     except OSError:
         sys.exit(f"Port {args.port} is in use: is the demo already running? Close it, or start this one with --port {args.port + 1}.")
     Handler.demo = Demo()
+    Handler.demo.version = version()
     Handler.demo.prepare()
     if not args.no_models:
         from models import LiveModels

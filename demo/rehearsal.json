@@ -1,0 +1,114 @@
+{
+ "demo:fictional-bank": {
+  "What was the Group's profit after tax in 2025?": {
+   "answer": "The Group's profit after tax in 2025 was 14,212,560 thousand rupees.",
+   "recorded": "2026-10-29"
+  },
+  "By what percentage did the Group's profit after tax grow in 2025?": {
+   "answer": "The Group's profit after tax grew by 8.6% in 2025.",
+   "recorded": "2026-10-29"
+  },
+  "What was the Group's net interest income in 2025?": {
+   "answer": "The Group's net interest income in 2025 was 48,215,330 thousand rupees.",
+   "recorded": "2026-10-29"
+  },
+  "By what percentage did the Group's net interest income grow in 2025?": {
+   "answer": "The Group's net interest income grew by 9.09% in 2025.",
+   "recorded": "2026-10-29"
+  }
+ },
+ "LK:SUN": {
+  "What was the Group's profit for the year in 2026?": {
+   "answer": "The Group's profit for the year in 2026 was 5,035,750 Rs. '000.",
+   "recorded": "2026-10-29"
+  },
+  "By what percentage did the Group's profit for the year grow in 2026?": {
+   "answer": "The Group's profit for the year grew by 46.7% in 2026.",
+   "recorded": "2026-10-29"
+  },
+  "What was the Group's revenue in 2026?": {
+   "answer": "The Group's revenue in 2026 was 65,925,260 Rs. '000.",
+   "recorded": "2026-10-29"
+  },
+  "By what percentage did the Group's revenue grow in 2026?": {
+   "answer": "The Group's revenue grew by 10.9% in 2026.",
+   "recorded": "2026-10-29"
+  },
+  "By what percentage did basic earnings per share change?": {
+   "answer": "Basic earnings per share increased by 21.5% from Rs. 1.14 in 2025 to Rs. 1.78 in 2026.",
+   "recorded": "2026-10-29"
+  }
+ },
+ "US:KNSL": {
+  "What were Kinsale's total revenues in 2025?": {
+   "answer": "Kinsale's total revenues in 2025 were $1,873,987,000.",
+   "recorded": "2026-10-29"
+  },
+  "By what percentage did Kinsale's total revenues grow in 2025?": {
+   "answer": "Kinsale's total revenues grew by 18.4% in 2025.",
+   "recorded": "2026-10-29"
+  },
+  "What were Kinsale's net earned premiums in 2025?": {
+   "answer": "Kinsale's net earned premiums in 2025 were $1,575,842 thousand.",
+   "recorded": "2026-10-29"
+  },
+  "By what percentage did Kinsale's net earned premiums grow in 2025?": {
+   "answer": "Kinsale's net earned premiums grew by 16.9% in 2025.",
+   "recorded": "2026-10-29"
+  }
+ },
+ "LK:CFIN": {
+  "What was the Group's profit for the year in 2026?": {
+   "answer": "The Group's profit for the year in 2026 was 10,595,623 Rs. '000.",
+   "recorded": "2026-10-29"
+  },
+  "By what percentage did the Group's profit for the year grow in 2026?": {
+   "answer": "The Group's profit for the year grew by 57.4% in 2026.",
+   "recorded": "2026-10-29"
+  },
+  "What was the Group's net interest income in 2026?": {
+   "answer": "The Group's net interest income in 2026 was 14,002,435 thousand.",
+   "recorded": "2026-10-29"
+  },
+  "By what percentage did the Group's net interest income grow in 2026?": {
+   "answer": "The Group's net interest income grew by 11.2% in 2026.",
+   "recorded": "2026-10-29"
+  }
+ },
+ "LK:SAMP": {
+  "What was the Group's profit for the year in 2025?": {
+   "answer": "The Group's profit for the year in 2025 was Rs 32,571,337 thousand.",
+   "recorded": "2026-10-29"
+  },
+  "By what percentage did the Group's profit for the year grow in 2025?": {
+   "answer": "The Group's profit for the year grew by 13% in 2025.",
+   "recorded": "2026-10-29"
+  },
+  "What was the Group's net interest income in 2025?": {
+   "answer": "The Group's net interest income in 2025 was 83,571,515 thousand.",
+   "recorded": "2026-10-29"
+  },
+  "By what percentage did the Group's net interest income grow in 2025?": {
+   "answer": "The Group's net interest income grew by 1% in 2025.",
+   "recorded": "2026-10-29"
+  }
+ },
+ "LK:TKYO": {
+  "What was the Group's profit for the year in 2026?": {
+   "answer": "The Group's profit for the year in 2026 was 2,579,997,694 Rs.",
+   "recorded": "2026-10-29"
+  },
+  "By what percentage did the Group's profit for the year grow in 2026?": {
+   "answer": "The Group's profit for the year grew by 49.9% in 2026.",
+   "recorded": "2026-10-29"
+  },
+  "What was the Group's revenue from contracts with customers in 2026?": {
+   "answer": "The Group's revenue from contracts with customers in 2026 was 61,010,848,909 Rs.",
+   "recorded": "2026-10-29"
+  },
+  "By what percentage did the Group's revenue from contracts with customers grow in 2026?": {
+   "answer": "The Group's revenue from contracts with customers grew by 21.8% in 2026.",
+   "recorded": "2026-10-29"
+  }
+ }
+}

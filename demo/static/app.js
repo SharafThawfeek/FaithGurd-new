@@ -72,6 +72,7 @@ async function refreshStatus() {
     return h("span", { class: "pill", title: st.detail || "" }, h("span", { class: `dot ${st.state}` }), h("b", {}, name), text);
   };
   document.getElementById("status").replaceChildren(
+    s.version ? h("span", { class: "pill", title: "the code this server runs" }, h("b", {}, "code"), s.version) : null,
     h("span", { class: "pill" }, h("span", { class: "dot ready" }), h("b", {}, "Channel B"), "rules, live"),
     pill("Channel A", s.channel_a, s.stored.channel_a),
     h("span", { class: "pill", title: s.policy.detail }, h("span", { class: `dot ${s.policy.state}` }), h("b", {}, "Policy"),
@@ -506,7 +507,7 @@ function renderControl(d) {
   const certCard = h("section", { class: "card cert" }, h("h2", {}, "The certified setting"),
     h("div", { style: "font-size:17px;margin-bottom:6px" }, h("code", {}, cert.setting || "send<0.5,fix>0.6"), `   ·   α = ${cert.alpha ?? 0.1}   ·   δ = ${cert.delta ?? 0.05}`),
     h("div", {}, h("span", { class: "k" }, "Guarantee: "),
-      `with ${100 * (1 - (cert.delta ?? 0.05))}% confidence, at most ${100 * (cert.alpha ?? 0.1)}% of released answers (sent as is or repaired) contain a wrong number, for answers like the controlled-track calibration set (Learn-then-Test).`),
+      `with ${100 * (1 - (cert.delta ?? 0.05))}% confidence, at most ${100 * (cert.alpha ?? 0.1)}% of released answers (sent as is or repaired) contain an unsupported claim, as a share over many answers like the controlled-track calibration set (Learn-then-Test). It promises nothing about any single answer.`),
     h("div", {}, h("span", { class: "k" }, "Certified on: "),
       `${(cert.calibration_items || 0).toLocaleString()} calibration answers; ${cert.certified || "–"} settings pass; chosen setting's p = ${cert.p_value ? Number(cert.p_value).toExponential(1) : "–"} (answer-level)` +
       (cert.p_issuer ? `, ${fmt(cert.p_issuer, 3)} treating each issuer as one draw.` : ".")),
@@ -515,7 +516,10 @@ function renderControl(d) {
       `${pct(t.residual_risk)} wrong among released, ${pct(t.useful_coverage)} useful.`) : null,
     h("h4", {}, "Certification budget: how many calibration answers are needed"),
     budgetChart(cert.budget_curve || []),
-    h("p", { class: "note" }, "Controlled track (injected errors on FinQA and TAT-QA): development results; the human-labelled test comes next. Real pilot answers are outside the certified distribution."));
+    d.group === "ask" || d.group === "pilot" ? h("div", { class: "verdictbox warn" },
+      "Not certified for this answer: the guarantee is for answers like the controlled-track calibration set (template answers with planted errors). "
+      + "Real reports and own questions are outside it; the certificate for natural answers is computed on the locked calibration answers in phase 7.") : null,
+    h("p", { class: "note" }, "Controlled track (injected errors on FinQA and TAT-QA): development results. The locked test set is labelled by separate blind Claude passes, not by people (D-103, D-105); its system results come next."));
   return h("div", {}, h("div", { class: "grid2" }, decide, feats), h("div", { style: "height:14px" }), certCard);
 }
 
@@ -664,7 +668,7 @@ function renderCorrect(d) {
   const key = `${d.id}|${d.answer}`;
   const live = state.trainedLive[key];
   const tview = live || c.trained;
-  const trained = repairColumn(d, tview, "Trained repairer v1 candidate",
+  const trained = repairColumn(d, tview, "Trained repairer v1 (frozen, D-101)",
     "Qwen3.5-2B + LoRA, trained to write edit programs; the same executor and gate.", chose === "abstain" ? "withheld" : "comparison");
   if (!tview) put(trained, h("p", { class: "note" }, d.edited ? "No stored output for this edited answer." : "No stored output for this answer."));
   if (c.live_repairer) {
@@ -783,7 +787,7 @@ function renderResults() {
       Object.keys(r.repair_reports).map((k) => h("option", { value: k, selected: k === name }, k)));
     put(body, h("section", { class: "card" }, h("h2", {}, "Repairers on the same 500 controlled-track development answers (411 wrong)"),
       resTable(REPAIR_COLS, r.repairers),
-      h("p", { class: "note" }, "From runs/repair/rules and runs/repair/kaggle/*/results.json; stage A under the current gate (D-095). Bold: the rule repairer and the trained v1 candidate.")),
+      h("p", { class: "note" }, "From runs/repair/rules and runs/repair/kaggle/*/results.json; stage A under the current gate (D-095). Bold: the rule repairer and the frozen repairer v1 (D-101). The free-rewriting row is the frozen R-H1 comparator (D-110).")),
       r.pilot_repair.length ? h("section", { class: "card" }, h("h2", {}, "Real AI answers (pilot, 104 answers, 23 wrong; development)"),
         resTable(REPAIR_COLS, r.pilot_repair),
         h("p", { class: "note" }, "Counts only, from runs/pilot/v1run-repair-v1. On natural answers the rules correct more than the trained repairer.")) : null,
@@ -792,7 +796,8 @@ function renderResults() {
     put(body, h("section", { class: "card" }, md(r.reports.policy)));
   }
   main.replaceChildren(
-    h("div", { class: "banner" }, "Development results; the human-labelled test comes next. These numbers come from the controlled track (injected errors) and Kaggle development runs, not from the locked test set."),
+    h("div", { class: "banner" }, "Development results, not the locked test set: these numbers come from the controlled track (injected errors) and Kaggle development runs. "
+      + "The locked test set (788 answers) is labelled by separate blind Claude passes, not by people (D-103, D-105); on its 672 numeric answers the rule checker flags 144 of the 170 labelled incorrect and 110 of the 502 labelled right (runs/main/labels). System results on it come next."),
     h("div", { class: "tabs" }, tabs.map(([k, label]) => h("button", { class: `tab${state.resultsTab === k ? " active" : ""}`,
       onclick: () => { state.resultsTab = k; renderResults(); } }, label))),
     body);

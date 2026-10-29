@@ -171,6 +171,41 @@ def test_own_question_on_the_fictional_bank_template_answer_sent_and_planted_err
             assert figures_match(rerun["output"]["text"], answer), e["label"]  # the repair gives the right figures back
 
 
+def test_questions_outside_the_report_are_refused_and_unchecked_parts_are_said(demo):
+    bank = "demo:fictional-bank"
+    assert "Apple" in demo.ask_draft(bank, "What was Apple's profit after tax in 2025?")["error"]
+    assert "error" in demo.ask(bank, "What was Apple's profit after tax in 2025?", "Apple's profit was Rs. 5 million.")
+    assert "2027" in demo.ask_draft(bank, "What was the Group's profit after tax in 2027?")["error"]
+    q = "What was the Group's profit after tax in 2025?"
+
+    def notes(question, answer):
+        return " ".join(demo.ask(bank, question, answer)["caveats"])
+
+    assert "count" in notes(q, "Group profit after tax was Rs. 14,213 million in 2025, and the Group employed 1,850 people.")
+    assert "not the words" in notes(q, "Group profit after tax was Rs. 14,213 million in 2025, driven by strong demand.")
+    assert "asks about the Bank" in notes("What was the Bank's profit after tax in 2025?", "The Group's profit after tax was Rs. 14,213 million in 2025.")
+    assert notes(q, "Group profit after tax was Rs. 14,213 million in 2025.") == ""
+    assert bad_answer(" ".join(f"Item {i} was Rs. {i} million." for i in range(30)))
+
+
+def test_a_sentence_whose_rate_does_not_fit_its_own_figures_is_flagged(demo):
+    from ask import contradictions, make_item
+
+    from faithguard.detect import detect
+
+    bank = demo.reports["demo:fictional-bank"]
+    q = "By what percentage did the Group's profit after tax grow in 2025?"
+
+    def flagged(text):
+        item = make_item(bank, "t", q, text, "typed")
+        return contradictions(text, detect(item))
+
+    assert flagged("Group profit after tax fell 9.3% from Rs. 13,004 million in 2024 to Rs. 14,213 million in 2025.")
+    assert flagged("Group profit after tax rose 12.4% from Rs. 13,004 million in 2024 to Rs. 14,213 million in 2025.")
+    assert not flagged("Group profit after tax rose 9.3% from Rs. 13,004 million in 2024 to Rs. 14,213 million in 2025.")
+    assert not flagged("Group profit after tax was Rs. 14,213 million in 2025, up 9.3%.")
+
+
 def test_planted_errors_are_real_errors_and_offered_only_where_the_checker_can_see_them(demo):
     bank = "demo:fictional-bank"
     q = "By what percentage did the Group's profit after tax grow in 2025?"

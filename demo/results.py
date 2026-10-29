@@ -16,9 +16,9 @@ REPAIRERS = [  # results file under runs/repair, label, has a gate
     ("rules/results.json", "Rule repairer v0 (no training; run on the laptop)", True),
     ("kaggle/eval-zero-shot-2b/results.json", "Qwen3.5-2B zero-shot (edit programs)", True),
     ("kaggle/eval-zero-shot-9b-free/results.json", "Qwen3.5-9B zero-shot (edit programs, free replies)", True),
-    ("kaggle/eval-rewrite-sft/results.json", "Free rewriting, fine-tuned (baseline, no gate)", False),
+    ("kaggle/eval-rewrite-v1/results.json", "Free rewriting, same backbone and data as v1 (frozen R-H1 comparator, D-110; no gate)", False),
     ("kaggle/eval-sft-current/results.json", "Stage A: fine-tuned edit programs", True),
-    ("kaggle/eval-v1/results.json", "Repairer v1 candidate (stage A + arithmetic slips)", True),
+    ("kaggle/eval-v1/results.json", "Repairer v1 (frozen, D-101: stage A + arithmetic slips)", True),
 ]
 PILOT = "runs/pilot/v1run-repair-v1/summary.json"  # natural answers, counts only (D-095 adapter, current code)
 

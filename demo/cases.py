@@ -27,7 +27,8 @@ from faithguard.pipeline import run
 from faithguard.policy import ThresholdPolicy
 from faithguard.records import Item, RepairOutput, read_jsonl
 
-from ask import Unanswerable, candidate_questions, caveats, draft, figures_match, make_item, plant, read_question, reports_of
+from ask import (Unanswerable, candidate_questions, caveats, contradictions, draft, figures_match, make_item, other_company, plant,
+                 read_question, released_problems, reports_of)
 from views import catch_view, channel_a_view, control_view, evidence_view, jsonable, output_view, repair_view
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -67,7 +68,9 @@ ANSWER_SOURCES = {
     "ai": "Qwen3.5-2B, live on this laptop (the base model: no FaithGuard training)",
     "template": "a template, written from the cells the question names",
     "typed": "typed in the demo",
+    "recorded": "Qwen3.5-2B, its answer to this question recorded at rehearsal (the live AI is not loaded)",
 }
+REHEARSAL = Path(__file__).resolve().parent / "rehearsal.json"  # the live AI's answers to the script's questions
 MAX_SUGGESTIONS = 4
 
 
@@ -163,6 +166,7 @@ class Demo:
         self.ask_lock = threading.Lock()
         self.ask_count = 0
         self.run_id = secrets.token_hex(2)  # own questions' ids differ between server starts
+        self.recorded = json.loads(REHEARSAL.read_text(encoding="utf-8")) if REHEARSAL.exists() else {}
         self._chips: dict[str, dict] = {}
         self._chips_lock = threading.Lock()
 
@@ -194,7 +198,7 @@ class Demo:
         return {**models, "policy": {"state": "ready" if self.policy else "failed",
                                      "detail": "LightGBM outcome models, live on CPU" if self.policy else
                                      f"no {POLICY.relative_to(ROOT)}: run `faithguard policy`; threshold v0 decides meanwhile"},
-                "stored": stored, "examples": len(self.examples)}
+                "stored": stored, "examples": len(self.examples), "version": getattr(self, "version", "")}
 
     def example(self, example_id: str) -> Example:
         e = self.examples.get(example_id) or self.asked.get(example_id)
@@ -245,7 +249,7 @@ class Demo:
         elif cached.get("trained_repair"):
             c = cached["trained_repair"]
             rep = RepairOutput.model_validate(c["output"])
-            trained = repair_view(item, det, rep, "laptop", f"trained repairer v1 candidate, computed earlier on this laptop's GPU in {c['seconds']:.1f} s")
+            trained = repair_view(item, det, rep, "laptop", f"trained repairer v1 (frozen, D-101), computed earlier on this laptop's GPU in {c['seconds']:.1f} s")
 
         rule = repair_view(item, det, final.repair, "live", "rule repairer v0, live") if final.repair else None
         if rule is None and final.action != "send":
@@ -262,7 +266,8 @@ class Demo:
             "generator": e.item.answer.generator, "evidence": evidence_view(item, det),
             "report": {"id": report.id, "name": report.name, "real": report.real} if report else None, "planted": e.planted,
             "planted_on": e.planted_on, "planted_dropped": e.planted_dropped,
-            "caveats": caveats(item, det, final.action) if e.group == "ask" else [],
+            "caveats": (caveats(item, det, final.action) + self.released_contradictions(item, final) + released_problems(item, final))
+                       if e.group == "ask" else [],
             "edits": [{"label": label, "answer": answer, "expect": expect} for label, answer, expect in e.edits],
             "catch": catch_view(item, det, a_view),
             "control": control_view(item, det, final, self.policy, self.certificate),
@@ -296,7 +301,16 @@ class Demo:
             rep, seconds = self.models.repair(item, det)
         except Exception as err:
             return {"error": f"The trained repairer failed on this text ({type(err).__name__}); the rule repairer's result stands."}
-        return jsonable(repair_view(item, det, rep, "live", f"trained repairer v1 candidate, live on this laptop's GPU in {seconds:.1f} s"))
+        return jsonable(repair_view(item, det, rep, "live", f"trained repairer v1 (frozen, D-101), live on this laptop's GPU in {seconds:.1f} s"))
+
+    def released_contradictions(self, item: Item, final) -> list[str]:
+        """A sentence of the released text (sent or repaired) that contradicts itself, said on screen (ask.contradictions)."""
+        if final.action not in ("send", "repair") or not final.text:
+            return []
+        if final.text == item.answer.text:
+            return contradictions(final.text, final.detector)
+        released = item.model_copy(update={"answer": item.answer.model_copy(update={"text": final.text})})
+        return contradictions(final.text, detect(released))
 
     # -- ask your own question ----------------------------------------------
 
@@ -349,12 +363,21 @@ class Demo:
 
     def ask_ai(self, report_id: str, question: str) -> dict:
         r = self.report(report_id)
+        if (problem := other_company(r, question)):
+            return {"error": problem}
+        recorded = self.recorded.get(r.id, {}).get(" ".join(question.split()))
         if not self.ai_ready():
+            if recorded:  # the AI is off (no GPU, or started with --no-models): the answer it gave this question at rehearsal
+                self.generated[(r.id, question.strip(), recorded["answer"])] = "recorded"
+                return {"answer": recorded["answer"], "source": "recorded", "by": f"{ANSWER_SOURCES['recorded']} on {recorded['recorded']}"}
             return {"error": "The AI is not loaded on this laptop (it needs the GPU and the model files): "
                              "write the answer from the table, or type one."}
         try:
             text, seconds = self.models.answer(question, r.evidence)
         except Exception as err:
+            if recorded:
+                self.generated[(r.id, question.strip(), recorded["answer"])] = "recorded"
+                return {"answer": recorded["answer"], "source": "recorded", "by": f"{ANSWER_SOURCES['recorded']} on {recorded['recorded']}"}
             return {"error": f"The AI could not answer ({type(err).__name__}). Write the answer from the table, or type one."}
         if not text:
             return {"error": "The AI gave an empty answer. Ask again in other words, or type an answer."}
@@ -363,6 +386,8 @@ class Demo:
 
     def ask_draft(self, report_id: str, question: str) -> dict:
         r = self.report(report_id)
+        if (problem := other_company(r, question)):
+            return {"error": problem}
         try:
             text = draft(r, question)
         except Unanswerable as err:
@@ -373,6 +398,8 @@ class Demo:
     def ask(self, report_id: str, question: str, answer: str) -> dict:
         """Register the question and its answer as an example of its own, and run it."""
         r = self.report(report_id)
+        if (problem := other_company(r, question)):
+            return {"error": problem}
         source = self.generated.get((r.id, question.strip(), answer), "typed")
         with self.ask_lock:
             self.ask_count += 1

@@ -129,8 +129,9 @@ async function refreshStatus() {
   if (!s.error) state.status = s;
   const r = s.repairer || {};
   const el = document.getElementById("ai");
-  const text = r.state === "ready" ? "AI ready (live on this laptop)" : r.state === "loading" ? "AI loading…" : "AI not loaded: answers come from the table";
-  el.replaceChildren(h("span", { class: `dot ${r.state === "ready" ? "ready" : r.state === "loading" ? "loading" : ""}` }), text);
+  const text = r.state === "ready" ? "AI ready (live on this laptop)" : r.state === "loading" ? "AI loading…" : "AI not loaded: recorded or table answers";
+  el.replaceChildren(h("span", { class: `dot ${r.state === "ready" ? "ready" : r.state === "loading" ? "loading" : ""}` }), text,
+    s.version ? h("span", { class: "ver", title: "the code this server runs" }, ` · code ${s.version}`) : null);
   updateButtons();
   if (r.state === "loading" || (s.channel_a && s.channel_a.state === "loading")) setTimeout(refreshStatus, 2000);
 }
@@ -151,7 +152,8 @@ function renderAsk() {
   if (!r) { box.replaceChildren(h("div", { class: "card" }, "Loading the reports…")); return; }
   const select = h("select", { id: "report", "aria-label": "Company report",
     onchange: (ev) => { state.report = ev.target.value; state.question = ""; state.answer = ""; state.seq++; state.data = state.original = state.planted = state.tricks = null; renderAsk(); renderResult(); } },
-  state.reports.map((x) => h("option", { value: x.id, selected: x.id === r.id }, x.real ? `${x.name} (real annual report, ${x.country === "LK" ? "Sri Lanka" : "US"})` : x.name)));
+  state.reports.map((x) => h("option", { value: x.id, selected: x.id === r.id },
+    x.real ? `${x.name} (real annual report, ${x.country === "LK" ? "Sri Lanka" : "US"}, development set)` : x.name)));
   const input = h("input", { id: "question", class: "q", type: "text", maxlength: 300, autocomplete: "off", spellcheck: "false",
     placeholder: "Type a question, or pick one below", "aria-label": "Your question",
     oninput: (ev) => setQuestion(ev.target.value),
@@ -159,7 +161,7 @@ function renderAsk() {
   input.value = state.question;
   const more = (r.line_items || []).slice(0, 10);
   const typed = state.typing ? [
-    h("div", { class: "label" }, "Your own answer (right or wrong)"),
+    h("div", { class: "label" }, "Paste an answer from any AI (for example ChatGPT), or type your own, right or wrong"),
     (() => {
       const t = h("textarea", { id: "typed", "aria-label": "Your own answer", placeholder: "For example: The Group's profit for the year grew by 10% in 2026.",
         oninput: (ev) => { state.answer = ev.target.value; updateButtons(); } });
@@ -170,6 +172,9 @@ function renderAsk() {
   ] : null;
   box.replaceChildren(h("section", { class: "card" },
     h("div", { class: "label" }, "1. Pick a company report"), select,
+    h("div", { class: "hint" }, r.real
+      ? "FaithGuard sees this report's two main statements (income statement and balance sheet), not its notes. These five reports are development reports: the checker's rules were tuned on them; the 48 test and calibration reports stay locked and are not in the demo."
+      : "Made-up figures, for showing each kind of mistake."),
     h("div", { class: "label" }, "2. Ask a question about it"), input,
     r.suggestions.length ? h("div", { class: "chips" }, r.suggestions.map((s) => h("button", { class: "chip", onclick: () => setQuestion(s) }, s))) : null,
     more.length ? h("div", { class: "chips more" }, h("span", { class: "hint" }, "Other figures you can ask about: "),
@@ -189,7 +194,7 @@ function renderAsk() {
 function updateButtons() {
   const busy = state.busy, hasQ = state.question.trim().length > 0;
   const set = (id, off) => { const el = document.getElementById(id); if (el && !(busy && busy.id === id)) el.disabled = off; };
-  set("askai", !!busy || !hasQ || !aiReady());
+  set("askai", !!busy || !hasQ);
   set("asktable", !!busy || !hasQ);
   set("check", !!busy || !hasQ || !state.answer.trim());
   for (const id of ["report", "question", "typed", "toggle", "back"]) set(id, !!busy);
@@ -199,9 +204,9 @@ function updateButtons() {
     if (btn && !btn.querySelector(".spin")) { btn.disabled = true; btn.replaceChildren(h("span", { class: "spin" }), busy.text, " ", h("span", { class: "secs" })); }
   }
   const hint = document.getElementById("aihint");
-  if (hint) hint.textContent = aiReady() ? "The AI is a small AI model running live on this laptop, with no FaithGuard training. It takes a few seconds."
+  if (hint) hint.textContent = aiReady() ? "The AI is Qwen3.5-2B, a small model running live on this laptop, with no FaithGuard training (a few seconds). The benchmark's answers came from 9-12B models; bigger models such as ChatGPT make fewer mistakes, and FaithGuard checks any of them: paste their answer under “type your own answer”."
     : state.status && state.status.repairer && state.status.repairer.state === "loading" ? "The AI is still loading (about a minute after the demo starts)."
-      : "The AI is not loaded on this laptop, so take the right answer from the table, or type your own.";
+      : "The live AI is not loaded on this laptop: “Ask the AI” gives its answer recorded at rehearsal for the scripted questions; otherwise take the answer from the table, or type your own.";
 }
 
 function startBusy(id, text) {
@@ -214,7 +219,9 @@ function startBusy(id, text) {
 
 // the server's messages for questions the table answer cannot handle, in plain words
 const TABLE_ERRORS = [
-  [/no line item that this question names/, "The report has no line for that. Try one of the suggested questions, ask the AI, or type your own answer."],
+  [/no line item that this question names/, "FaithGuard could not match your question to a line of the two statements: check the spelling, use the line's name as the report prints it, or pick one below."],
+  [/report covers .* only/, null],  // already plain: shown as it is
+  [/is .*'s report, and the question asks about/, null],
   [/printed in brackets/, "That line is a cost the report prints in brackets, and the table answer skips those. Ask the AI or type your own answer."],
   [/more than one line item/, "The question names more than one line of the report. Ask about one at a time."],
   [/rows called/, "The report has more than one line with that name. Say which one you mean (for example current or non-current)."],
@@ -226,14 +233,14 @@ const TABLE_ERRORS = [
 function askError(msg) {
   const el = document.getElementById("askerr");
   if (!el) return;
-  const plain = msg ? (TABLE_ERRORS.find(([re]) => re.test(msg)) || [null, msg])[1] : "";
+  const plain = msg ? (TABLE_ERRORS.find(([re]) => re.test(msg)) || [null, msg])[1] || msg : "";
   el.textContent = plain; el.hidden = !plain;
   if (plain) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 async function ask(kind) {
   const r = report(), question = state.question;
-  if (state.busy || !r || !question.trim() || (kind === "ai" && !aiReady())) return;
+  if (state.busy || !r || !question.trim()) return;  // with the AI off, the server answers with its rehearsal recording, if any
   askError("");
   const done = kind === "ai" ? startBusy("askai", "The AI is reading the report…") : startBusy("asktable", "Looking it up…");
   const out = await api(kind === "ai" ? "/api/ask/ai" : "/api/ask/draft", { report: r.id, question }, kind === "ai" ? 90 : 30);
@@ -270,9 +277,11 @@ function marked(d) {
   // for an up/down mistake the direction word is what is crossed out, not the number
   const text = d.answer;
   const spans = [];
+  const loose = unknownLine(d);
   for (const c of d.catch.claims) {
     const limited = limitationOf(d, c);
-    const cls = c.verdict === "supported" ? "ok" : limited || c.verdict !== "unsupported" || c.missing ? "unsure" : "bad";
+    const unread = loose && c.verdict === "supported" && !(c.intended && c.intended.metric);
+    const cls = unread ? "unsure" : c.verdict === "supported" ? "ok" : limited || c.verdict !== "unsupported" || c.missing ? "unsure" : "bad";
     const signOnly = cls === "bad" && c.slots.includes("sign") && c.direction_span && !state.planted?.kind?.match(/^(digit|scale)$/);
     if (signOnly) {
       spans.push({ start: c.direction_span[0], end: c.direction_span[1], cls: "bad", tip: c.expected ? `the report says ${c.expected}` : "wrong direction" });
@@ -310,14 +319,44 @@ function repaired(check) {
 
 const limited = (d) => d.catch.claims.some((c) => c.verdict !== "supported" && limitationOf(d, c));
 
+const has = (d, prefix) => (d.caveats || []).some((c) => c.startsWith(prefix));
+const contradicts = (d) => has(d, "The sentence contradicts itself") || has(d, "Careful, this fix is not trustworthy");
+const unknownLine = (d) => has(d, "Unknown line item");
+const shaky = (d) => has(d, "“Attributable to”") || (d.output.action === "repair" && (d.caveats || []).some((c) => /printed in brackets/.test(c)));
+
 function verdict(d) {
   const a = d.output.action;
   const claims = d.catch.claims;
   const wrong = claims.filter((c) => c.verdict !== "supported").length;
+  if (state.planted && a === "send") {
+    return h("div", { class: "verdict abstain" }, h("div", { class: "icon" }, "!"),
+      h("div", {}, h("div", { class: "head" }, "FaithGuard missed your planted mistake."),
+        h("div", { class: "sub" }, "It sent the answer with the mistake in it. This is one of the cases it cannot see yet; step 1 shows what it checked.")));
+  }
+  if ((a === "send" || a === "repair") && contradicts(d)) {
+    return h("div", { class: "verdict abstain" }, h("div", { class: "icon" }, "!"),
+      h("div", {}, h("div", { class: "head" }, "Careful: the answer FaithGuard sent does not add up."),
+        h("div", { class: "sub" }, "Each number matches the report on its own, but the answer as a whole is not right. FaithGuard does not yet check that (a known limitation); see below.")));
+  }
+  if ((a === "send" || a === "repair") && unknownLine(d)) {
+    return h("div", { class: "verdict abstain" }, h("div", { class: "icon" }, "?"),
+      h("div", {}, h("div", { class: "head" }, "FaithGuard found the figure in the report, but could not tell which line the question is about."),
+        h("div", { class: "sub" }, "So it could not really check the answer (a known limitation). Ask with the line's name as the report prints it.")));
+  }
+  if (a === "repair" && shaky(d)) {
+    return h("div", { class: "verdict abstain" }, h("div", { class: "icon" }, "!"),
+      h("div", {}, h("div", { class: "head" }, "FaithGuard changed this answer, but this is a case it often gets wrong."),
+        h("div", { class: "sub" }, "Check the changed figure against the report yourself (a known limitation; see below).")));
+  }
   if (a === "send") {
     return h("div", { class: "verdict send" }, h("div", { class: "icon" }, "✓"),
       h("div", {}, h("div", { class: "head" }, claims.length ? "Every number checks out." : "No number to check."),
-        h("div", { class: "sub" }, claims.length ? "FaithGuard sends the answer unchanged." : "FaithGuard sends the answer as it is.")));
+        h("div", { class: "sub" }, claims.length ? "FaithGuard sends the answer unchanged. It checks the numbers, not the words around them." : "FaithGuard sends the answer as it is.")));
+  }
+  if (a === "repair" && !limited(d) && claims.filter((c) => c.verdict !== "supported").every((c) => c.slots.length && c.slots.every((s) => s === "sign"))) {
+    return h("div", { class: "verdict repair" }, h("div", { class: "icon" }, "✎"),
+      h("div", {}, h("div", { class: "head" }, "The direction was wrong (up instead of down, or the other way). FaithGuard fixed it."),
+        h("div", { class: "sub" }, "It worked out the direction from the report's figures, and checked the fix before sending it.")));
   }
   if (a === "repair" && limited(d)) {
     return h("div", { class: "verdict abstain" }, h("div", { class: "icon" }, "!"),
@@ -331,7 +370,7 @@ function verdict(d) {
   }
   return h("div", { class: "verdict abstain" }, h("div", { class: "icon" }, "!"),
     h("div", {}, h("div", { class: "head" }, "FaithGuard holds the answer back."),
-      h("div", { class: "sub" }, "It only sends answers it can stand behind. Step 2 below says why it stopped this one.")));
+      h("div", { class: "sub" }, "It holds back answers it cannot check or fix. Step 2 below says why it stopped this one.")));
 }
 
 const allChecked = (d) => d.catch.claims.length > 0 && d.catch.claims.every((c) => c.verdict === "supported");
@@ -339,7 +378,8 @@ const allChecked = (d) => d.catch.claims.length > 0 && d.catch.claims.every((c) 
 function whyHeld(d) {
   const claims = d.catch.claims;
   if (!claims.length) return "The answer has no number in it, so there is nothing to check against the report, and FaithGuard does not send unchecked answers.";
-  if (claims.some((c) => c.missing)) return "The report does not contain the figure this answer needs, so FaithGuard can neither check it nor fix it.";
+  if (claims.some((c) => c.missing && !(c.intended && c.intended.metric))) return "FaithGuard could not tell which line of the two statements this number is about, so it can neither check it nor fix it. It may be in a note, under another name, or not in the report at all.";
+  if (claims.some((c) => c.missing)) return "The two statements FaithGuard was given do not contain the figure this answer needs, so it can neither check it nor fix it.";
   if (allChecked(d)) return "Every number matches the report, but FaithGuard's safety rule was tuned on smaller tables and is extra careful on big real reports, so it plays safe.";
   return "A number is wrong, and FaithGuard could not fix it safely, so it stops the answer instead.";
 }
@@ -349,6 +389,10 @@ function checkList(d) {
   if (!claims.length) return h("div", { class: "d" }, "There is no number in this answer to check.");
   const computed = (c) => ["growth", "diff", "share", "ratio"].includes(c.relation);
   return h("ul", { class: "check" }, claims.map((c) => {
+    if (c.verdict === "supported" && unknownLine(d) && !(c.intended && c.intended.metric)) {
+      return h("li", { class: "unsure" }, h("b", {}, `? ${c.text}`), " appears in the report, but FaithGuard could not tell which line the question means, so this is no real check.",
+        c.asked.length ? h("div", { class: "from" }, "It matched: ", cells(c, c.asked)) : null);
+    }
     if (c.verdict === "supported") {
       return h("li", { class: "ok" }, h("b", {}, `✓ ${c.text}`), " matches the report",
         c.asked.length ? h("div", { class: "from" }, computed(c) ? "Worked out from: " : "Found in: ", cells(c, c.asked)) : null);
@@ -360,7 +404,9 @@ function checkList(d) {
     }
     if (c.missing || c.verdict !== "unsupported" || (c.loose_match && !c.expected)) {
       return h("li", { class: "unsure" }, h("b", {}, `? ${c.text}`),
-        c.missing ? " can't be checked: the report does not contain this figure." : " can't be checked: FaithGuard could not find where this figure comes from in the report.");
+        c.missing && !(c.intended && c.intended.metric) ? " can't be checked: FaithGuard could not tell which line of the report it is about."
+          : c.missing ? " can't be checked: the two statements FaithGuard was given do not contain this figure."
+            : " can't be checked: FaithGuard could not find where this figure comes from in the report.");
     }
     const guess = c.loose_match || ["share", "ratio"].includes(c.relation);
     const rows = [];
@@ -377,20 +423,14 @@ const PLAIN_NOTES = [
   [/^“000”/, "The answer writes the unit as “000”, which FaithGuard misreads as a number (a known limitation)."],
   [/^The answer says “/, null],  // said in step 1
   [/^Every number is supported/, null],
+  [/^The sentence contradicts itself/, null],  // kept as it is, below
 ];
 function notes(d) {
-  const out = [];
+  const out = (d.caveats || []).filter((c) => c.startsWith("The sentence contradicts itself"));
   for (const c of d.caveats || []) {
     const hit = PLAIN_NOTES.find(([re]) => re.test(c));
     if (!hit) out.push(c);
     else if (hit[1] && !out.includes(hit[1])) out.push(hit[1]);
-  }
-  // an answer about another part of the company than the question asks about is checked as what it says it is
-  const m = /\b(Group|Bank|Company)\b/.exec(d.question.text || "");
-  const asked = m && m[1].toLowerCase();
-  const other = d.catch.claims.find((c) => c.verdict === "supported" && c.intended && c.intended.entity && asked && c.intended.entity !== asked);
-  if (other) {
-    out.push(`The answer gives the ${PART[other.intended.entity] || other.intended.entity}'s figure, but the question asked about the ${PART[asked] || asked}. FaithGuard checks each number against what the answer says it is.`);
   }
   if (d.catch.claims.some((c) => c.direction_span && c.relation === "cell")) {
     out.push("Words like “up” or “down” are checked only when they describe a change (a percentage or an amount of change).");
@@ -403,7 +443,8 @@ function renderResult() {
   const d = state.data;
   if (!d) { box.replaceChildren(); return; }
   const a = d.output.action;
-  const by = /^Qwen/.test(d.generator) ? "The AI answered:" : /^a template/.test(d.generator) ? "The answer written from the table:" : "Your answer:";
+  const by = /recorded at rehearsal/.test(d.generator) ? "The AI's answer to this question, recorded at rehearsal (the live AI is not loaded):"
+    : /^Qwen/.test(d.generator) ? "The AI answered:" : /^a template/.test(d.generator) ? "The answer written from the table:" : "Your answer:";
   const planted = state.planted ? h("div", { class: "planted" }, h("b", {}, `You planted a mistake: ${state.planted.title}.`),
     h("button", { id: "back", class: "btn", onclick: backToOriginal }, "Back to the original answer")) : null;
   const decide = a === "send" ? "Every number matches, so it is safe to send."
@@ -416,7 +457,8 @@ function renderResult() {
     h("div", { class: "final" }, repaired(rule.check)),
     rule.check.changes.some((c) => c.cells.length) ? h("div", { class: "from" }, "Worked out from: ",
       [...new Set(rule.check.changes.flatMap((c) => c.cells.map((id) => cellText(id, c.cell_labels[id]))))].join("  ·  ")) : null,
-    h("div", { class: "note" }, "Before sending, FaithGuard checked the fixed answer again: every number in it now matches the report, and only those numbers changed."),
+    limited(d) || shaky(d) || contradicts(d) ? null
+      : h("div", { class: "note" }, "Before sending, FaithGuard re-checked each new number against the report cell it came from. It does not check the words around them."),
   ] : a === "send" ? [h("div", { class: "final" }, d.output.text)]
     : a === "repair" ? [h("div", { class: "final" }, d.output.text || "")]
       : [h("div", { class: "final" }, "“I can't give a reliable answer to this from the report.”"),
@@ -484,8 +526,10 @@ function renderTricks() {
     h("div", { class: "tricks" }, t.edits.map((e) => {
       const n = trickName(e.label);
       return h("button", { class: `trick${state.planted && state.planted.answer === e.answer ? " on" : ""}`, title: e.answer, onclick: () => plant(e, n) },
-        h("b", {}, n.title), h("span", {}, n.detail));
-    })));
+        h("b", {}, n.title), h("span", {}, n.detail), e.expect === "send" ? h("span", { class: "miss" }, "FaithGuard misses this one") : null);
+    })),
+    h("p", { class: "hint" }, "These mistakes are planted where FaithGuard can usually see them, so most are caught. On the benchmark's 672 real AI answers with numbers, "
+      + "the checker flagged 144 of the 170 that the labels call wrong, and also 110 of the 502 right ones (labels by separate blind Claude passes, D-103)."));
   updateButtons();
 }
 
@@ -497,7 +541,12 @@ async function plant(e, name) {
   const data = await api("/api/run", { id: state.original.id, answer: e.answer, channel_a: false });
   state.busy = null;
   if (seq !== state.seq) { updateButtons(); return; }
-  if (data.error) { toast(data.error); updateButtons(); return; }
+  if (data.error) {
+    toast(data.error);
+    if (/restarted/.test(data.error)) { state.data = state.original = state.planted = state.tricks = null; renderResult(); }
+    updateButtons();
+    return;
+  }
   state.data = data;
   state.planted = { title: name.title.toLowerCase(), kind: name.kind, answer: e.answer };
   renderResult();

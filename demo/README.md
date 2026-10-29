@@ -39,8 +39,9 @@ Flags: `--no-models` (live pipeline only, stored model outputs), `--no-repairer`
 
 - Run `precompute.py --check-only` and read the last line.
 - Start the demo a minute early and wait for the green Channel A and Trained repairer pills. Close other programs using the GPU.
+- Check the **code** pill (full demo) or the line next to "AI ready" (simple page): it shows the commit the server runs. If it says "+ local changes", or is older than the last commit, restart the server.
 - Use the projector at 1366×768 or more, browser zoom 100-125%. ← and → (or PageUp/PageDown) move between steps when the cursor is not in the answer box.
-- If anything goes wrong with the models, restart with `--no-models`: every screen still works from stored outputs.
+- If anything goes wrong with the models, restart with `--no-models`: every screen still works from stored outputs, and **Ask the AI** answers the suggested questions with the AI's answers recorded at rehearsal (`demo/rehearsal.json`, labelled as recorded on screen).
 
 ## Click-by-click scripts
 
@@ -69,7 +70,7 @@ Each script takes about three minutes. Examples are numbered as in the sidebar; 
 ### Correct: repair (M.S.A Ahamed)
 
 1. **2. Entity error**, step **3 Correct**. Left, the rule repairer: `CALCULATE k1 = growth(t1r3c1, t1r3c2)` and `COPY k2 ← t1r3c1`. The five gate checks, all ✓. BEFORE/AFTER, with the cells behind each new number.
-2. Right, the trained repairer v1 candidate (Qwen3.5-2B + LoRA): the same program. Click **Run the trained repairer live on this answer** (3-6 s on the GPU).
+2. Right, the trained repairer v1, frozen in D-101 (Qwen3.5-2B + LoRA): the same program. Click **Run the trained repairer live on this answer** (3-6 s on the GPU).
 3. **5. Sign error**: one CALCULATE, and the executor turns *fell* into *rose* from the sign of the calculation.
 4. Real answer **9**: the rule repairer fixes the slip from the Company columns; the trained program uses a Group cell and the gate rejects it (provenance ✗, recheck ✗), so nothing wrong is sent.
 5. **6. Missing operand**: the rule repairer's **CANNOT_FIX**, with its reason and what the report does hold.
@@ -92,13 +93,14 @@ Suggested script (2 minutes): Tokyo Cement → *By what percentage did the Group
 
 Stress tests before the talk:
 - **The AI** (laptop GPU, 68 questions over the six reports, each judged against the tables by a separate reviewer): 61 handled well (28 right and sent, 24 wrong and repaired to the right figures, 9 wrong and withheld), no bad repairs, 3 sent with a wrong figure (two on a question that names no entity, so the Company's figure was a fair reading), 3 right answers withheld (Sampath). Sampath Bank's growth questions are withheld even when the AI is right (the policy is cautious on that report), so do not use them on stage.
-- **The one-click questions** (all 260 suggestions and line-item buttons over the six reports): every template answer sent; their 1,145 planted errors all caught and repaired back to the right figures, none missed.
-- Planted errors are offered only where the checker can see them: a direction flip only on a change ("a rise of 9.3%", not "rose to X"), a wrong entity only when the question or answer names one, a slip moved further if it happens to equal another ratio in the tables, and a variant whose repair would not give the figures back is left out (the screen says how many).
+- **The one-click questions** (all 260 suggestions and line-item buttons over the six reports): every template answer sent; their 1,145 planted errors all caught and repaired back to the right figures, none missed. This is by construction: planted errors are offered where the checker can usually see them (a direction flip only on a change, "a rise of 9.3%" and not "rose to X"; a wrong entity only when the question or answer names one; a slip moved further if it happens to equal another ratio in the tables; a variant whose repair would not give the figures back is left out, and the screen says how many). On AI or typed answers some planted errors are missed: the button says "FaithGuard misses this one", and the verdict says so. Say it: the natural numbers are the ones below.
+- **Natural answers** (the benchmark's 672 labelled numeric answers, labels by separate blind Claude passes, D-103): the rule checker flags 144 of the 170 labelled incorrect and 110 of the 502 labelled right (`runs/main/labels/report.md`). The screens say this beside the planted errors and on the Results banner.
+- **On-screen warnings for released answers** (demo-side, they change no decision): a sentence whose rate does not fit its own figures ("decreased 12.4% from Rs. 1.14 to Rs. 1.78"), the same figure written for two things, a count ("1,850 people") overwritten with a money figure, a repaired figure next to the wrong year, a question whose line item the checker could not name, an answer about another part of the company than the question asks, "attributable to" questions, restated columns, words that were not checked ("driven by ..."). Questions about another company, or a year the report lacks, are refused. None of them fired falsely on the 1,405 one-click and planted cases.
 
 ### Output and Results (closing, any member)
 
 - Step **Output** shows what the user gets: the original, the repaired answer with the cells behind its numbers, or a refusal with the evidence. Real answers also show the development reference answer, which the pipeline never sees.
-- **Results** (sidebar): detection, repair and policy tables from `runs/`, under the banner "development results; the human-labelled test comes next".
+- **Results** (sidebar): detection, repair and policy tables from `runs/`, under a banner that says they are development results, that the locked test set is labelled by separate blind Claude passes, not by people (D-103, D-105), and what the rule checker does on its 672 labelled numeric answers.
 
 ## Recording a backup video
 

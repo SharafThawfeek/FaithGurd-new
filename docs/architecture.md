@@ -45,7 +45,7 @@ The project has three research components, one per member, plus a shared benchma
 | Detection | M.L Ahamed | Which parts of the answer are wrong, and why? |
 | Decision policy | Sharaf | Should this answer be sent, repaired or withheld? |
 | Repair | M.S.A Ahamed | How can the wrong numbers be fixed without breaking anything else? |
-| Benchmark | All three | Real answers about US and Sri Lankan reports, labelled by people |
+| Benchmark | All three | Real answers about US and Sri Lankan reports, labelled by separate blind Claude passes (D-103, D-105) |
 
 ---
 
@@ -189,7 +189,7 @@ flowchart TD
     RP --> EV
 ```
 
-1. **Sources** are turned into two kinds of data. The *controlled track* plants known errors in template answers to FinQA and TAT-QA questions, so every outcome can be scored automatically and in bulk. The *benchmark* holds natural answers to real questions about current annual reports, labelled by people; it is what every paper's claims rest on.
+1. **Sources** are turned into two kinds of data. The *controlled track* plants known errors in template answers to FinQA and TAT-QA questions, so every outcome can be scored automatically and in bulk. The *benchmark* holds natural answers to real questions about current annual reports, labelled by separate blind Claude passes in the roles the plan gave to people (D-103, D-105); it is what every paper's claims rest on.
 2. **Training** happens on free Kaggle T4 GPUs: Channel A learns from controlled-track spans, RAGTruth and XBRL-mined examples; the repairer learns from controlled-track edit programs.
 3. **Fitting** of the small models (fusion, outcome models) runs on a laptop CPU.
 4. **Replay** plays out every action on every item and stores what each would have produced. The outcome models are fitted on these records, the policy is certified on them, and the papers' metrics are computed from them.
@@ -324,7 +324,7 @@ A rebuild of the benchmark replaces only the gold answers and keeps labels and i
 flowchart TD
     C["Candidate issuers per country<br/>33 Sri Lankan (CSE), 32 US (SEC)<br/>sector-stratified, seed 2026"] --> V["Tickers verified against the<br/>CSE and SEC lists; 3 replaced"]
     V --> S["Split manifest (manifests/splits.json)<br/>frozen by SHA-256"]
-    S --> T["test: 12 + 12<br/>locked, human-labelled"]
+    S --> T["test: 12 + 12<br/>locked, labelled (D-103)"]
     S --> K["calibration: 12 + 12<br/>thresholds, certificates"]
     S --> D["dev: 4 + 4<br/>pilot, design decisions"]
     S --> R["train: 5 + 4<br/>plus FinQA, TAT-QA, RAGTruth"]
