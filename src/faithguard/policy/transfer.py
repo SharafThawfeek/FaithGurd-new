@@ -6,7 +6,7 @@ certified on v0's calibration records. Three arms are then scored on v1's test r
 
     as-is          v0's outcome models and certified setting, unchanged
     recalibrated   v0's outcome models, with the setting certified again on n of v1's calibration
-                   records drawn at random (n = 25, 50, 100, 200, and all), so the label cost shows
+                   records drawn at random (n = 100, 200, and all; D-102), so the label cost shows
     refitted       outcome models fitted on v1's fit records, certified on v1's calibration records
 
 P-H3 (pre-registration §2, D-109): the v0 policy is unsafe as-is if the lower end of the issuer-clustered

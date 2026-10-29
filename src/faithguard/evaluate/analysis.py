@@ -222,6 +222,18 @@ def detection(items: Sequence[Item], gold: GoldStore, outputs: dict, seed: int =
                             if t is not None else None,
                             "test_risk": paired(test_all, lambda sub: _sent_risk(sub, risk, lab, t), seed) if t is not None else None}
 
+    def _score_of(name: str, i: Item) -> float:
+        """A detector's score for any labelled answer, ambiguous ones included (the score tables hold the usable ones only)."""
+        if name in scores and i.id in scores[name]:
+            return scores[name][i.id]
+        if name == "channel-b":
+            return detect(i).risk
+        if name == "fused-a+b":
+            return fusion.item_risk(claim_rows([i]))
+        if name.startswith("channel-a"):
+            return item_score(outputs.get("repair-v1" if name == "channel-a" else name, {}).get("detector", {}).get(i.id))
+        return float(outputs.get(name, {}).get("scores", {}).get(i.id, {}).get("risk", 0.0))
+
     # every detector on the test split: AUROC, clean false alarms at its calibration threshold, with intervals (§7)
     scores = {"channel-a": full} if outputs.get("repair-v1", {}).get("detector") else {}
     for name in ("channel-a-noxbrl", "channel-a-noslot"):
@@ -235,6 +247,12 @@ def detection(items: Sequence[Item], gold: GoldStore, outputs: dict, seed: int =
         if rows:
             scores[name] = {i.id: float(rows.get(i.id, {}).get("risk", 0.0)) for i in usable}
     out["detectors"] = {name: _detector_metrics(sc, cal, test, lab, seed) for name, sc in scores.items()}
+    # answers labelled ambiguous are left out of these metrics and reported separately (pre-registration §5, D-089): how many,
+    # and how many of the test ones each detector flags at its threshold
+    amb_test = [i for i in items if i.id in lab and lab[i.id].status == "ambiguous" and i.question.split == "test"]
+    out["ambiguous"] = {"test": len(amb_test), "calibration": sum(lab[i.id].status == "ambiguous" for i in items if i.id in lab) - len(amb_test),
+                        "test_flagged": {name: sum(_score_of(name, i) > out["detectors"][name]["threshold_at_10pct_calibration_false_alarms"]
+                                                   for i in amb_test) for name in scores}}
     # AUROC differences: the fused detector against each other one, and Channel A with against without its slot head
     pairs = [("fused-a+b", n) for n in scores if n != "fused-a+b" and "fused-a+b" in scores]
     pairs += [("channel-a", "channel-a-noslot")] if {"channel-a", "channel-a-noslot"} <= set(scores) else []
@@ -550,6 +568,7 @@ def policy(items: Sequence[Item], gold: GoldStore, outputs: dict, controlled: li
 
     v1 = outputs.get("repair-v1", {}).get("repair_rule_spans", {})
     natural = natural_records(items, gold, v1)
+    lab_all = labels(items, gold)
     fit_tune = [r for r in controlled if r.split in ("fit", "tune")]
     kinds = ("lightgbm", "neural") if neural_file else ("lightgbm",)
     result = study.run(fit_tune + natural, seed=seed, kinds=kinds, use_score=True, budget_sizes=(100, 200, None), budget_repeats=50,
@@ -576,8 +595,13 @@ def policy(items: Sequence[Item], gold: GoldStore, outputs: dict, controlled: li
     if a and ours.get("chosen"):
         out["groups"] = _group_risk(test, items, a, seed)
     neural = by.get("outcome_aware[neural]", {})
-    if a and neural.get("_test_actions") and ours.get("chosen") and neural.get("chosen"):
-        out["neural_vs_lightgbm"] = {"useful_coverage_difference": _useful_gap(test, items, neural["_test_actions"], a, seed)}
+    if a and neural.get("_test_actions"):  # a model that certifies nothing withholds every answer (useful coverage 0), as in P-H1
+        out["neural_vs_lightgbm"] = {"useful_coverage_difference": _useful_gap(test, items, neural["_test_actions"], a, seed),
+                                     "certified": {"neural": neural.get("chosen") is not None, "lightgbm": ours.get("chosen") is not None}}
+    if a:
+        # answers labelled ambiguous count as unsafe in residual risk and are reported separately (pre-registration §5, D-089)
+        amb = [n for n, r in enumerate(test) if lab_all.get(r.item_id) is not None and lab_all[r.item_id].status == "ambiguous"]
+        out["ambiguous"] = {"test_answers": len(amb), "sent_by_chosen_policy": sum(test[n].outcomes[a[n]] != "abstained" for n in amb)}
     # generator shift (§7): with no natural fit split the outcome models stay the controlled track's (D-102), so the policy is
     # certified on the Qwen calibration answers and reported on the Gemma test answers
     shift = [r for r in natural if (r.split == "calibration" and r.item_id.endswith(":qwen")) or (r.split == "test" and r.item_id.endswith(":gemma"))]
@@ -668,6 +692,10 @@ def report(result: dict) -> str:
         for name, m in det["spans"].items():
             cells = [ci(m["recall_by_slot"][k]) if k in m["recall_by_slot"] else "-" for k in slots]
             lines.append(f"| {name} | {ci(m['span_f1'], False)} | {ci(m['slot_accuracy']) if 'slot_accuracy' in m else '-'} | " + " | ".join(cells) + " |")
+    if det.get("ambiguous"):
+        a = det["ambiguous"]
+        lines += ["", f"Answers labelled ambiguous, left out of these metrics: {a['test']} on test, {a['calibration']} on calibration; test ones "
+                  "flagged at each detector's threshold: " + ", ".join(f"{k} {v}" for k, v in a["test_flagged"].items()) + "."]
     if det.get("fused_calibration"):
         c = det["fused_calibration"]
         lines += ["", f"Fused probabilities on test: per claim Brier {ci(c['claim']['brier'], False)}, ECE {ci(c['claim']['ece'], False)}; "
@@ -719,7 +747,13 @@ def report(result: dict) -> str:
             lines += ["", f"Certification budget ({kind}): " + "; ".join(
                 f"{r['calibration_items']} answers certify in {f(r['certified_share'])} of {r['draws']} draws" for r in rows) + "."]
     if pol.get("neural_vs_lightgbm"):
-        lines += ["", f"Neural outcome model minus LightGBM, useful coverage on test: {ci(pol['neural_vs_lightgbm']['useful_coverage_difference'])}."]
+        n = pol["neural_vs_lightgbm"]
+        lines += ["", f"Neural outcome model minus LightGBM, useful coverage on test: {ci(n['useful_coverage_difference'])} (certified: "
+                  f"neural {'yes' if n['certified']['neural'] else 'no'}, LightGBM {'yes' if n['certified']['lightgbm'] else 'no'}; "
+                  "a model that certifies nothing withholds every answer)."]
+    if pol.get("ambiguous"):
+        lines += ["", f"Answers labelled ambiguous count as unsafe: {pol['ambiguous']['test_answers']} on test, "
+                  f"{pol['ambiguous']['sent_by_chosen_policy']} of them sent by the LightGBM policy."]
     if pol.get("groups"):
         lines += ["", "Residual risk of the chosen policy on test by group: "
                   + "; ".join(f"{k} {ci(v)} ({v['sent']} of {v['items']} sent)" for k, v in pol["groups"].items()) + "."]
