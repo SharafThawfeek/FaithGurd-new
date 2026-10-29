@@ -342,4 +342,6 @@ def test_labels_replace_the_scorer_for_a_group_the_repair_check_failed(tmp_path)
     assert out["summaries"]["repair-sft, channel_a_spans"]["correction_rate"] == 1.0
     assert out["summaries"]["rule repairer, rule_spans"] == out["code_scored"]["summaries"]["rule repairer, rule_spans"]  # not a trained arm
     assert set(out["code_scored"]) == {"summaries", "R-H2", "R-H3"}
-    assert "replaces the gold scorer's (D-112)" in analysis.report({"repair": out})
+    text = analysis.report({"repair": out})
+    assert "replaces the gold scorer's (D-112)" in text and "Scored by the gold scorer instead" in text
+    assert "| repair-sft, rule_spans | 1 | 100.0% |" in text  # the scorer's summary beside the labelled one

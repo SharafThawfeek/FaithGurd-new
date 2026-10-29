@@ -757,7 +757,14 @@ def report(result: dict) -> str:
                   f"With the gold scorer's states instead: R-H2 basis {ci(cs['R-H2']['basis'])}, Gemma {ci(cs['R-H2']['gemma'])} "
                   f"({cs['R-H2']['verdict']}); R-H3 {ci(cs['R-H3'])} ({cs['R-H3']['verdict']}).",
                   "The policy's natural records keep the gold scorer's states for repairer v1 on the rule checker's spans: the check labels "
-                  "test repairs only, and the policy is certified on calibration answers."]
+                  "test repairs only, and the policy is certified on calibration answers"
+                  + (f"; on test the labels score {v1['label_differs_from_code']} of its {v1['changed']} changed repairs differently."
+                     if (v1 := arms.get("repair-v1, rule_spans")) else "."),
+                  "", "Scored by the gold scorer instead (D-112, sensitivity):", "",
+                  "| Repairer, spans | Wrong originals | Corrected | Withheld when needed | New errors | Damage |", "| --- | --- | --- | --- | --- | --- |"]
+        for name in arms:
+            s = cs["summaries"][name]
+            lines.append(f"| {name} | {s['needing_repair']} | {f(s['correction_rate'])} | {f(s['abstained_when_needed'])} | {f(s['new_error_rate'])} | {f(s['damage_rate'])} |")
     if rep.get("repair_check"):
         lines += ["", "## Repair check (D-106)", "", "| Group | Checked | Code and label disagree | Every changed repair labelled |", "| --- | --- | --- | --- |"]
         for g, r in rep["repair_check"].items():
