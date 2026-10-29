@@ -40,36 +40,20 @@
   },
   "recalibrated": [
     {
-      "labels": 25,
-      "draws": 50,
-      "certified_share": 0.0,
-      "mean_risk": null,
-      "risk_within_alpha_share": null,
-      "mean_useful_coverage": null
-    },
-    {
-      "labels": 50,
-      "draws": 50,
-      "certified_share": 0.0,
-      "mean_risk": null,
-      "risk_within_alpha_share": null,
-      "mean_useful_coverage": null
-    },
-    {
       "labels": 100,
       "draws": 50,
-      "certified_share": 0.76,
-      "mean_risk": 0.009418737285576457,
+      "certified_share": 0.48,
+      "mean_risk": 0.009277330113497805,
       "risk_within_alpha_share": 1.0,
-      "mean_useful_coverage": 0.696736842105263
+      "mean_useful_coverage": 0.693375
     },
     {
       "labels": 200,
       "draws": 50,
       "certified_share": 1.0,
-      "mean_risk": 0.009731852262537142,
+      "mean_risk": 0.009712444365824874,
       "risk_within_alpha_share": 1.0,
-      "mean_useful_coverage": 0.7060200000000001
+      "mean_useful_coverage": 0.7053800000000001
     },
     {
       "labels": 1000,
@@ -80,13 +64,13 @@
       "mean_useful_coverage": 0.709
     }
   ],
-  "refitted_setting": "send<0.005,fix>0.5",
+  "refitted_setting": "send<0.5,fix>0.5",
   "refitted": {
     "items": 1000,
-    "emitted": 732,
-    "emission_coverage": 0.732,
-    "residual_risk": 0.009562841530054645,
-    "useful_coverage": 0.725,
+    "emitted": 729,
+    "emission_coverage": 0.729,
+    "residual_risk": 0.009602194787379973,
+    "useful_coverage": 0.722,
     "unsafe_emitted": 7,
     "risk_within_alpha": true
   }
