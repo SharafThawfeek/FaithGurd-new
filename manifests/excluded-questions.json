@@ -1,0 +1,12 @@
+{
+ "decision": "D-104",
+ "reason": "ambiguous wording found by the second reader (D-103); the gold is right",
+ "questions": [
+  "AAON-2025-07",
+  "DFCC-2025-09",
+  "FHN-2025-01",
+  "HAYL-2026-08",
+  "LSCC-2026-06",
+  "SIGI-2025-06"
+ ]
+}

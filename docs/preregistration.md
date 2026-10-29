@@ -1,6 +1,6 @@
-# FaithGuard pre-registration (draft)
+# FaithGuard pre-registration
 
-**Status: draft, not filed.** Phase 5 files this document before any test result is seen, either on OSF Registries or as a tagged commit pushed to GitHub. It is filed only after the evidence is frozen, the test set is locked and every component is frozen (the hashes in [Frozen inputs](#frozen-inputs)). Points the plan leaves open are marked **Open** with a proposed default; each must be settled by its owner, or the default accepted, before filing. Nothing here comes from looking at test answers: at the time of drafting, no system had been run on a test or calibration answer.
+**Status: filed on 2026-10-29 as the git tag `prereg-v1` (D-104), before any system had been run on a test or calibration answer and before any of them was labelled or scored.** The evidence is frozen, the test set locked (788 items after excluding 6 ambiguous questions, D-104) and the components frozen (the hashes in [Frozen inputs](#frozen-inputs)). Every point the plan left open is settled (D-089, D-093, D-102). Anything changed after filing is recorded as a deviation in the decision log.
 
 Sources: [the revised plan](FaithGuard-Revised-Plan.md) (hypotheses, research questions, experiments), [the phase plan](FaithGuard-Phase-Plan.md) (phase 5: what the pre-registration states) and the code named in each section.
 
@@ -122,8 +122,10 @@ Filled in at filing with `faithguard hashes`.
 | Input | Hash |
 | --- | --- |
 | Split manifest | `db0433453c32632ecd44f6ecaab25b247ec509cdef2a6836673223ef3a03c771` |
-| Main questions with frozen evidence (`questions.jsonl`) | To fill at lock (after every table and question is cross-checked) |
-| The 800 answers | To fill at lock |
-| Detector, fusion and ablation variants | To fill (M.L Ahamed) |
-| Repairer v1 and repair variants | To fill (M.S.A Ahamed) |
-| Code version used for the analysis, including the triage and scorer rules (D-100) | Commit hash at filing |
+| Main questions with frozen evidence (`questions.jsonl`) | `db45d0304502f251…` ([manifests/locked-test.json](../manifests/locked-test.json); every question checked by the second-reader pass, D-103) |
+| The 800 answers | Qwen `b1360509876d3823…`, Gemma `133940729caba578…` (unchanged since D-073) |
+| The locked test set: 788 items, 6 ambiguous questions excluded (D-104) | `items-locked.jsonl` `203c6a1706e5a2ef…`; [manifests/excluded-questions.json](../manifests/excluded-questions.json) |
+| Detector, fusion and ablation variants | Channel A and the no-slot ablation in [manifests/frozen-detector.json](../manifests/frozen-detector.json); the no-XBRL ablation is added there when its download ends; the fusion is refitted on calibration answers as §2 states (no frozen weights); Channel A flags a claim for repair at 0.5 |
+| Repairer v1 and repair variants | [manifests/frozen-repair.json](../manifests/frozen-repair.json): v1 (D-101), stage A, no-KEEP, stage B; the free-rewrite baseline retrained on v1's data is added when its run ends, before any of its outputs on main answers exist |
+| Neural outcome model (D-096) | Its predictions file in frozen-detector.json; the model in Kaggle kernel faithguard-neural-outcome-model (run of 2026-10-28) |
+| Code version used for the analysis, including the triage and scorer rules (D-100) and `evaluate/analysis.py` | The commit tagged `prereg-v1` |

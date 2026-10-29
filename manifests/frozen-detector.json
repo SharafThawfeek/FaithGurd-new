@@ -1,0 +1,84 @@
+{
+  "created": "2026-10-29",
+  "note": "Frozen detection and policy models (D-104): Channel A (from the private Kaggle dataset faithguard-detector-models, as the demo fetched it), the no-slot ablation (same dataset) and the neural outcome model's predictions (Kaggle kernel faithguard-neural-outcome-model, run of 2026-10-28, D-099; its model folder stays in that kernel's output). The no-XBRL ablation (kernel faithguard-detector-ablation, outputs/channel-a-noxbrl/model) is added when its download ends. The fusion of A and B is refitted on the main calibration answers as pre-registered, so it has no frozen weights.",
+  "files": [
+    {
+      "path": "data/demo-models/channel-a/model/channel_a.json",
+      "sha256": "965e02cf988c0427cca961d8f9eba6802b114ecab2719e201315bc0936ccd4c7",
+      "bytes": 136,
+      "lines": 0
+    },
+    {
+      "path": "data/demo-models/channel-a/model/slot_head.pt",
+      "sha256": "10ea25facb12c927ea55b5074da4eb34a3805d3c9c0967f73eb58563b66204bd",
+      "bytes": 29557,
+      "lines": 127
+    },
+    {
+      "path": "data/demo-models/channel-a/model/encoder/config.json",
+      "sha256": "494ebea41145fdaf361e93bd9fca70df98e37ca1b5f059196e115b6d3faad093",
+      "bytes": 2045,
+      "lines": 86
+    },
+    {
+      "path": "data/demo-models/channel-a/model/encoder/model.safetensors",
+      "sha256": "8e81db8c2110a99a301b363601333173789cbe855ca66deb442dd39d4b477bbd",
+      "bytes": 1230141424,
+      "lines": 3941045
+    },
+    {
+      "path": "data/demo-models/channel-a/model/encoder/tokenizer.json",
+      "sha256": "2f6c25b9da6381f2be0f596708366a2c2d5f85210032f69cbf3a921c48648c7c",
+      "bytes": 34363284,
+      "lines": 2580788
+    },
+    {
+      "path": "data/demo-models/channel-a/model/encoder/tokenizer_config.json",
+      "sha256": "14b147f2a4f939d9b12ab36e9633917040dd948fa78ce283b03402e4cf2c9cba",
+      "bytes": 574,
+      "lines": 25
+    },
+    {
+      "path": "data/models/detector/noslot/channel-a-noslot__model__channel_a.json",
+      "sha256": "1b55a259fc8aa9ced2a99c0b7eed3b078b4433665d061d69c117e3e8a2587289",
+      "bytes": 137,
+      "lines": 0
+    },
+    {
+      "path": "data/models/detector/noslot/channel-a-noslot__model__slot_head.pt",
+      "sha256": "b65c8a9a63baf2c6130243bde133094c0d8e61b8ee3df9e6b01ad6309c0c5ca1",
+      "bytes": 29557,
+      "lines": 130
+    },
+    {
+      "path": "data/models/detector/noslot/channel-a-noslot__model__encoder__config.json",
+      "sha256": "494ebea41145fdaf361e93bd9fca70df98e37ca1b5f059196e115b6d3faad093",
+      "bytes": 2045,
+      "lines": 86
+    },
+    {
+      "path": "data/models/detector/noslot/channel-a-noslot__model__encoder__model.safetensors",
+      "sha256": "640bb0567146d12f0d9db17c00233d4812ea9d1cf9b44e7a49bfc78dc978fd5f",
+      "bytes": 1230141424,
+      "lines": 3940961
+    },
+    {
+      "path": "data/models/detector/noslot/channel-a-noslot__model__encoder__tokenizer.json",
+      "sha256": "2f6c25b9da6381f2be0f596708366a2c2d5f85210032f69cbf3a921c48648c7c",
+      "bytes": 34363284,
+      "lines": 2580788
+    },
+    {
+      "path": "data/models/detector/noslot/channel-a-noslot__model__encoder__tokenizer_config.json",
+      "sha256": "14b147f2a4f939d9b12ab36e9633917040dd948fa78ce283b03402e4cf2c9cba",
+      "bytes": 574,
+      "lines": 25
+    },
+    {
+      "path": "runs/policy/neural/outcome-model/predictions.jsonl",
+      "sha256": "8bf0e87bd95e1705d49f66b1be6ea82e0f8bcab6879d2664431d28d3d88b8ae5",
+      "bytes": 1573019,
+      "lines": 14320
+    }
+  ]
+}

@@ -50,6 +50,7 @@ class QuestionSpec(Record):
     checked_by: str = ""
     pilot: bool = False
     note: str = ""
+    excluded: str = ""  # why the question is left out of the locked test set (D-104); empty if it is in
 
 
 class ReportSpec(Record):

@@ -1,0 +1,36 @@
+{
+  "created": "2026-10-29",
+  "note": "The locked test set (D-104): the 400 main questions with frozen evidence (all checked by the second-reader pass, D-103), the 800 answers, and the 788 items left after excluding the 6 ambiguous questions in excluded-questions.json. The analyses and the labelling use items-locked.jsonl.",
+  "files": [
+    {
+      "path": "data/benchmark-build/main/questions.jsonl",
+      "sha256": "db45d0304502f251295a5b5ab10eb134d1d3f8c8a7786fb5f90320d3415352dc",
+      "bytes": 24899853,
+      "lines": 400
+    },
+    {
+      "path": "data/benchmark-build/main/items-locked.jsonl",
+      "sha256": "203c6a1706e5a2efb255875e692e1a88d415cc731fa43d037e5bd3fc1e3f03e8",
+      "bytes": 49786326,
+      "lines": 788
+    },
+    {
+      "path": "data/benchmark-build/main/answers-qwen.jsonl",
+      "sha256": "b1360509876d3823c0382b1983966df3a87577fb02894cc7154c528930fb23f0",
+      "bytes": 353053,
+      "lines": 400
+    },
+    {
+      "path": "data/benchmark-build/main/answers-gemma.jsonl",
+      "sha256": "133940729caba578fc01df94b22ee963a2a5f525dfe15aa09ef11e8775cb7650",
+      "bytes": 293227,
+      "lines": 400
+    },
+    {
+      "path": "manifests/excluded-questions.json",
+      "sha256": "989a74ccef0c6196825353e3bb7d21bcb966a90ea35bb86d4eb2c541f1d71875",
+      "bytes": 237,
+      "lines": 12
+    }
+  ]
+}
