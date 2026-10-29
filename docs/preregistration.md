@@ -46,6 +46,18 @@ Nine hypotheses, three per paper, as in the revised plan. Each is confirmed or r
 | P-H2. α = 0.10 is certifiable at useful coverage | Certificate holds with coverage above the threshold policy | Not reachable; the budget curve says how many labels would be needed |
 | P-H3. The v0 policy is unsafe on v1; recalibration restores safety | Risk above α as-is, within α after recalibration | Safe as-is, or refitting is needed; both are findings |
 
+**How each is decided (D-102).** "Higher" and "lower" mean that the issuer-clustered bootstrap 95% interval (2,000 resamples, §6) of the paired difference on the test split excludes zero in the stated direction; otherwise the hypothesis is rejected as "no difference". In detail:
+
+- **D-H1:** each model's threshold is set on the calibration split so that it flags 10% of the correct answers there; wrong-context recall (answers with an entity_scope, metric or period span) is compared on test at those thresholds. If test has fewer than 20 such answers, D-H1 is reported as untestable.
+- **D-H2:** span F1 of A + B minus span F1 of B on the Sri Lankan test answers (B's spans are the claims it flags; A + B's are the claims the fused probability puts at 0.5 or more).
+- **D-H3:** the threshold certified on US calibration answers fails if the lower end of its Sri Lankan test risk interval is above α, and is restored if, recalibrated on 100 Sri Lankan calibration labels, its Sri Lankan test risk is at most α.
+- **R-H1 (replaces the frontier rule left Open):** each system at its own operating point; confirmed if the new-error rate of programs minus that of free rewriting is below zero and programs' correction rate is no more than 5 points below rewriting's (a non-inferiority margin). If programs correct more than 5 points less, R-H1 is reported as not decidable at a matched rate.
+- **R-H2:** correction rate of the self-trained model (stage B) minus the supervised one (stage A) on held-out basis errors and on Gemma's answers; confirmed if above zero on both.
+- **R-H3:** damage rate with Channel A's spans, KEEP-trained minus no-KEEP; confirmed if below zero.
+- **P-H1:** useful coverage of the outcome-aware policy minus the calibrated detector threshold, both certified. If the threshold policy certifies no setting it sends nothing (useful coverage 0), which is reported as such; as a secondary analysis it is also compared at its most cautious uncertified setting.
+- **P-H2:** the outcome-aware policy certifies on calibration and its test useful coverage is above the threshold policy's (as in P-H1).
+- **P-H3:** unsafe as-is if the lower end of the v0 policy's test risk interval on v1's records is above α; restored if, recalibrated on 100 v1 labels, it certifies and its test risk is at most α.
+
 ## 3. Primary comparisons
 
 One per paper; everything else is secondary.
@@ -53,7 +65,7 @@ One per paper; everything else is secondary.
 | Paper | Primary comparison | Measured on |
 | --- | --- | --- |
 | Detection | Channel A trained with vs without XBRL-mined negatives: wrong-context recall at an equal clean false-alarm rate | Human-labelled natural answers, test split |
-| Repair | Edit programs vs free rewriting (same backbone, same data): new-error rate at a matched correction rate | Natural errors with gold spans, test split |
+| Repair | Edit programs (repairer v1, D-101) vs free rewriting (same backbone, same data): new-error rate, with correction rate within a 5-point margin (§2) | Natural errors with gold spans, test split |
 | Policy | Outcome-aware policy vs calibrated detector threshold: useful coverage, both certified at α = 0.10 | Test split, policies certified on the calibration split |
 
 ## 4. Policy certification
@@ -64,7 +76,8 @@ From `faithguard.policy` and `faithguard.stats` at the code version named at fil
 - **Certified quantity:** the share of sent answers that are unsupported, written as the per-item loss 1{unsafe sent} − α · 1{substantive sent} with expectation at most 0, so repair-introduced errors count.
 - **Grid (outcome-aware policy):** send the original if P(unsafe) < τ1; otherwise repair if P(fix) > τ2; otherwise abstain. τ1 ∈ {0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5} and τ2 ∈ {0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99}: 56 settings (`TAU_SEND`, `TAU_FIX` in `policy/families.py`). The threshold policy's grid is its risk thresholds (0.25, 0.75, 1.01), and the static four-state classifier's its confidence levels (0.5 to 0.95).
 - **Procedure:** Learn-then-Test. Order each family's grid on the tune split, most cautious first; on the calibration split compute each setting's Hoeffding–Bentkus p-value for H0: P(unsafe | sent) > α; certify in fixed sequence until the first p > δ; among certified settings choose the highest useful coverage on calibration; report that setting once on test.
-- **Issuer-level sensitivity check (risk R-14):** the same certification with each issuer as one draw; reported next to the main certificate.
+- **Which records play which part on the benchmark (D-102):** the benchmark has only calibration and test issuers, so the outcome models are fitted on the controlled track's fit records and each grid is ordered on its tune records; certification uses the benchmark's calibration answers and the result is reported once on its test answers. The natural answers' replay records take an original's state from its label and a repair's from the gold scorer read with the evidence.
+- **Issuer-level sensitivity check (risk R-14, D-102):** the chosen setting's one-sided 95% upper bound of residual risk on calibration from an issuer-clustered bootstrap (2,000 resamples); it passes when the bound is at most α. (An issuer-level Hoeffding–Bentkus p-value cannot pass with 24 calibration issuers even when every issuer sends everything without error, so it is reported only for reference.)
 - **Comparator:** SCoRE (`score-select`), whose guarantee is on expected risk, not a high-probability bound.
 - **When no setting certifies:** the grid has no setting that never repairs, and none is added (D-082, D-093). If no setting certifies, the policy withholds every answer and this is reported; in the transfer study, refitting is the remedy reported. The controlled-track rehearsal with real trained-repairer replays found the v0 policy safe as it is (D-093).
 - **Outcome models:** LightGBM for P(unsafe) and P(fix), from pre-action features only, is the primary model and the one deployed. The one challenger is a neural outcome model (D-096): the v2 mmBERT encoder Channel A starts from, fine-tuned on a GPU with one output per target, reading the question, the evidence (focused as for Channel A), the answer and the same pre-action features written as text. It is trained on the fit split with early stopping on the tune split, never sees a calibration or test label, and is certified on the same grid with the same α and δ.
@@ -78,7 +91,7 @@ From `faithguard.policy` and `faithguard.stats` at the code version named at fil
 | Policy | Useful coverage | Share of items where a supported, useful answer is sent |
 | Policy | Flip matrix, regret | Each answer's state before and after repair; useful coverage below the stored-outcome oracle |
 | Detection | Span F1 by slot; wrong-context recall; clean false-alarm rate; AUROC; Brier score and ECE; coverage at certified selective risk | As in the revised plan. Span F1 is computed on character overlap between predicted and gold spans, as LettuceDetect reports span-level results and `train/detector_eval.py` computes it; answers labelled ambiguous are left out of span F1 and reported separately (D-089) |
-| Repair | Correction rate; new-error rate; damage rate; information preserved (human-scored sample); abstention calibration; valid-program rate in the 4-bit runtime; latency | As in the revised plan. **Open (M.S.A Ahamed):** how the correction rate is matched for R-H1 (proposed: compare new-error rates along each system's correction-versus-new-error frontier, at the free-rewrite baseline's correction rate) |
+| Repair | Correction rate; new-error rate; damage rate; information preserved (human-scored sample); abstention calibration; valid-program rate in the 4-bit runtime; latency | As in the revised plan. R-H1 compares each system at its own operating point with a 5-point non-inferiority margin on correction rate (§2, D-102), which settles the point left open here. "Information preserved" is scored by Claude on a sample, not by a person (D-103) |
 
 **Ambiguous labels in risk metrics:** an answer labelled ambiguous counts as unsafe in residual risk (the conservative choice) and is reported separately (D-089).
 
@@ -88,7 +101,7 @@ From `faithguard.policy` and `faithguard.stats` at the code version named at fil
 
 - **Intervals:** issuer-clustered bootstrap (`stats/bootstrap.py`): whole issuers resampled with replacement, 2,000 resamples, 95% percentile intervals, seed 0.
 - **Counts:** issuers, questions and answers are always reported separately.
-- **Recalibration label sizes (D-H3, P-H3):** 25, 50, 100 and 200 labels.
+- **Recalibration label sizes (D-H3, P-H3):** 100 and 200 labels, and all available. 25 and 50 are dropped: at the send rates seen, they cannot certify α = 0.10 even with no error (D-102).
 - **Repair labelling rule (D-100):** people check at least 50 changed repairs from each R-H1 arm (edit programs, free rewriting) and 50 across the other variants; if code and people disagree on more than 10% of an arm's checked repairs, people check every changed repair of that arm.
 - **Code labels (D-100):** the audit's overruled share is reported with its 95% Clopper–Pearson upper bound. Every certificate is also computed with each unaudited code-labelled sent answer counted unsafe at that upper bound, and every detection metric again on person-labelled answers only; whether P-H1 to P-H3 or D-H1 to D-H3 change is reported. Code labels and the rule checker read numbers with the same code (`calc/numbers.py`, `claims.py`), so errors that code cannot see escape both (R-25).
 - **Groups:** residual risk is also reported by group (numeric vs narrative, US vs Sri Lanka).

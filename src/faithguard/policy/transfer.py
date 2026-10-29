@@ -40,7 +40,8 @@ def _arm(test: Sequence, actions: Sequence[str], alpha: float) -> dict:
     return m | {"risk_within_alpha": m["residual_risk"] <= alpha}
 
 
-def run(v0: Sequence, v1: Sequence, alpha: float = 0.10, delta: float = 0.05, sizes: Sequence[int] = (25, 50, 100, 200),
+# 25 and 50 labels can never certify alpha = 0.10 at the send rates seen (D-102), so recalibration starts at 100
+def run(v0: Sequence, v1: Sequence, alpha: float = 0.10, delta: float = 0.05, sizes: Sequence[int] = (100, 200),
         repeats: int = 50, seed: int = 0) -> dict:
     a, b = _splits(v0), _splits(v1)
     result: dict = {"alpha": alpha, "delta": delta, "counts": {s: [len(a[s]), len(b[s])] for s in SPLITS}}

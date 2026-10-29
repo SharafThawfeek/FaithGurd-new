@@ -25,11 +25,7 @@ from faithguard.detect import detect
 from faithguard.gold import GoldStore
 from faithguard.records import CannotFix, EditProgram, Item, Keep
 from faithguard.repair.prompting import SYSTEM, build_prompt, editable_claims, program_json
-
-REWRITE_SYSTEM = (
-    "You correct wrong numbers in answers about financial reports. Use only the evidence. "
-    "Reply with the corrected answer and nothing else, or with CANNOT_FIX if the evidence cannot support it."
-)
+from faithguard.repair.rewrite import REWRITE_SYSTEM
 
 
 def target_for(editable: list[str], gold_program: EditProgram) -> EditProgram | None:

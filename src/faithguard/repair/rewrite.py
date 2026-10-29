@@ -2,7 +2,8 @@
 
 Same backbone, same data and same prompt as the edit-program repairer, but the reply
 is the corrected answer text (or CANNOT_FIX). There is no executor and no gate: that
-is the comparison the repair paper's main question (RQ1) makes.
+is the comparison the repair paper's main question (RQ1) makes. Its generator must use
+REWRITE_SYSTEM, the system prompt it was trained with, not the edit-program one (D-101).
 """
 
 from __future__ import annotations
@@ -12,6 +13,10 @@ from typing import Callable
 from faithguard.records import DetectorOutput, Item, RepairOutput
 from faithguard.repair.prompting import build_prompt, editable_claims
 
+REWRITE_SYSTEM = (
+    "You correct wrong numbers in answers about financial reports. Use only the evidence. "
+    "Reply with the corrected answer and nothing else, or with CANNOT_FIX if the evidence cannot support it."
+)
 REWRITE_INSTRUCTIONS = (
     "Rewrite the answer so that every number is supported by the evidence, changing as little as possible. "
     "Reply with the corrected answer only, or with CANNOT_FIX if the evidence lacks what is needed."

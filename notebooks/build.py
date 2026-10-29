@@ -241,6 +241,24 @@ NOTEBOOKS = {
              "!python -m faithguard.train.repair_eval --adapter $ADAPTER --load $MODE --arithmetic --out {OUT}/eval-sft-arithmetic"),
         ],
     },
+    "repair_rewrite_v1": {
+        "title": "Repair baseline: free rewriting on repairer v1's data",
+        "about": "The R-H1 comparator trained on the same data as repairer v1 (stage A's items plus the arithmetic slips, D-088), "
+                 "and evaluated with the system prompt it is trained with (D-101). Evaluated on the same 500 tune-track items and "
+                 "arithmetic slips as v1. Attach the repair_baselines notebook's output to re-evaluate the first rewrite model with "
+                 "the right prompt as well. Expect about 7 GPU hours.",
+        "cells": [
+            ("The first rewrite model, if attached",
+             "import glob\nOLD = sorted(glob.glob('/kaggle/input/**/rewrite-sft/adapter', recursive=True))\nprint(OLD)\nMODE = 'fp16'"),
+            ("Training data with arithmetic slips (about 3 minutes on CPU)", "!faithguard sft --mode rewrite --arithmetic --out runs/sft-v1"),
+            ("Fine-tune (resumable)", "!python -m faithguard.train.repair_sft --data runs/sft-v1/repair-rewrite-train.jsonl --out {OUT}/rewrite-v1 --mode $MODE"),
+            ("Evaluate: the tune track and its arithmetic slips, with the rewrite system prompt",
+             "!python -m faithguard.train.repair_eval --mode rewrite --adapter {OUT}/rewrite-v1/adapter --load $MODE --out {OUT}/eval-rewrite-v1\n"
+             "!python -m faithguard.train.repair_eval --mode rewrite --adapter {OUT}/rewrite-v1/adapter --load $MODE --arithmetic --out {OUT}/eval-rewrite-v1-arithmetic\n"
+             "if OLD:\n"
+             "    !python -m faithguard.train.repair_eval --mode rewrite --adapter {OLD[0]} --load $MODE --out {OUT}/eval-rewrite-sft-fixed"),
+        ],
+    },
     "repair_spans": {
         "title": "Repair RQ3: predicted spans, and stage A with and without KEEP training",
         "about": "How much does repair degrade when Channel A, not the rule checker, decides which claims to edit, and does KEEP "

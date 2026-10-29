@@ -1,0 +1,54 @@
+{
+  "created": "2026-10-29",
+  "note": "Frozen repairers (D-101): repairer v1 (Kaggle kernel faithguard-repair-v1), and the variants stage A (faithguard-repair-stage-a), no-KEEP (faithguard-repair-spans) and stage B round 2 (faithguard-repair-stage-b). LoRA adapters on Qwen/Qwen3.5-2B, downloaded from the kernels' outputs into data/models/ (not in git). The rewrite baseline is added once retrained on v1's data (repair_rewrite_v1).",
+  "files": [
+    {
+      "path": "data/models/repair-v1/outputs/repair-v1/adapter/adapter_model.safetensors",
+      "sha256": "08d7152491488ee03f00095f871aa99e4d8c5de286b73a4eff67d5f4cb622764",
+      "bytes": 67327104,
+      "lines": 211186
+    },
+    {
+      "path": "data/models/repair-v1/outputs/repair-v1/adapter/adapter_config.json",
+      "sha256": "139eff7233150b52e888c0ec9c7b174caf0542160b7e780888cb5d40cedb0706",
+      "bytes": 1256,
+      "lines": 55
+    },
+    {
+      "path": "data/models/repair-stage-a/outputs/repair-sft/adapter/adapter_model.safetensors",
+      "sha256": "220fbd7a1d6abd9545e8cd67d27a8e90e5ea7a3b2e3e13598ea7ed06504fce58",
+      "bytes": 67327104,
+      "lines": 210507
+    },
+    {
+      "path": "data/models/repair-stage-a/outputs/repair-sft/adapter/adapter_config.json",
+      "sha256": "ec80540a90beb97b2430a011e7ec9d956550b919aa5165ed027a0f1c86278510",
+      "bytes": 1256,
+      "lines": 55
+    },
+    {
+      "path": "data/models/repair-spans/outputs/repair-sft-nokeep/adapter/adapter_model.safetensors",
+      "sha256": "bc80248df4c5e077144682d4788b849eb26a9606ecc3a4e5a473d0c2b2d32d26",
+      "bytes": 67327104,
+      "lines": 212352
+    },
+    {
+      "path": "data/models/repair-spans/outputs/repair-sft-nokeep/adapter/adapter_config.json",
+      "sha256": "8dac77b4dc44121ae53b983a5889da1fd1bcc0c64701f1a0e8a1a9aee1e0d23e",
+      "bytes": 1256,
+      "lines": 55
+    },
+    {
+      "path": "data/models/repair-stage-b/outputs/self-train/round-2/adapter/adapter_model.safetensors",
+      "sha256": "69cc0d6f5339d9bee429d1860bc039f2986d8a12d7767f7acb9a41ae6a58b7a6",
+      "bytes": 67327104,
+      "lines": 210084
+    },
+    {
+      "path": "data/models/repair-stage-b/outputs/self-train/round-2/adapter/adapter_config.json",
+      "sha256": "6ec2e0cf9c7e745a7ff52cb4eb8812bb5e840ac397078857ae4627fb372f490b",
+      "bytes": 1256,
+      "lines": 55
+    }
+  ]
+}

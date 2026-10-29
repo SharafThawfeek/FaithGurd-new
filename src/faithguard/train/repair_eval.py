@@ -74,15 +74,21 @@ def main(argv: list[str] | None = None) -> None:
 
         repairer, name = rules.repair, "rules only (COPY and CALCULATE)"
     else:
+        from faithguard.repair.prompting import SYSTEM
+        from faithguard.repair.rewrite import REWRITE_SYSTEM
+
+        system = REWRITE_SYSTEM if args.mode == "rewrite" else SYSTEM  # the system prompt each was trained with (D-101)
         if args.server:
             from faithguard.repair.backends import openai_chat
 
-            generate = openai_chat(args.server, constrained=not args.unconstrained)
+            generate = openai_chat(args.server, constrained=not args.unconstrained and args.mode == "program", system=system)
             name = f"server:{args.server}{' (unconstrained)' if args.unconstrained else ' (schema-constrained)'}"
         else:
             from faithguard.train.generation import Generator
 
-            generate, name = Generator(args.model, args.load, adapter=args.adapter), f"{args.model}{' + ' + args.adapter if args.adapter else ' (zero-shot)'}"
+            # a rewrite is the whole answer, so it gets room for a long one
+            generate = Generator(args.model, args.load, adapter=args.adapter, system=system, max_new_tokens=400 if args.mode == "rewrite" else 256)
+            name = f"{args.model}{' + ' + args.adapter if args.adapter else ' (zero-shot)'}"
         repairer = ModelRepairer(generate, name=name) if args.mode == "program" else RewriteRepairer(generate, name=name)
     if args.spans == "rules":
         from faithguard.detect import detect as detector

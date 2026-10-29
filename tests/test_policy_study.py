@@ -146,3 +146,14 @@ def test_transfer_study_scores_the_v0_policy_on_a_changed_repairer():
     assert result["refitted"] and result["refitted"]["risk_within_alpha"]  # refitting learns to abstain instead
     assert [r["labels"] for r in result["recalibrated"]][:2] == [50, 200]
     assert "# Transfer study" in transfer.report(result)
+
+
+def test_issuer_check_can_pass_with_24_issuers_where_the_issuer_p_value_cannot():
+    from faithguard.policy.certify import cluster_upper
+
+    clean = [record(i, "clean", "calibration") for i in range(24 * 5)]  # 24 issuers, every answer safe and sent
+    sends = ["send"] * len(clean)
+    assert cluster_pvalue(clean, sends, 0.10) > 0.05  # the old check fails even here (D-102)
+    assert cluster_upper(clean, sends) <= 0.10
+    risky = [record(i, "fixable", "calibration") for i in range(24 * 5)]
+    assert cluster_upper(risky, ["send"] * len(risky)) > 0.10

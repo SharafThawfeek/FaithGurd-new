@@ -74,21 +74,23 @@
       "test_ci": {
         "residual_risk": [
           0.0159,
-          0.0099,
-          0.0225
+          0.01,
+          0.0229
         ],
         "useful_coverage": [
           0.7274,
-          0.7043,
-          0.7472
+          0.7063,
+          0.7481
         ],
         "emission_coverage": [
           0.7395,
-          0.7169,
-          0.76
+          0.7186,
+          0.7596
         ]
       },
-      "cluster_p_calibration": 0.001999495423000254
+      "cluster_p_calibration": 0.001999495423000254,
+      "cluster_upper_calibration": 0.02773650321941555,
+      "cluster_check_passes": true
     },
     {
       "family": "verified_only",
@@ -116,21 +118,23 @@
       "test_ci": {
         "residual_risk": [
           0.0288,
-          0.0174,
-          0.042
+          0.0186,
+          0.0428
         ],
         "useful_coverage": [
           0.2088,
           0.2054,
-          0.2125
+          0.213
         ],
         "emission_coverage": [
           0.215,
           0.2106,
-          0.2202
+          0.2205
         ]
       },
-      "cluster_p_calibration": 0.9451484193362085
+      "cluster_p_calibration": 0.9451484193362085,
+      "cluster_upper_calibration": 0.054310344827586204,
+      "cluster_check_passes": true
     },
     {
       "family": "threshold_v0",
@@ -158,21 +162,23 @@
       "test_ci": {
         "residual_risk": [
           0.0159,
-          0.0099,
-          0.0225
+          0.01,
+          0.0229
         ],
         "useful_coverage": [
           0.7274,
-          0.7043,
-          0.7472
+          0.7063,
+          0.7481
         ],
         "emission_coverage": [
           0.7395,
-          0.7169,
-          0.76
+          0.7186,
+          0.7596
         ]
       },
-      "cluster_p_calibration": 0.001999495423000254
+      "cluster_p_calibration": 0.001999495423000254,
+      "cluster_upper_calibration": 0.02773650321941555,
+      "cluster_check_passes": true
     },
     {
       "family": "four_state",
@@ -201,20 +207,22 @@
         "residual_risk": [
           0.0153,
           0.0095,
-          0.0219
+          0.0224
         ],
         "useful_coverage": [
           0.7265,
-          0.7037,
-          0.7464
+          0.7053,
+          0.7471
         ],
         "emission_coverage": [
           0.7381,
-          0.7154,
-          0.7586
+          0.7173,
+          0.7585
         ]
       },
-      "cluster_p_calibration": 0.001999495423000254
+      "cluster_p_calibration": 0.001999495423000254,
+      "cluster_upper_calibration": 0.026180698151950718,
+      "cluster_check_passes": true
     },
     {
       "family": "outcome_aware[lightgbm]",
@@ -243,20 +251,22 @@
         "residual_risk": [
           0.0155,
           0.0096,
-          0.0222
+          0.0226
         ],
         "useful_coverage": [
           0.7265,
-          0.7039,
-          0.7464
+          0.7057,
+          0.7471
         ],
         "emission_coverage": [
           0.7383,
-          0.7155,
-          0.7588
+          0.7176,
+          0.7587
         ]
       },
-      "cluster_p_calibration": 0.001999495423000254
+      "cluster_p_calibration": 0.001999495423000254,
+      "cluster_upper_calibration": 0.026330224904004388,
+      "cluster_check_passes": true
     },
     {
       "family": "outcome_aware[neural]",
@@ -285,20 +295,22 @@
         "residual_risk": [
           0.0129,
           0.0074,
-          0.0192
+          0.0195
         ],
         "useful_coverage": [
           0.7254,
-          0.702,
-          0.7449
+          0.7046,
+          0.746
         ],
         "emission_coverage": [
           0.7352,
-          0.7128,
-          0.7552
+          0.7151,
+          0.755
         ]
       },
-      "cluster_p_calibration": 0.00042435742504865956
+      "cluster_p_calibration": 0.00042435742504865956,
+      "cluster_upper_calibration": 0.021907560780122896,
+      "cluster_check_passes": true
     }
   ],
   "models": {
@@ -884,5 +896,5 @@
     "residual_risk": 0.0546,
     "useful_coverage": 0.214
   },
-  "seconds": 87.5
+  "seconds": 113.5
 }

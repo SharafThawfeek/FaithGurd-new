@@ -72,6 +72,19 @@ def certify(
     return Certificate(alpha, delta, order, pvalues, certified, chosen, cal)
 
 
+def cluster_upper(records: Sequence, actions: Sequence[str], n_boot: int = 2000, seed: int = 0) -> float:
+    """Issuer-level check (R-14, D-102): the one-sided 95% upper bound of residual risk from resampling whole issuers.
+
+    It replaces the issuer-level p-value below, which cannot pass with 24 calibration issuers even when every issuer
+    sends everything with no error (best p 0.10 > delta 0.05). The check passes when the bound is at most alpha."""
+    from faithguard.stats import cluster_bootstrap
+
+    pairs = list(zip(records, actions))
+    _, _, upper = cluster_bootstrap(pairs, lambda p: p[0].issuer, lambda s: policy_metrics([r.outcomes[a] for r, a in s])["residual_risk"],
+                                    n_boot=n_boot, level=0.90, seed=seed)
+    return upper
+
+
 def cluster_pvalue(records: Sequence, actions: Sequence[str], alpha: float) -> float:
     """Issuer-level certificate: each issuer's mean shifted loss is one bounded draw."""
     by_issuer: dict[str, list[float]] = {}

@@ -18,12 +18,12 @@ Each family's grid is ordered on the tune split and certified on the calibration
 | Policy | Certified settings | Chosen | Answers sent | Wrong among sent | Useful answers | Regret vs oracle |
 | --- | --- | --- | --- | --- | --- | --- |
 | send_all | 0 of 1 | none (p = 1) | 100.0% | 79.0% | 21.0% | – |
-| repair_all | 1 of 1 | `repair` | 74.0% | 1.6% [1.0%, 2.2%] | 72.7% [70.4%, 74.7%] | 0.1% |
-| verified_only | 1 of 3 | `risk<0.25` | 21.5% | 2.9% [1.7%, 4.2%] | 20.9% [20.5%, 21.2%] | 52.0% |
-| threshold_v0 | 1 of 3 | `risk<0.25` | 74.0% | 1.6% [1.0%, 2.2%] | 72.7% [70.4%, 74.7%] | 0.1% |
-| four_state | 6 of 6 | `conf>=0.5` | 73.8% | 1.5% [0.9%, 2.2%] | 72.7% [70.4%, 74.6%] | 0.2% |
-| outcome_aware[lightgbm] | 56 of 56 | `send<0.5,fix>0.6` | 73.8% | 1.6% [1.0%, 2.2%] | 72.7% [70.4%, 74.6%] | 0.2% |
-| outcome_aware[neural] | 56 of 56 | `send<0.005,fix>0.7` | 73.5% | 1.3% [0.7%, 1.9%] | 72.5% [70.2%, 74.5%] | 0.3% |
+| repair_all | 1 of 1 | `repair` | 74.0% | 1.6% [1.0%, 2.3%] | 72.7% [70.6%, 74.8%] | 0.1% |
+| verified_only | 1 of 3 | `risk<0.25` | 21.5% | 2.9% [1.9%, 4.3%] | 20.9% [20.5%, 21.3%] | 52.0% |
+| threshold_v0 | 1 of 3 | `risk<0.25` | 74.0% | 1.6% [1.0%, 2.3%] | 72.7% [70.6%, 74.8%] | 0.1% |
+| four_state | 6 of 6 | `conf>=0.5` | 73.8% | 1.5% [0.9%, 2.2%] | 72.7% [70.5%, 74.7%] | 0.2% |
+| outcome_aware[lightgbm] | 56 of 56 | `send<0.5,fix>0.6` | 73.8% | 1.6% [1.0%, 2.3%] | 72.7% [70.6%, 74.7%] | 0.2% |
+| outcome_aware[neural] | 56 of 56 | `send<0.005,fix>0.7` | 73.5% | 1.3% [0.7%, 1.9%] | 72.5% [70.5%, 74.6%] | 0.3% |
 | oracle (hindsight) | – | – | 72.9% | 0.0% | 72.9% | 0 |
 
 ## Outcome models on test
@@ -123,7 +123,7 @@ Random calibration subsets of each size, for each outcome model whose policy cer
 
 ## Issuer-level sensitivity check
 
-Treating each issuer as one draw, the chosen setting's p-value on calibration is 0.002 (item-level: 1.49e-50); certified at delta = 0.05: True.
+Resampling whole issuers (2,000 times), the chosen setting's one-sided 95% upper bound of residual risk on calibration is 0.026 against alpha = 0.1: passes True (D-102). The issuer-level p-value it replaces is 0.002 (item-level: 1.49e-50).
 
 ## SCoRE comparator (send or abstain only)
 
@@ -131,4 +131,4 @@ SCoRE-SDR (score-select 0.1.1) with the same P(unsafe) scores, alpha = gamma = 0
 
 Answers sent 22.7%; wrong among sent 5.5%; useful 21.4%. It decides only send or abstain, so compare it with verified_only; repair is what lifts the other policies' useful coverage.
 
-Run time: 87.5 s.
+Run time: 113.5 s.

@@ -17,13 +17,13 @@ from faithguard.repair.prompting import SYSTEM, json_schema
 
 
 def openai_chat(url: str, model: str = "local", temperature: float = 0.0, max_tokens: int = 400,
-                constrained: bool = True, seed: int = 0, timeout: int = 300) -> Callable[[str], str]:
+                constrained: bool = True, seed: int = 0, timeout: int = 300, system: str = SYSTEM) -> Callable[[str], str]:
     """Chat completions against an OpenAI-compatible server. With `constrained`, ask for the edit-program JSON schema."""
 
     def generate(prompt: str) -> str:
         body = {
             "model": model,
-            "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}],
+            "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
             "temperature": temperature,
             "max_tokens": max_tokens,
             "seed": seed,

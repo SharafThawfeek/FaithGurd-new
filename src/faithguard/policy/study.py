@@ -22,7 +22,7 @@ import numpy as np
 
 from faithguard.evaluate import flip_matrix, policy_metrics
 from faithguard.policy import families, outcome
-from faithguard.policy.certify import certify, cluster_pvalue, indicators, order_settings, states
+from faithguard.policy.certify import certify, cluster_pvalue, cluster_upper, indicators, order_settings, states
 from faithguard.stats import cluster_bootstrap, fixed_sequence, selective_risk_pvalue
 
 QTYPES = ("lookup", "difference", "growth", "share", "ratio", "sum", "average", "other")
@@ -53,7 +53,7 @@ def _ci(records: Sequence, actions: Sequence[str], key: str, seed: int) -> list[
     def stat(sample):
         return policy_metrics([r.outcomes[a] for r, a in sample])[key]
 
-    est, lo, hi = cluster_bootstrap(pairs, lambda p: p[0].issuer, stat, n_boot=500, seed=seed)
+    est, lo, hi = cluster_bootstrap(pairs, lambda p: p[0].issuer, stat, n_boot=2000, seed=seed)  # the pre-registered 2,000
     return [round(est, 4), round(lo, 4), round(hi, 4)]
 
 
@@ -78,6 +78,8 @@ def _evaluate(name: str, tune, cal, test, cands: tuple[dict, dict, dict], alpha,
     out["test"] = m
     out["test_ci"] = {k: _ci(test, acts, k, seed) for k in ("residual_risk", "useful_coverage", "emission_coverage")}
     out["cluster_p_calibration"] = cluster_pvalue(cal, cands[1][cert.chosen], alpha)
+    out["cluster_upper_calibration"] = cluster_upper(cal, cands[1][cert.chosen], seed=seed)
+    out["cluster_check_passes"] = out["cluster_upper_calibration"] <= alpha
     return out
 
 
@@ -352,7 +354,10 @@ def report(result: dict) -> str:
         lines.append("")
     main = next((f for f in result["families"] if f["family"] == "outcome_aware[lightgbm]"), None)
     if main and main.get("chosen"):
-        lines += ["## Issuer-level sensitivity check", "", f"Treating each issuer as one draw, the chosen setting's p-value on calibration is {main['cluster_p_calibration']:.3g} (item-level: {main['p_chosen']:.3g}); certified at delta = {result['delta']}: {main['cluster_p_calibration'] <= result['delta']}.", ""]
+        lines += ["## Issuer-level sensitivity check", "",
+                  f"Resampling whole issuers (2,000 times), the chosen setting's one-sided 95% upper bound of residual risk on calibration "
+                  f"is {main['cluster_upper_calibration']:.3f} against alpha = {result['alpha']}: passes {main['cluster_check_passes']} (D-102). "
+                  f"The issuer-level p-value it replaces is {main['cluster_p_calibration']:.3g} (item-level: {main['p_chosen']:.3g}).", ""]
     if "score_comparator" in result:
         s = result["score_comparator"]
         if "skipped" in s:
