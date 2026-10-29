@@ -518,6 +518,7 @@ def cmd_analyse(args) -> None:
     from faithguard.controlled import load_or_build
     from faithguard.evaluate import analysis
     from faithguard.gold import GoldStore
+    from faithguard.policy import outcome
     from faithguard.replay import ReplayRecord
 
     items = list(read_jsonl(args.items, Item))
@@ -537,11 +538,15 @@ def cmd_analyse(args) -> None:
         for split in ("train", "dev", "test"):
             controlled += load_or_build(source, split)[2]
     controlled_v1 = list(read_jsonl(args.controlled_v1, ReplayRecord)) if args.controlled_v1 and Path(args.controlled_v1).exists() else None
-    result = {"detection": analysis.detection(items, gold, outputs, args.seed),
-              "repair": analysis.repair(items, gold, outputs, gold_spans, args.seed),
-              "policy": analysis.policy(items, gold, outputs, controlled, controlled_v1, args.seed)}
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
+    neural = analysis.neural_predictions(outputs, outcome.PRECOMPUTED["neural"], out / "neural-predictions.jsonl")
+    result = {"detection": analysis.detection(items, gold, outputs, args.seed),
+              "repair": analysis.repair(items, gold, outputs, gold_spans, args.seed),
+              "policy": analysis.policy(items, gold, outputs, controlled, controlled_v1, args.seed, neural_file=neural)}
+    for key, name in (("repair_check", "repair-check-result.json"), ("information_preserved", "repair-info-result.json")):
+        if (gold.root / name).exists():  # the repair check and the information-preserved pass (D-106, D-109)
+            result["repair"][key] = json.loads((gold.root / name).read_text(encoding="utf-8"))
     (out / "results.json").write_text(json.dumps(result, indent=2, default=str) + "\n", encoding="utf-8")
     (out / "report.md").write_text(analysis.report(result), encoding="utf-8")
     print(analysis.report(result))
@@ -566,12 +571,26 @@ def cmd_repair_check(args) -> None:
         ids = sorted({rid for group in sample.values() for rid in group})
         n = labelling.write_tasks(repair_check.repair_items(items, changes, ids), Path(args.out or "labelling/repair-tasks.json"),
                                   store.root / "repair-task-mapping.json")
+        info, info_map = repair_check.info_tasks(items, changes, ids)  # D-109: its own keys, so the two passes stay apart
+        Path("labelling/repair-info-tasks.json").write_text(json.dumps(info, ensure_ascii=False, indent=1), encoding="utf-8")
+        (store.root / "repair-info-mapping.json").write_text(json.dumps(info_map, indent=1, sort_keys=True), encoding="utf-8")
         plan.write_text(json.dumps({"seed": repair_check.SEED, "per_group": repair_check.SAMPLE, "sample": sample,
                                     "changed": {arm: len(v) for arm, v in changes.items()}}, indent=1) + "\n", encoding="utf-8")
         print(f"wrote {n} blinded repair tasks ({', '.join(f'{g}: {len(v)}' for g, v in sample.items())}); "
-              f"import their labels with --target repair --mapping {store.root / 'repair-task-mapping.json'}")
+              f"import their labels with --target repair --mapping {store.root / 'repair-task-mapping.json'}; "
+              f"the information-preserved tasks are in labelling/repair-info-tasks.json")
         return
     sample = json.loads(plan.read_text(encoding="utf-8"))["sample"]
+    if args.action == "info":
+        if not args.results:
+            sys.exit("repair-check info needs --results: the information-preserved pass, [{task_key, preserved, note}]")
+        mapping = json.loads((store.root / "repair-info-mapping.json").read_text(encoding="utf-8"))
+        result = repair_check.info_summary(items, json.loads(Path(args.results).read_text(encoding="utf-8")), mapping, sample)
+        (store.root / "repair-info-result.json").write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
+        for group, r in result.items():
+            p = r["preserved"]
+            print(f"{group}: {r['checked']} of {r['planned']} judged; information preserved {p['estimate']:.1%} [{p['ci95'][0]:.1%}, {p['ci95'][1]:.1%}]")
+        return
     result = repair_check.compare(items, store, changes, sample)
     (store.root / "repair-check-result.json").write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
     for group, r in result.items():
@@ -864,8 +883,10 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--out", default="runs/main")
     p.set_defaults(fn=cmd_analyse)
 
-    p = sub.add_parser("repair-check", help="the repair check: a blind labelled sample of changed repairs against code (D-106)")
-    p.add_argument("action", choices=["draw", "compare"])
+    p = sub.add_parser("repair-check", help="the repair check: a blind labelled sample of changed repairs against code (D-106), "
+                                            "and the information-preserved pass on the same sample (D-109)")
+    p.add_argument("action", choices=["draw", "compare", "info"])
+    p.add_argument("--results", help="info: the information-preserved pass's results, [{task_key, preserved, note}]")
     p.add_argument("--items", default="data/benchmark-build/main/items-locked.jsonl")
     p.add_argument("--gold", default="data/benchmark-build/main/gold")
     p.add_argument("--systems", default="data/benchmark-build/main/systems", help="folder of the fetched GPU outputs")

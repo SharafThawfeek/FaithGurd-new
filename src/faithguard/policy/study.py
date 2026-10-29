@@ -36,6 +36,11 @@ def _qtype(r) -> str:
     return next((q for q in QTYPES if r.features.get(f"qtype_{q}", 0) > 0), "other")
 
 
+def _answer_kind(r) -> str:
+    """Numeric or narrative (pre-registration §6 groups); comparison questions count as numeric (D-105)."""
+    return "narrative" if r.features.get("qtype_narrative", 0) > 0 else "numeric"
+
+
 def _quality(y: tuple, p: tuple, mask: np.ndarray | None = None) -> dict:
     """AUROC (None when every item has the same target), Brier score and ECE of P(unsafe) and P(fix)."""
     out = {}
@@ -87,15 +92,19 @@ def _evaluate(name: str, tune, cal, test, cands: tuple[dict, dict, dict], alpha,
 
 
 def budget_curve(cal, test, cal_cands, test_cands, order, alpha, delta, sizes, repeats, seed) -> list[dict]:
-    """How many calibration answers are needed to certify, and how much useful coverage that buys on test."""
+    """How many calibration answers are needed to certify, and how much useful coverage that buys on test.
+    A size of None is every calibration answer (one draw)."""
     rng = np.random.default_rng(seed)
     cal = list(cal)
     rows = []
     for n in sizes:
+        draws = repeats
+        if n is None:
+            n, draws = len(cal), 1
         if n > len(cal):
             continue
         ok, coverage = 0, []
-        for _ in range(repeats):
+        for _ in range(draws):
             idx = rng.choice(len(cal), n, replace=False)
             sub = [cal[i] for i in idx]
             pvals = []
@@ -110,10 +119,24 @@ def budget_curve(cal, test, cal_cands, test_cands, order, alpha, delta, sizes, r
                 coverage.append(policy_metrics(states(test, test_cands[best]))["useful_coverage"])
         rows.append({
             "calibration_items": n,
-            "certified_share": ok / repeats,
+            "draws": draws,
+            "certified_share": ok / draws,
             "mean_test_useful_coverage_when_certified": round(float(np.mean(coverage)), 4) if coverage else None,
         })
     return rows
+
+
+def labels_needed(cal, cal_cands, order, alpha, delta, most: int = 100) -> int | None:
+    """When nothing certifies: how many calibration answers the first setting of the fixed sequence would need to certify if
+    they kept the rates seen on calibration (the observed answers repeated k times, k = 2 to `most`); None if its share of
+    unsafe sent answers is already at or above alpha, or `most` copies do not suffice."""
+    unsafe, sent = indicators(cal, cal_cands[order[0]])
+    if not any(sent) or sum(unsafe) / sum(sent) >= alpha:
+        return None
+    for k in range(2, most + 1):
+        if selective_risk_pvalue(unsafe * k, sent * k, alpha) <= delta:
+            return k * len(cal)
+    return None
 
 
 def score_comparator(cal, test, p_cal, p_test, alpha, seed, n_test=500, repeats=3) -> dict:
@@ -141,7 +164,7 @@ def score_comparator(cal, test, p_cal, p_test, alpha, seed, n_test=500, repeats=
     keys = ("emission_coverage", "residual_risk", "useful_coverage")
     return {
         "guarantee": "expected risk among sent answers <= alpha (not a high-probability bound)",
-        "subsample": {"calibration": len(cal), "test": n_test, "repeats": repeats, "prune": "homo"},
+        "subsample": {"calibration": len(cal), "test": min(n_test, len(test)), "repeats": repeats, "prune": "homo"},
         **{k: round(float(np.mean([r[k] for r in runs])), 4) for k in keys},
     }
 
@@ -184,10 +207,10 @@ def run(records: Sequence, alpha: float = 0.10, delta: float = 0.05, kinds=("lig
     for kind in kinds:
         try:
             models = outcome.fit(fit, kind, seed, (predictions or {}).get(kind))
-        except (ImportError, FileNotFoundError) as err:
+            p = {s: models.predict(x) for s, x in (("tune", tune), ("cal", cal), ("test", test))}
+        except (ImportError, FileNotFoundError, ValueError) as err:  # ValueError: precomputed probabilities miss some records
             result["models"][kind] = {"skipped": str(err)}
             continue
-        p = {s: models.predict(x) for s, x in (("tune", tune), ("cal", cal), ("test", test))}
         preds[kind] = p
         result[f"_models_{kind}"] = models
         y = outcome.targets(test)
@@ -203,14 +226,18 @@ def run(records: Sequence, alpha: float = 0.10, delta: float = 0.05, kinds=("lig
         }
         add(f"outcome_aware[{kind}]", tuple(families.outcome_aware(*p[s]) for s in ("tune", "cal", "test")))
 
-    # how many calibration labels each outcome model's certified policy needs, and its chosen setting by planted error
-    result["budget_curve"], result["chosen_by_error"] = {}, {}
+    # how many calibration labels each outcome model's policy needs (also when it did not certify: P-H2's rejection
+    # branch reads the curve), and its chosen setting by planted error
+    result["budget_curve"], result["chosen_by_error"], result["labels_needed"] = {}, {}, {}
     for kind, p in preds.items():
         chosen = next(f for f in result["families"] if f["family"] == f"outcome_aware[{kind}]").get("chosen")
-        if chosen:
-            cands = {s: families.outcome_aware(*p[s]) for s in ("tune", "cal", "test")}
-            order = order_settings(tune, cands["tune"])
+        cands = {s: families.outcome_aware(*p[s]) for s in ("tune", "cal", "test")}
+        order = order_settings(tune, cands["tune"])
+        if budget_sizes:
             result["budget_curve"][kind] = budget_curve(cal, test, cands["cal"], cands["test"], order, alpha, delta, budget_sizes, budget_repeats, seed)
+        if not chosen:
+            result["labels_needed"][kind] = labels_needed(cal, cands["cal"], order, alpha, delta)
+        else:
             acts = cands["test"][chosen]
             result["chosen_by_error"][kind] = {g: policy_metrics([r.outcomes[a] for r, a in zip(test, acts) if r.error == g])
                                                for g in sorted({r.error for r in test if r.error})}
@@ -226,6 +253,7 @@ def run(records: Sequence, alpha: float = 0.10, delta: float = 0.05, kinds=("lig
             "action_mix_test": {a: acts.count(a) for a in ("send", "repair", "abstain")},
             "by_source": {g: policy_metrics([r.outcomes[a] for r, a in zip(test, acts) if _source(r) == g]) for g in sorted({_source(r) for r in test})},
             "by_question_type": {g: policy_metrics([r.outcomes[a] for r, a in zip(test, acts) if _qtype(r) == g]) for g in sorted({_qtype(r) for r in test})},
+            "by_answer_kind": {g: policy_metrics([r.outcomes[a] for r, a in zip(test, acts) if _answer_kind(r) == g]) for g in sorted({_answer_kind(r) for r in test})},
             "by_error": {g: policy_metrics([r.outcomes[a] for r, a in zip(test, acts) if r.error == g]) for g in sorted({r.error for r in test if r.error})},
         }
         from faithguard.policy.deployed import OutcomeAwarePolicy, parse_setting
@@ -236,11 +264,13 @@ def run(records: Sequence, alpha: float = 0.10, delta: float = 0.05, kinds=("lig
             names=lgbm.names, unsafe_model=lgbm.unsafe, fix_model=lgbm.fix, tau_send=tau_send, tau_fix=tau_fix,
             certificate={"alpha": alpha, "delta": delta, "p_value": main["p_chosen"], "setting": main["chosen"]},
         )
-        if use_score:
-            try:
-                result["score_comparator"] = score_comparator(cal, test, p["cal"][0], p["test"][0], alpha, seed)
-            except ImportError as err:
-                result["score_comparator"] = {"skipped": str(err)}
+    # SCoRE decides send or abstain from P(unsafe) alone, so it needs LightGBM's scores but not its certificate
+    if use_score and "lightgbm" in preds:
+        p = preds["lightgbm"]
+        try:
+            result["score_comparator"] = score_comparator(cal, test, p["cal"][0], p["test"][0], alpha, seed)
+        except ImportError as err:
+            result["score_comparator"] = {"skipped": str(err)}
     result["seconds"] = round(time.time() - t0, 1)
     return result
 
@@ -337,14 +367,15 @@ def report(result: dict) -> str:
         lines += ["Flip matrix on test (state of the original answer → state after repair):", "", "| Original | Unsupported | Supported, unhelpful | Supported, useful | Abstained |", "| --- | --- | --- | --- | --- |"]
         for row, cols in d["flip_matrix_test"].items():
             lines.append(f"| {row} | {cols['unsupported']} | {cols['supported_unhelpful']} | {cols['supported_useful']} | {cols['abstained']} |")
-        for title, key in (("By source", "by_source"), ("By question type", "by_question_type"), ("By planted error", "by_error")):
+        for title, key in (("By source", "by_source"), ("Numeric or narrative", "by_answer_kind"), ("By question type", "by_question_type"),
+                           ("By planted error", "by_error")):
             lines += ["", f"{title}:", "", "| Group | Items | Sent | Wrong among sent | Useful |", "| --- | --- | --- | --- | --- |"]
-            for g, m in d[key].items():
+            for g, m in d.get(key, {}).items():
                 lines.append(f"| {g} | {m['items']} | {_pct(m['emission_coverage'])} | {_pct(m['residual_risk'])} | {_pct(m['useful_coverage'])} |")
         lines.append("")
     curves = result.get("budget_curve") or {}
     if curves:
-        lines += ["## Certification budget", "", "Random calibration subsets of each size, for each outcome model whose policy certified: share of draws in which at least one setting is certified, and the useful coverage on test of the setting then chosen.", "",
+        lines += ["## Certification budget", "", "Random calibration subsets of each size, for each outcome model: share of draws in which at least one setting is certified, and the useful coverage on test of the setting then chosen.", "",
                   "| Calibration answers | " + " | ".join(f"Certified ({k}) | Useful coverage on test ({k})" for k in curves) + " |",
                   "| --- |" + " --- | --- |" * len(curves)]
         by_size = {k: {row["calibration_items"]: row for row in rows} for k, rows in curves.items()}
@@ -355,6 +386,9 @@ def report(result: dict) -> str:
                 cells += [_pct(row.get("certified_share")), _pct(row.get("mean_test_useful_coverage_when_certified"))]
             lines.append(f"| {n} | " + " | ".join(cells) + " |")
         lines.append("")
+    for kind, n in (result.get("labels_needed") or {}).items():
+        lines += [f"Not certified with {kind}: at the rates seen on calibration, the first setting of the fixed sequence would need "
+                  + (f"about {n:,} calibration answers." if n else "more than 100 times the calibration answers, or can never certify."), ""]
     main = next((f for f in result["families"] if f["family"] == "outcome_aware[lightgbm]"), None)
     if main and main.get("chosen"):
         lines += ["## Issuer-level sensitivity check", "",

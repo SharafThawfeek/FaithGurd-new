@@ -7,6 +7,10 @@ than 10% of a group's checked repairs, every changed repair of that group is lab
 
 A repair is identified as "item id@system, span source" (e.g. "DIAL-2025-03:qwen@repair-v1, gold_spans");
 its labels go to the gold store with target "repair" under that id.
+
+The same sample also gets the information-preserved check (pre-registration §5, D-109): a separate blind
+Claude pass sees the original answer beside the repaired one and says whether the repair kept every piece
+of the original's information that the evidence supports.
 """
 
 from __future__ import annotations
@@ -61,6 +65,34 @@ def repair_items(items: Sequence[Item], changes: dict[str, dict[str, str]], repa
         item_id, arm = rid.split("@", 1)
         item = by_id[item_id]
         out.append(item.model_copy(update={"id": rid, "answer": item.answer.model_copy(update={"text": changes[arm][item_id]})}))
+    return out
+
+
+def info_tasks(items: Sequence[Item], changes: dict[str, dict[str, str]], repair_ids: Sequence[str], salt: str | None = None) -> tuple[list[dict], dict[str, str]]:
+    """Blinded tasks for the information-preserved check (D-109): the question, the evidence, the original answer and the
+    repaired one, for the repairs the check sampled; (tasks, key -> repair id)."""
+    from faithguard import labelling
+
+    by_id = {i.id: i for i in items}
+    tasks, mapping = labelling.build_tasks(repair_items(items, changes, repair_ids), salt)
+    for t in tasks:
+        t["data"]["original"] = by_id[mapping[t["data"]["task_key"]].split("@", 1)[0]].answer.text
+        t["data"]["repaired"] = t["data"].pop("answer")
+    return tasks, mapping
+
+
+def info_summary(items: Sequence[Item], results: Sequence[dict], mapping: dict[str, str], sample: dict[str, list[str]], seed: int = 0) -> dict:
+    """Per group of the repair check: how many sampled repairs were judged, and the share that keep every piece of the
+    original's information the evidence supports, with its issuer-clustered interval. results: [{task_key, preserved}]."""
+    from faithguard.evaluate.analysis import paired
+
+    by_id = {i.id: i for i in items}
+    got = {mapping[r["task_key"]]: bool(r["preserved"]) for r in results if r["task_key"] in mapping}
+    out = {}
+    for group, ids in sorted(sample.items()):
+        checked = [by_id[rid.split("@", 1)[0]].model_copy(update={"id": rid}) for rid in ids if rid in got]
+        out[group] = {"planned": len(ids), "checked": len(checked),
+                      "preserved": paired(checked, lambda s: sum(got[i.id] for i in s) / len(s) if s else None, seed)}
     return out
 
 

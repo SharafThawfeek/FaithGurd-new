@@ -38,11 +38,18 @@
     "unsafe_emitted": 7,
     "risk_within_alpha": true
   },
+  "as_is_risk_ci": [
+    0.009776536312849162,
+    0.0016260162601626016,
+    0.01943198804185351
+  ],
+  "unsafe_as_is": false,
   "recalibrated": [
     {
       "labels": 100,
       "draws": 50,
       "certified_share": 0.48,
+      "restored_share": 0.48,
       "mean_risk": 0.009277330113497805,
       "risk_within_alpha_share": 1.0,
       "mean_useful_coverage": 0.693375
@@ -51,6 +58,7 @@
       "labels": 200,
       "draws": 50,
       "certified_share": 1.0,
+      "restored_share": 1.0,
       "mean_risk": 0.009712444365824874,
       "risk_within_alpha_share": 1.0,
       "mean_useful_coverage": 0.7053800000000001
@@ -59,6 +67,7 @@
       "labels": 1000,
       "draws": 1,
       "certified_share": 1.0,
+      "restored_share": 1.0,
       "mean_risk": 0.009776536312849162,
       "risk_within_alpha_share": 1.0,
       "mean_useful_coverage": 0.709
@@ -73,5 +82,6 @@
     "useful_coverage": 0.722,
     "unsafe_emitted": 7,
     "risk_within_alpha": true
-  }
+  },
+  "verdict": "rejected: safe as-is"
 }

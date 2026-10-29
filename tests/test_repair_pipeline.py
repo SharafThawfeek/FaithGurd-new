@@ -298,3 +298,12 @@ def test_repair_check_samples_changed_test_repairs_and_compares_code_with_labels
     assert result["repair-v1, gold_spans"] == {"planned": 1, "labelled": 1, "disagree": 0, "rate": 0.0,
                                                "label_every_changed_repair": False, "disagreements": []}
     assert result["other variants"]["disagree"] == 1 and result["other variants"]["label_every_changed_repair"]
+    # the information-preserved pass (D-109): its own keys, the original beside the repaired text, a share per group
+    tasks, mapping = repair_check.info_tasks([item], changes, [task.id])
+    (info,) = tasks
+    assert set(info["data"]) == {"task_key", "question", "evidence_html", "original", "repaired"}
+    assert info["data"]["original"] == item.answer.text and info["data"]["repaired"] == fixed["text"]
+    assert mapping == {info["data"]["task_key"]: task.id}
+    summary = repair_check.info_summary([item], [{"task_key": info["data"]["task_key"], "preserved": True}], mapping, sample)
+    assert summary["repair-v1, gold_spans"]["checked"] == 1 and summary["repair-v1, gold_spans"]["preserved"]["estimate"] == 1.0
+    assert summary["other variants"]["checked"] == 0

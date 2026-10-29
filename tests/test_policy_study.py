@@ -146,6 +146,28 @@ def test_transfer_study_scores_the_v0_policy_on_a_changed_repairer():
     assert result["refitted"] and result["refitted"]["risk_within_alpha"]  # refitting learns to abstain instead
     assert [r["labels"] for r in result["recalibrated"]][:2] == [50, 200]
     assert "# Transfer study" in transfer.report(result)
+    # P-H3 (D-109): unsafe as-is by the issuer-clustered interval, then restored by recalibration or not
+    est, lo, hi = result["as_is_risk_ci"]
+    assert lo > 0.10 and result["unsafe_as_is"] and all("restored_share" in r for r in result["recalibrated"])
+    assert result["verdict"] in ("confirmed", "rejected: refitting is needed")
+    assert transfer.verdict({"as_is": {}, "unsafe_as_is": False, "recalibrated": []}) == "rejected: safe as-is"
+    unsafe = {"as_is": {}, "unsafe_as_is": True}
+    assert transfer.verdict(unsafe | {"recalibrated": [{"labels": 100, "restored_share": 0.5}]}) == "confirmed"
+    assert transfer.verdict(unsafe | {"recalibrated": [{"labels": 100, "restored_share": 0.4}], "refitted": {"risk_within_alpha": True}}) ==         "rejected: refitting is needed"
+    assert transfer.verdict(unsafe | {"recalibrated": [{"labels": 100, "restored_share": 0.0}], "refitted": None}) ==         "rejected: neither recalibration nor refitting restores it"
+    assert transfer.verdict({"skipped": "x"}).startswith("untestable")
+
+
+def test_budget_curve_takes_every_calibration_answer_and_says_how_many_labels_an_uncertified_policy_needs():
+    result = study.run(records(), budget_sizes=(50, None), budget_repeats=4, use_score=False)
+    rows = result["budget_curve"]["lightgbm"]
+    assert [(r["calibration_items"], r["draws"]) for r in rows] == [(50, 4), (result["counts"]["calibration"]["items"], 1)]
+    assert set(result["chosen_detail"]["by_answer_kind"]) == {"numeric"}  # no narrative questions among these records
+    clean = [record(i, "clean", "calibration") for i in range(30)]
+    # 30 safe answers all sent: 32 are needed to certify alpha = 0.10, so twice the answers would do
+    assert study.labels_needed(clean, {"send": ["send"] * 30}, ["send"], 0.10, 0.05) == 60
+    risky = [record(i, "fixable", "calibration") for i in range(30)]
+    assert study.labels_needed(risky, {"send": ["send"] * 30}, ["send"], 0.10, 0.05) is None
 
 
 def test_issuer_check_can_pass_with_24_issuers_where_the_issuer_p_value_cannot():
@@ -191,3 +213,10 @@ def test_threshold_transfer_counts_ambiguous_answers_unsafe_and_reports_the_labe
     risk[worst.id] = 0.0
     again = _threshold_transfer(cal, test, lab, {}, Fusion(), lambda xs: risk[xs[0].id], 0)
     assert again["lk_test_risk_as_is"]["estimate"] > out["lk_test_risk_as_is"]["estimate"]
+    # fails on Sri Lanka and 100 labels do not restore it: a finding, not "untestable" (D-109)
+    for i in items:
+        if i.question.country == "LK" and rng.random() < 0.5:
+            lab[i.id] = GoldLabel(item_id=i.id, status="incorrect", annotator="claude-labeller@d103")
+    failed = _threshold_transfer(cal, test, lab, {}, Fusion(), lambda xs: risk[xs[0].id], 0)
+    assert failed["us_threshold"] is not None and failed["lk_test_risk_as_is"]["ci95"][0] > 0.10
+    assert failed["verdict"] == "not confirmed: fails as-is, not restored with 100 labels"
