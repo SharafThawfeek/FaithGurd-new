@@ -519,7 +519,7 @@ function renderControl(d) {
     d.group === "ask" || d.group === "pilot" ? h("div", { class: "verdictbox warn" },
       "Not certified for this answer: the guarantee is for answers like the controlled-track calibration set (template answers with planted errors). "
       + "Real reports and own questions are outside it; the certificate for natural answers is computed on the locked calibration answers in phase 7.") : null,
-    h("p", { class: "note" }, "Controlled track (injected errors on FinQA and TAT-QA): development results. The locked test set is labelled by separate blind Claude passes, not by people (D-103, D-105); its system results come next."));
+    h("p", { class: "note" }, "Controlled track (injected errors on FinQA and TAT-QA): development results. The locked test set is labelled by separate blind Claude passes, not by people (D-103, D-105); on it no policy setting certified (runs/main/report.md, D-113)."));
   return h("div", {}, h("div", { class: "grid2" }, decide, feats), h("div", { style: "height:14px" }), certCard);
 }
 
@@ -797,7 +797,7 @@ function renderResults() {
   }
   main.replaceChildren(
     h("div", { class: "banner" }, "Development results, not the locked test set: these numbers come from the controlled track (injected errors) and Kaggle development runs. "
-      + "The locked test set (788 answers) is labelled by separate blind Claude passes, not by people (D-103, D-105); on its 672 numeric answers the rule checker flags 144 of the 170 labelled incorrect and 110 of the 502 labelled right (runs/main/labels). System results on it come next."),
+      + "The locked test set (788 answers) is labelled by separate blind Claude passes, not by people (D-103, D-105); on its 672 numeric answers the rule checker flags 144 of the 170 labelled incorrect and 110 of the 502 labelled right (runs/main/labels). The pre-registered results on it are in runs/main/report.md (D-113)."),
     h("div", { class: "tabs" }, tabs.map(([k, label]) => h("button", { class: `tab${state.resultsTab === k ? " active" : ""}`,
       onclick: () => { state.resultsTab = k; renderResults(); } }, label))),
     body);
