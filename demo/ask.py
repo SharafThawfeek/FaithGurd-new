@@ -25,7 +25,7 @@ from faithguard.claims import DIRECTION_WORDS, Vocabulary, mention_of, question_
 from faithguard.executor import ExecError, apply, execute
 from faithguard.inject import _label, _style
 from faithguard.records import Answer, Calculate, Cell, Copy, DetectorOutput, EditProgram, Evidence, Item, Question
-from faithguard.tables import normalise_metric, normalise_period
+from faithguard.tables import ENTITY_WORDS, normalise_metric, normalise_period
 
 ROOT = Path(__file__).resolve().parent.parent
 ISSUERS = ROOT / "manifests" / "issuers.csv"
@@ -121,12 +121,16 @@ def reports_of(examples) -> dict[str, Report]:
     return out
 
 
-def clean_label(cell: Cell) -> str:
-    """The row label without the leftovers of the printed table: 'Less: Interest expense' -> 'Interest expense',
-    'Net finance income /' -> 'Net finance income', 'Dividend per share - Rs.' -> 'Dividend per share'."""
+def clean_label(cell: Cell, vocab: Vocabulary | None = None) -> str:
+    """The row label without the leftovers of the printed table: 'Net finance income /' -> 'Net finance income',
+    'Less: Interest expense' -> 'Interest expense'. With the vocabulary, a cleaning is kept only if the checker still
+    reads the cell's metric in it (it does not in 'interest expense'), else the label stays as printed."""
     label = re.sub(r"^less\s*:\s*", "", _label(cell), flags=re.I)
     label = re.sub(r"\s*[-–]\s*(Rs\.?|US\$|\$)\s*$", "", label)
-    return re.sub(r"[\s/:;,\-]+$", "", label) or _label(cell)
+    label = re.sub(r"[\s/:;,\-]+$", "", label) or _label(cell)
+    if vocab is not None and vocab.metric_in(label) != cell.metric:
+        return re.sub(r"[\s/:;,\-]+$", "", _label(cell)) if vocab.metric_in(re.sub(r"[\s/:;,\-]+$", "", _label(cell))) == cell.metric else _label(cell)
+    return label
 
 
 def _in_sentence(label: str) -> str:
@@ -148,8 +152,8 @@ def named_metrics(vocab: Vocabulary, text: str) -> set[str]:
     return {s.metric for s in found if not any(o.text != s.text and f" {s.text} " in f" {o.text} " for o in found)}
 
 
-def _subject(cell: Cell, name: str) -> str:
-    label = _in_sentence(clean_label(cell))
+def _subject(cell: Cell, name: str, vocab: Vocabulary | None = None) -> str:
+    label = _in_sentence(clean_label(cell, vocab))
     if cell.entity in ENTITY_WORD:
         return f"the {ENTITY_WORD[cell.entity]}'s {label}"
     return f"{name.split()[0]}'s {label}"
@@ -202,8 +206,9 @@ def _row_cells(report: Report) -> list[Cell]:
     rows: dict[tuple[str, int], Cell] = {}
     for c in report.evidence.cells():
         if (c.value is None or c.kind != "amount" or c.period != latest or not c.metric or (c.table_id, c.row) in negative
-                or not c.row_label.strip() or re.search(r"\d|\$", _label(c)) or re.search(r"\b(to|of|for|from|by)$", clean_label(c), re.I)):
-            continue  # also leaves out subtotal headers such as "Profit attributable to"
+                or not c.row_label.strip() or re.search(r"\d|\$", _label(c)) or re.search(r"\b(to|of|for|from|by)$", clean_label(c), re.I)
+                or vocab.metric_in(clean_label(c)) != c.metric):
+            continue  # also subtotal headers ("Profit attributable to") and labels the checker would not read back
         key = (c.table_id, c.row)
         if key not in rows or order.get(c.entity, len(order)) < order.get(rows[key].entity, len(order)):
             rows[key] = c
@@ -230,16 +235,17 @@ def candidate_questions(report: Report) -> tuple[list[str], list[tuple[str, str]
                   key=lambda c: min((i for m, i in rank.items() if m in c.metric), default=len(rank)))
     out = []
     for a in main[:3]:
-        out.append(f"What {_verb(clean_label(a))} {_subject(a, report.name)} in {latest}?")
+        out.append(f"What {_verb(clean_label(a, vocab))} {_subject(a, report.name, vocab)} in {latest}?")
         if previous:
-            out.append(f"By what percentage did {_subject(a, report.name)} grow in {latest}?")
+            out.append(f"By what percentage did {_subject(a, report.name, vocab)} grow in {latest}?")
     other = next((e for e in ENTITY_PREFERENCE if e in vocab.entities and main and e != main[0].entity), None)
     if other and previous:
         for a in main[:3]:
             b = next((c for c in report.evidence.cells() if c.metric == a.metric and c.entity == other and c.period == latest), None)
             if b is not None:
-                out.append(f"How did {_subject(b, report.name)} change in {latest} compared with {previous[-1]}?")
-    items = [(clean_label(c), _cap(f"What {_verb(clean_label(c))} {_subject(c, report.name)} in {latest}?")) for c in cells]
+                out.append(f"How did {_subject(b, report.name, vocab)} change in {latest} compared with {previous[-1]}?")
+    items = [(clean_label(c, vocab), _cap(f"What {_verb(clean_label(c, vocab))} {_subject(c, report.name, vocab)} in {latest}?"))
+             for c in cells]
     return [_cap(s) for s in dict.fromkeys(out)], items
 
 
@@ -304,6 +310,10 @@ def draft(report: Report, question: str) -> str:
         kind = "growth"
     if kind not in ("lookup", "growth", "difference", "comparison"):
         raise Unanswerable("The template writes lookups, growth rates and changes only. Ask the AI or type an answer.")
+    entities = {ENTITY_WORDS[w] for w in re.findall(r"[a-z]+", text.lower()) if w in ENTITY_WORDS} & set(vocab.entities)
+    if len(entities) > 1:
+        raise Unanswerable("The question compares two entities; the template writes one entity's figures only. "
+                           "Ask the AI or type an answer.")
     named = named_metrics(vocab, text)
     if len(named) > 1:
         raise Unanswerable(f"The question names more than one line item ({', '.join(sorted(named))}), so the template "
@@ -319,7 +329,7 @@ def draft(report: Report, question: str) -> str:
     if a.value < 0:
         raise Unanswerable(f"{clean_label(a)} is printed in brackets, so the tables store it as a negative number, and the frozen "
                            "checker reads a positive figure for it as a sign error: the template does not write it. Ask the AI or type an answer.")
-    subject = _cap(_subject(a, report.name))
+    subject = _cap(_subject(a, report.name, vocab))
     A = render(a.value, _style(a))
     if kind in ("growth", "difference"):
         base = years[0] if len(years) > 1 else max((p for p in vocab.periods if p < (a.period or "")), default=None)
@@ -332,13 +342,15 @@ def draft(report: Report, question: str) -> str:
             raise Unanswerable(f"{clean_label(a)} is printed in brackets, so the tables store it as a negative number, and the "
                                "frozen checker reads a change in it by that sign: the template does not write one. Ask the AI or type an answer.")
         B = render(b.value, _style(b))
+        if a.value == b.value:
+            return f"{subject} {_verb(clean_label(a, vocab))} unchanged at {A} in {a.period}."
         if kind == "growth":
             g = ops.growth(a.value, b.value)
             return f"{subject} {'rose' if g >= 0 else 'fell'} {render(abs(g), _percent_style(g))} from {B} in {b.period} to {A} in {a.period}."
         d = ops.diff(a.value, b.value)
         return (f"{subject} {'increased' if d >= 0 else 'decreased'} by {render(abs(d), _style(a))} "
                 f"from {B} in {b.period} to {A} in {a.period}.")
-    return f"{subject} {_verb(clean_label(a))} {A} in {a.period}."
+    return f"{subject} {_verb(clean_label(a, vocab))} {A} in {a.period}."
 
 
 def caveats(item: Item, det: DetectorOutput, action: str) -> list[str]:
@@ -368,6 +380,23 @@ def caveats(item: Item, det: DetectorOutput, action: str) -> list[str]:
 # ---------------------------------------------------------------------------
 # Planted errors
 # ---------------------------------------------------------------------------
+
+
+def figures_match(text: str | None, reference: str) -> bool:
+    """Each number equals the reference's to the coarser of the two printed precisions, with the same direction
+    (a repair may print a figure at another scale: "Rs. 14,213 million" for "Rs. 14,212,560 thousand")."""
+    from faithguard.claims import extract_claims
+
+    if text is None:
+        return False
+    got, want = extract_claims(text), extract_claims(reference)
+    if len(got) != len(want):
+        return False
+    for a, b in zip(got, want):
+        unit = max(Decimal(1).scaleb(-c.decimals) * (Decimal(10) ** c.scale if c.kind == "amount" else 1) for c in (a, b))
+        if a.direction != b.direction or abs(a.value - b.value) > unit / 2:
+            return False
+    return True
 
 
 def _sibling(cells: list[Cell], a: Cell, same: tuple[str, ...], differ: str, prefer=None) -> Cell | None:
@@ -402,21 +431,25 @@ def _swap(item: Item, det: DetectorOutput, supported, claim_id: str, old: Cell, 
 
 def plant(item: Item, det: DetectorOutput) -> list[tuple[str, str]]:
     """(label, answer text) for each kind of error that can be planted in this answer's supported figures, one of each."""
+    from faithguard.detect import detect
+
     text = item.answer.text
+    vocab = Vocabulary(item.evidence.cells())
     cells = [c for c in item.evidence.cells() if c.value is not None]
     by_id = {c.id: c for c in item.evidence.cells()}
     supported = [(claim, det.check(claim.id)) for claim in det.claims if det.check(claim.id).verdict == "supported"]
     traced = [(claim, check) for claim, check in supported if check.cells and all(c in by_id for c in check.cells)]
     out: list[tuple[str, str]] = []
 
-    # wrong entity: every traced figure taken from another entity's column (Bank for Group)
+    # wrong entity: every traced figure taken from another entity's column (Bank for Group), where the
+    # question or answer names the entity (without one, the other column's figure is a fair reading)
     edits, other = [], None
     for claim, check in traced:
-        if check.relation not in ("cell", "growth", "diff"):
+        if check.relation not in ("cell", "growth", "diff") or not check.intended.entity:
             continue
         swapped = []
         for cid in check.cells:
-            s = _sibling(cells, by_id[cid], ("metric", "period", "table_id"), "entity")
+            s = _sibling(cells, by_id[cid], ("metric", "period", "table_id", "row"), "entity")
             if s is None or (other is not None and s.entity != other):
                 break
             swapped.append(s)
@@ -440,15 +473,22 @@ def plant(item: Item, det: DetectorOutput) -> list[tuple[str, str]]:
             out.append((f"Wrong year: the {s.period} figure", planted))
             break
 
-    # wrong line item: the figure on a neighbouring row of the same column, of the same sign
+    # wrong line item: a neighbouring row of the same column, sign, unit and rough size (not EPS for an amount)
     for claim, check in lookups:
         a = by_id[check.cells[0]]
         column = [c for c in cells if c.table_id == a.table_id and c.col == a.col and c.metric and c.metric != a.metric
-                  and c.kind == a.kind and c.value != a.value and (c.value < 0) == (a.value < 0)]
-        s = min(column, key=lambda c: abs(c.row - a.row), default=None)
+                  and c.kind == a.kind and c.value != a.value and (c.value < 0) == (a.value < 0)
+                  and c.scale == a.scale and c.currency == a.currency]
+        s = min(column, key=lambda c: (not (abs(a.value) / 10 <= abs(c.value) <= abs(a.value) * 10), abs(c.row - a.row)), default=None)
         if s is not None and (planted := _swap(item, det, traced, claim.id, a, s)):
-            out.append((f"Wrong line item: {_label(s)}", planted))
+            out.append((f"Wrong line item: {clean_label(s, vocab)}", planted))
             break
+
+    def still_supported(new_text: str, start: int) -> bool:
+        """Whether the checker still supports the figure at `start` after the change (it can match another ratio by chance)."""
+        variant = item.model_copy(update={"answer": item.answer.model_copy(update={"text": new_text})})
+        d = detect(variant)
+        return any(c.start == start and d.check(c.id).verdict == "supported" for c in d.claims)
 
     figures = [claim for claim, _ in supported]
     # wrong scale: thousand read as million, million as billion
@@ -460,30 +500,47 @@ def plant(item: Item, det: DetectorOutput) -> list[tuple[str, str]]:
             out.append((f"Wrong scale: “{m.group(1)}” → “{new}”", apply(text, [(start, start + len(m.group(1)), new)])))
             break
 
-    # wrong direction: rose for a fall
+    # wrong direction: rose for a fall, on a change (the checker reads direction on changes only, not on "rose to X")
+    relation = {claim.id: check.relation for claim, check in supported}
     for claim in figures:
-        if claim.direction_span:
+        if claim.direction_span and relation.get(claim.id) in ("growth", "diff") and claim.value != 0:
             s, e = claim.direction_span
             word = text[s:e]
             if word.lower() in DIRECTION_WORDS:
                 new = _match_case(OPPOSITE.get(word.lower()) or DIRECTION_WORDS[word.lower()][1], word)
-                out.append((f"Flip the direction: “{word}” → “{new}”", apply(text, [(s, e, new)])))
-                break
+                edits = [(s, e, new)]
+                article = re.search(r"\b(an?)\s+$", text[:s])
+                if article:  # "a rise" -> "a fall", "an increase" -> "a decrease"
+                    a_or_an = "an" if new[:1].lower() in "aeiou" else "a"
+                    edits.insert(0, (article.start(1), article.end(1), _match_case(a_or_an, article.group(1))))
+                planted = apply(text, edits)
+                shift = sum(len(n) - (e0 - s0) for s0, e0, n in edits if e0 <= claim.start)  # edits before the figure move it
+                if not still_supported(planted, claim.start + shift):
+                    out.append((f"Flip the direction: “{word}” → “{new}”", planted))
+                    break
 
-    # a maths slip: the growth rate or figure off by 3 in its last printed digit (the commonest real error)
+    # a maths slip: the growth rate or figure off by a few units in its last printed digit (the commonest real error)
     for claim in sorted(figures, key=lambda c: c.kind != "percent"):
-        if claim.kind not in ("percent", "amount"):
+        if claim.kind not in ("percent", "amount") or claim.value == 0:
             continue
         try:
             style = mention_of(claim, text).style
             unit = Decimal(1).scaleb(-claim.decimals) * (Decimal(10) ** claim.scale if claim.kind == "amount" else 1)
             value = abs(claim.value) if claim.direction is not None else claim.value
-            new = render(value + 3 * unit, style)
         except Exception:
             continue
-        if new != claim.text:
-            out.append((f"Maths slip: {claim.text} → {new}", apply(text, [(claim.start, claim.end, new)])))
-            break
+        for k in (3, -3, 4, -4, 7):  # a slip that happens to equal another ratio in the tables is no planted error
+            try:
+                new = render(value + k * unit, style)
+            except Exception:
+                break
+            planted = apply(text, [(claim.start, claim.end, new)])
+            if new != claim.text and not still_supported(planted, claim.start):
+                out.append((f"Maths slip: {claim.text} → {new}", planted))
+                break
+        else:
+            continue
+        break
     seen, unique = {text}, []
     for label, planted in out:
         if planted not in seen:

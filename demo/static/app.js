@@ -279,7 +279,8 @@ function plantedChips(d) {
   if (!d.edits.length) return h("div", { class: "chips", id: "planted" }, label,
     h("span", { class: "note" }, "none: no number in the original answer is supported by a cell (it is already wrong, or has no number)."));
   return h("div", { class: "chips", id: "planted" }, label,
-    d.edits.map((e) => h("button", { class: "chip plant", title: e.answer, onclick: () => useEdit(e.answer) }, e.label, " → ", badge(e.expect))));
+    d.edits.map((e) => h("button", { class: "chip plant", title: e.answer, onclick: () => useEdit(e.answer) }, e.label, " → ", badge(e.expect))),
+    d.planted_dropped ? h("span", { class: "note" }, `(${d.planted_dropped} more left out: their repair does not give the right figures back, a known limitation)`) : null);
 }
 
 async function fetchPlanted(id) {
@@ -288,6 +289,7 @@ async function fetchPlanted(id) {
   state.data.edits = r.error ? [] : r.edits;
   state.data.plantError = r.error || null;
   state.data.planted_on = r.on || "original";
+  state.data.planted_dropped = r.dropped || 0;
   state.data.planted = true;
   const old = document.getElementById("planted");
   if (old) old.replaceWith(plantedChips(state.data));

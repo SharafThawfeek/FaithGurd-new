@@ -27,7 +27,7 @@ from faithguard.pipeline import run
 from faithguard.policy import ThresholdPolicy
 from faithguard.records import Item, RepairOutput, read_jsonl
 
-from ask import Unanswerable, candidate_questions, caveats, draft, make_item, plant, read_question, reports_of
+from ask import Unanswerable, candidate_questions, caveats, draft, figures_match, make_item, plant, read_question, reports_of
 from views import catch_view, channel_a_view, control_view, evidence_view, jsonable, output_view, repair_view
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -96,6 +96,7 @@ class Example:
     report: str | None = None  # ask only: the report's id
     planted: bool = False  # ask only: edits hold the planted errors, each with the action the pipeline took
     planted_on: str = "original"  # or "repaired": the answer had no supported figure, so they went into its repair
+    planted_dropped: int = 0  # planted errors left out because their repair did not give the figures back
 
 
 def _rows(path: Path) -> dict[str, dict]:
@@ -260,7 +261,7 @@ class Demo:
             "question": e.item.question.model_dump(mode="json"), "answer": item.answer.text, "original_answer": e.item.answer.text,
             "generator": e.item.answer.generator, "evidence": evidence_view(item, det),
             "report": {"id": report.id, "name": report.name, "real": report.real} if report else None, "planted": e.planted,
-            "planted_on": e.planted_on,
+            "planted_on": e.planted_on, "planted_dropped": e.planted_dropped,
             "caveats": caveats(item, det, final.action) if e.group == "ask" else [],
             "edits": [{"label": label, "answer": answer, "expect": expect} for label, answer, expect in e.edits],
             "catch": catch_view(item, det, a_view),
@@ -314,11 +315,13 @@ class Demo:
         policy = self.policy or ThresholdPolicy()
 
         def sent(question: str) -> bool:
+            """The template answers it, the pipeline sends that, and the checker read the line item it is about."""
             try:
                 item = make_item(r, "chip", question, draft(r, question), "template")
-                return run(item, policy=policy).action == "send"
+                final = run(item, policy=policy)
             except Exception:
                 return False
+            return final.action == "send" and all(c.intended.metric is not None for c in final.detector.checks)
 
         suggested, items = candidate_questions(r)
         out = {"suggestions": [q for q in suggested if sent(q)][:MAX_SUGGESTIONS],
@@ -392,19 +395,25 @@ class Demo:
             def with_text(text: str) -> Item:
                 return e.item.model_copy(update={"answer": e.item.answer.model_copy(update={"text": text})})
 
-            base, variants = e.item, plant(e.item, detect(e.item))
-            if not variants:  # a wrong answer has no supported figure to spoil: plant into its repair, if it got one
+            det = detect(e.item)
+            base, variants = e.item, plant(e.item, det)
+            if not any(c.verdict == "supported" for c in det.checks):
+                # a wrong answer has no supported figure to spoil: plant into its repair, if it got one that changed a figure
                 final = run(e.item, policy=policy)
-                if final.action == "repair" and final.text:
+                if final.action == "repair" and final.text and final.text != e.item.answer.text:
                     base = with_text(final.text)
                     variants = plant(base, detect(base))
                     e.planted_on = "repaired"
-            edits = []
+            edits, e.planted_dropped = [], 0
             for label, text in variants:
                 try:
-                    edits.append((label, text, run(with_text(text), policy=policy).action))
+                    final = run(with_text(text), policy=policy)
                 except Exception:  # a variant the pipeline cannot read is not offered
                     continue
+                if final.action == "repair" and not figures_match(final.text, base.answer.text):
+                    e.planted_dropped += 1  # its repair does not give the figures back (a frozen-checker limitation)
+                    continue
+                edits.append((label, text, final.action))
             e.edits, e.planted = edits, True
         return {"edits": [{"label": label, "answer": answer, "expect": expect} for label, answer, expect in e.edits],
-                "on": e.planted_on}
+                "on": e.planted_on, "dropped": e.planted_dropped}

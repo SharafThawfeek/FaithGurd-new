@@ -11,7 +11,7 @@ DEMO = Path(__file__).resolve().parent.parent / "demo"
 sys.path.insert(0, str(DEMO))
 
 from app import bad_answer, friendly  # noqa: E402
-from ask import bad_question, draft, question_type  # noqa: E402
+from ask import bad_question, draft, figures_match, question_type  # noqa: E402
 from cases import Demo, UnknownExample, safe_path  # noqa: E402
 from views import channel_a_view  # noqa: E402
 
@@ -168,23 +168,23 @@ def test_own_question_on_the_fictional_bank_template_answer_sent_and_planted_err
         for e in planted:
             rerun = demo.case(case["id"], e["answer"])
             assert rerun["output"]["action"] == e["expect"] == "repair", e["label"]
-            assert same_figures(rerun["output"]["text"], answer), e["label"]  # the repair gives the right figures back
+            assert figures_match(rerun["output"]["text"], answer), e["label"]  # the repair gives the right figures back
 
 
-def same_figures(text: str, reference: str) -> bool:
-    """Each number equals the reference's to the coarser of the two printed precisions, with the same direction."""
-    from decimal import Decimal
-
-    from faithguard.claims import extract_claims
-
-    got, want = extract_claims(text), extract_claims(reference)
-    if len(got) != len(want):
-        return False
-    for a, b in zip(got, want):
-        unit = max(Decimal(1).scaleb(-c.decimals) * (Decimal(10) ** c.scale if c.kind == "amount" else 1) for c in (a, b))
-        if a.direction != b.direction or abs(a.value - b.value) > unit / 2:
-            return False
-    return True
+def test_planted_errors_are_real_errors_and_offered_only_where_the_checker_can_see_them(demo):
+    bank = "demo:fictional-bank"
+    q = "By what percentage did the Group's profit after tax grow in 2025?"
+    # a direction word on a level ("increased to X") is not read by the checker: flip the change ("a rise of") instead
+    case = demo.ask(bank, q, "Group profit after tax increased to Rs. 14,213 million in 2025 from Rs. 13,004 million in 2024, a rise of 9.3%.")
+    flips = [e for e in demo.plant_errors(case["id"])["edits"] if e["label"].startswith("Flip")]
+    assert flips and all("a fall of 9.3%" in e["answer"] and e["expect"] != "send" for e in flips)
+    # no entity named: the other column's figure is a fair reading, so no "wrong entity" is offered
+    case = demo.ask(bank, "What was profit after tax in 2025?", "Profit after tax was Rs. 14,213 million in 2025.")
+    assert not [e for e in demo.plant_errors(case["id"])["edits"] if e["label"].startswith("Wrong entity")]
+    # a wrong answer with no supported figure gets its errors planted into FaithGuard's repair
+    case = demo.ask(bank, "What was the Group's profit after tax in 2025?", "The Group's profit after tax was Rs. 9 million in 2025.")
+    planted = demo.plant_errors(case["id"])
+    assert planted["on"] == "repaired" and planted["edits"]
 
 
 def test_typed_answers_are_labelled_typed_and_unknown_reports_refused(demo):
