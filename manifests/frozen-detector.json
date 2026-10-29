@@ -1,6 +1,6 @@
 {
   "created": "2026-10-29",
-  "note": "Frozen detection and policy models (D-104): Channel A (from the private Kaggle dataset faithguard-detector-models, as the demo fetched it), the no-slot ablation (same dataset) and the neural outcome model's predictions (Kaggle kernel faithguard-neural-outcome-model, run of 2026-10-28, D-099; its model folder stays in that kernel's output). The no-XBRL ablation (kernel faithguard-detector-ablation, outputs/channel-a-noxbrl/model) is added when its download ends. The fusion of A and B is refitted on the main calibration answers as pre-registered, so it has no frozen weights.",
+  "note": "Frozen detection and policy models (D-104): Channel A (private Kaggle dataset faithguard-detector-models, as the demo fetched it), the no-slot ablation (same dataset), the no-XBRL ablation (kernel faithguard-detector-ablation, outputs/channel-a-noxbrl/model; downloaded after filing and added here, before any output on a main answer), and the neural outcome model's predictions (kernel faithguard-neural-outcome-model, run of 2026-10-28, D-099). The fusion of A and B is refitted on the main calibration answers as pre-registered, so it has no frozen weights.",
   "files": [
     {
       "path": "data/demo-models/channel-a/model/channel_a.json",
@@ -70,6 +70,42 @@
     },
     {
       "path": "data/models/detector/noslot/channel-a-noslot__model__encoder__tokenizer_config.json",
+      "sha256": "14b147f2a4f939d9b12ab36e9633917040dd948fa78ce283b03402e4cf2c9cba",
+      "bytes": 574,
+      "lines": 25
+    },
+    {
+      "path": "data/models/detector/noxbrl/outputs/channel-a-noxbrl/model/channel_a.json",
+      "sha256": "965e02cf988c0427cca961d8f9eba6802b114ecab2719e201315bc0936ccd4c7",
+      "bytes": 136,
+      "lines": 0
+    },
+    {
+      "path": "data/models/detector/noxbrl/outputs/channel-a-noxbrl/model/slot_head.pt",
+      "sha256": "b566ffc0fa946b9c304af61fe88d95406a20f76d33ee36fa017ccbf0ae99294a",
+      "bytes": 29557,
+      "lines": 120
+    },
+    {
+      "path": "data/models/detector/noxbrl/outputs/channel-a-noxbrl/model/encoder/config.json",
+      "sha256": "494ebea41145fdaf361e93bd9fca70df98e37ca1b5f059196e115b6d3faad093",
+      "bytes": 2045,
+      "lines": 86
+    },
+    {
+      "path": "data/models/detector/noxbrl/outputs/channel-a-noxbrl/model/encoder/model.safetensors",
+      "sha256": "1fc30407941cd980e9655d6c51bdaa9ecc4a5bacd80cbb1d30b179669059aad3",
+      "bytes": 1230141424,
+      "lines": 3941670
+    },
+    {
+      "path": "data/models/detector/noxbrl/outputs/channel-a-noxbrl/model/encoder/tokenizer.json",
+      "sha256": "2f6c25b9da6381f2be0f596708366a2c2d5f85210032f69cbf3a921c48648c7c",
+      "bytes": 34363284,
+      "lines": 2580788
+    },
+    {
+      "path": "data/models/detector/noxbrl/outputs/channel-a-noxbrl/model/encoder/tokenizer_config.json",
       "sha256": "14b147f2a4f939d9b12ab36e9633917040dd948fa78ce283b03402e4cf2c9cba",
       "bytes": 574,
       "lines": 25
