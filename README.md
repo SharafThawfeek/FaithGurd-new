@@ -186,7 +186,7 @@ Controlled track on development data, made from the project's own templates (pip
 | --- | --- |
 | All answers generated and stored | Done (D-073): 800 answers (400 questions, Qwen3.5-9B and Gemma-4-12B), no thinking leaks or empty answers, 0.95 GPU hours; files pinned in [manifests/main-answers.json](manifests/main-answers.json); blinded labelling tasks made (`labelling/main-tasks.json`, not in git), with no suggested labels; superseded by D-100, which builds the main tasks with `labelling triage` after filing |
 | Evidence frozen and test set locked | Done (D-104): a second-reader pass by Claude (D-103) re-derived all 400 questions and checked the table rows they use; 6 questions with two readings excluded, so the locked test set is 394 questions and 788 answers ([manifests/locked-test.json](manifests/locked-test.json), [manifests/excluded-questions.json](manifests/excluded-questions.json)) |
-| Detector, repairer v1 and all variants frozen | Done (D-101, D-104): hashes in [manifests/frozen-detector.json](manifests/frozen-detector.json) and [manifests/frozen-repair.json](manifests/frozen-repair.json); the free-rewrite baseline's adapter is added when its Kaggle run ends |
+| Detector, repairer v1 and all variants frozen | Done (D-101, D-104): hashes in [manifests/frozen-detector.json](manifests/frozen-detector.json) and [manifests/frozen-repair.json](manifests/frozen-repair.json); the free-rewrite baseline's adapter was added when its Kaggle run ended (D-110) |
 | Pre-registration filed | Filed on 2026-10-29 as the git tag `prereg-v1` (D-104): [docs/preregistration.md](docs/preregistration.md); later changes are deviations in the decision log (D-105 to D-107) |
 
 ### Phase 6: label the benchmark (labels done; system runs next)
