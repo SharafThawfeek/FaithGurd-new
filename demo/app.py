@@ -27,6 +27,7 @@ sys.path[:0] = [str(HERE), str(ROOT / "src")]
 
 from decimal import InvalidOperation  # noqa: E402
 
+from ask import bad_question  # noqa: E402
 from cases import Demo, UnknownExample  # noqa: E402
 from results import results  # noqa: E402
 
@@ -110,6 +111,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._guarded(lambda: self.demo.case(query.get("id", "")))
         if url.path == "/api/results":
             return self._guarded(lambda: results(ROOT))
+        if url.path == "/api/reports":
+            return self._guarded(self.demo.report_listing)
         name = "index.html" if url.path in ("/", "") else url.path.lstrip("/")
         path = (STATIC / name).resolve()
         if STATIC in path.parents and path.is_file():
@@ -131,6 +134,20 @@ class Handler(BaseHTTPRequestHandler):
         problem = bad_answer(answer)
         if problem:
             return self._json({"error": problem})
+        if url.path in ("/api/ask", "/api/ask/ai", "/api/ask/draft"):
+            report, question = str(body.get("report", "")), body.get("question")
+            problem = bad_question(question)
+            if problem:
+                return self._json({"error": problem})
+            if url.path == "/api/ask/ai":
+                return self._guarded(lambda: self.demo.ask_ai(report, question))
+            if url.path == "/api/ask/draft":
+                return self._guarded(lambda: self.demo.ask_draft(report, question))
+            if answer is None:
+                return self._json({"error": "Type an answer, ask the AI, or write the answer from the table first."})
+            return self._guarded(lambda: self.demo.ask(report, question, answer))
+        if url.path == "/api/plant":
+            return self._guarded(lambda: self.demo.plant_errors(example))
         if url.path == "/api/run":
             return self._guarded(lambda: self.demo.case(example, answer, channel_a=body.get("channel_a", True) is True))
         if url.path == "/api/channel-a":
@@ -157,6 +174,7 @@ def main(argv: list[str] | None = None) -> None:
     except OSError:
         sys.exit(f"Port {args.port} is in use: is the demo already running? Close it, or start this one with --port {args.port + 1}.")
     Handler.demo = Demo()
+    Handler.demo.prepare()
     if not args.no_models:
         from models import LiveModels
 

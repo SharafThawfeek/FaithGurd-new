@@ -11,7 +11,8 @@ const VERDICT_ICON = { supported: "✓", unsupported: "✗", unverifiable: "?" }
 const ACTION_WORD = { send: "SEND", repair: "REPAIR", abstain: "ABSTAIN" };
 
 const state = { examples: [], current: null, data: null, step: 0, claim: null, showAll: {}, view: "case",
-                runSeq: 0, loadSeq: 0, timer: null, resultsTab: "detection", results: null, trainedLive: {}, modelStates: {} };
+                runSeq: 0, loadSeq: 0, timer: null, resultsTab: "detection", results: null, trainedLive: {}, modelStates: {},
+                reports: null, ask: { report: null, question: "", answer: "", busy: null, allItems: false, tables: false }, asked: [] };
 
 // ---------------------------------------------------------------- helpers
 function h(tag, attrs, ...kids) {
@@ -81,6 +82,7 @@ async function refreshStatus() {
   state.status = s;
   state.modelStates = { a: s.channel_a.state, r: s.repairer.state };
   const becameReady = ["a", "r"].some((k) => before[k] === "loading" && state.modelStates[k] === "ready");
+  if (state.view === "ask") updateAskButtons();
   if (becameReady && state.view === "case" && state.current) {
     if (state.data && !state.data.edited && document.activeElement.id !== "answerbox") loadCase(state.current, { keepStep: true });
     else toast("A trained model is now live: re-select the example to use it.");
@@ -93,6 +95,16 @@ function renderSidebar() {
   const groups = [["fictional", "Fictional bank (made-up figures)"], ["pilot", "Real AI answers (pilot, development)"]];
   const side = document.getElementById("sidebar");
   side.replaceChildren();
+  side.append(h("h3", {}, "Your own question"));
+  side.append(h("button", { class: `ex cta${state.view === "ask" ? " active" : ""}`, onclick: showAsk },
+    h("span", { class: "t" }, "Ask your own question ▶"),
+    h("span", { class: "c" }, "any question on a real report: an AI (or you) answers, FaithGuard checks it")));
+  for (const a of state.asked.slice(0, 8)) {
+    const active = state.view === "case" && state.current === a.id;
+    side.append(h("button", { class: `ex asked${active ? " active" : ""}`, onclick: () => selectExample(a.id), title: a.question },
+      h("span", { class: "t" }, h("span", { class: "q" }, a.question), a.action ? badge(a.action) : null),
+      h("span", { class: "c" }, `${a.report} · ${a.by}`)));
+  }
   let n = 0;
   for (const [g, title] of groups) {
     const items = state.examples.filter((e) => e.group === g);
@@ -138,6 +150,7 @@ async function loadCase(id, { keepStep = false, answer = null } = {}) {
   state.data = data;
   if (!keepStep || !data.catch.claims.some((c) => c.id === state.claim)) state.claim = firstClaim(data);
   render();
+  if (data.group === "ask" && !data.planted) fetchPlanted(data.id);
 }
 
 function firstClaim(data) {
@@ -206,6 +219,7 @@ function render(opts = {}) {
     // keep the textarea (and the presenter's cursor) while the result below changes
     document.getElementById("tryrow").replaceChildren(...tryRowKids(d));
     document.getElementById("tryerr").hidden = true;
+    document.getElementById("caveats").replaceChildren(...caveatList(d));
   }
   const panel = h("div", { id: "panel" }, [renderCatch, renderControl, renderCorrect, renderOutput][state.step](d));
   const nav = h("div", { class: "nav" },
@@ -233,20 +247,50 @@ function renderQA(d) {
     oninput: (ev) => scheduleRun(ev.target.value),
     onkeydown: (ev) => { if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); clearTimeout(state.timer); runEdited(ev.target.value); } } });
   box.value = d.answer;
-  return h("section", { class: "card qa", id: "qa" },
+  const asked = d.group === "ask";
+  const where = asked && d.report ? `${d.report.name}${d.report.real ? " · real annual report" : ""}` : `${q.country === "LK" ? "Sri Lanka" : "US"} · ${q.issuer}`;
+  return h("section", { class: `card qa${asked ? " asked" : ""}`, id: "qa" },
     h("div", { class: "meta" },
-      h("span", {}, d.group === "pilot" ? "Real AI answer (pilot, development)" : "Fictional bank, made-up figures"),
-      h("span", {}, `${q.country === "LK" ? "Sri Lanka" : "US"} · ${q.issuer}`),
-      d.generator ? h("span", {}, `answer by: ${d.generator}`) : null),
+      h("span", {}, asked ? "Your question" : d.group === "pilot" ? "Real AI answer (pilot, development)" : "Fictional bank, made-up figures"),
+      h("span", {}, where),
+      d.generator ? h("span", {}, `answer by: ${d.generator}`) : null,
+      asked ? h("button", { class: "btn small", onclick: showAsk }, "◀ Ask another question") : null),
     h("div", { class: "question" }, q.text),
     d.caption ? h("div", { class: "caption" }, d.caption) : null,
+    h("div", { id: "caveats" }, caveatList(d)),
     h("div", { class: "tryit" },
       h("label", { for: "answerbox" }, "Answer · try it yourself: edit the text and the pipeline reruns"),
       box,
-      d.edits && d.edits.length ? h("div", { class: "chips" }, h("span", { class: "note" }, "Pre-checked edits: "),
-        d.edits.map((e) => h("button", { class: "chip", title: e.answer, onclick: () => useEdit(e.answer) }, e.label, " → ", badge(e.expect)))) : null,
+      asked ? plantedChips(d)
+        : d.edits && d.edits.length ? h("div", { class: "chips" }, h("span", { class: "note" }, "Pre-checked edits: "),
+          d.edits.map((e) => h("button", { class: "chip", title: e.answer, onclick: () => useEdit(e.answer) }, e.label, " → ", badge(e.expect)))) : null,
       h("div", { class: "row", id: "tryrow" }, ...tryRowKids(d)),
       h("div", { class: "err", id: "tryerr", hidden: true })));
+}
+
+function caveatList(d) {
+  return (d.caveats || []).map((c) => h("div", { class: "caveat" }, h("b", {}, "Known limitation: "), c));
+}
+
+function plantedChips(d) {
+  const label = h("span", { class: "note" }, d.planted_on === "repaired" ? "Plant an error in FaithGuard's repaired answer: " : "Plant an error in the original answer: ");
+  if (!d.planted) return h("div", { class: "chips", id: "planted" }, label, h("span", { class: "spin" }), h("span", { class: "note" }, " finding errors to plant…"));
+  if (d.plantError) return h("div", { class: "chips", id: "planted" }, label, h("span", { class: "note" }, d.plantError));
+  if (!d.edits.length) return h("div", { class: "chips", id: "planted" }, label,
+    h("span", { class: "note" }, "none: no number in the original answer is supported by a cell (it is already wrong, or has no number)."));
+  return h("div", { class: "chips", id: "planted" }, label,
+    d.edits.map((e) => h("button", { class: "chip plant", title: e.answer, onclick: () => useEdit(e.answer) }, e.label, " → ", badge(e.expect))));
+}
+
+async function fetchPlanted(id) {
+  const r = await api("/api/plant", { id });
+  if (!state.data || state.data.id !== id) return;
+  state.data.edits = r.error ? [] : r.edits;
+  state.data.plantError = r.error || null;
+  state.data.planted_on = r.on || "original";
+  state.data.planted = true;
+  const old = document.getElementById("planted");
+  if (old) old.replaceWith(plantedChips(state.data));
 }
 
 function tryRowKids(d) {
@@ -750,6 +794,178 @@ function renderResults() {
     h("div", { class: "tabs" }, tabs.map(([k, label]) => h("button", { class: `tab${state.resultsTab === k ? " active" : ""}`,
       onclick: () => { state.resultsTab = k; renderResults(); } }, label))),
     body);
+}
+
+// ---------------------------------------------------------------- ask your own question
+async function showAsk() {
+  state.view = "ask";
+  state.loadSeq++;
+  state.runSeq++;
+  clearTimeout(state.timer);
+  renderSidebar();
+  if (!state.reports) {
+    document.getElementById("main").replaceChildren(h("div", { class: "main-loading" }, "Loading the reports…"));
+    const r = await api("/api/reports");
+    if (r.error) { toast(r.error); return; }
+    state.reports = r;
+    const real = r.find((x) => x.real && x.country === "LK") || r[0];
+    state.ask.report = state.ask.report || (real && real.id);
+  }
+  if (state.view === "ask") renderAsk();
+}
+
+function askReport() { return (state.reports || []).find((r) => r.id === state.ask.report) || null; }
+function aiReady() { return state.status && state.status.repairer && state.status.repairer.state === "ready"; }
+function aiNote() {
+  const st = state.status && state.status.repairer;
+  if (aiReady()) return "Qwen3.5-2B, live on this laptop's GPU (3-15 s): the trained repairer's base model with the repair training switched off, "
+    + "asked for a one-sentence answer. The benchmark's answers came from larger models.";
+  if (st && st.state === "loading") return "The AI is loading on the GPU (about 25 s)…";
+  return "The AI is not loaded on this laptop (it needs the GPU and the model files): write the answer from the table, or type one.";
+}
+
+function setQuestion(text) {
+  if (state.ask.busy) return;
+  state.ask.question = text;
+  state.ask.answer = "";
+  const q = document.getElementById("askq");
+  if (q) { q.value = text; q.focus(); }
+  const a = document.getElementById("askanswer");
+  if (a) a.value = "";
+  updateAskButtons();
+}
+
+function askError(msg) {
+  const el = document.getElementById("askerr");
+  if (el) { el.textContent = msg || ""; el.hidden = !msg; }
+}
+
+const ASK_INPUTS = ["askreport", "askq", "askanswer", "asktables", "askall"];
+
+function updateAskButtons() {
+  const busy = state.ask.busy;
+  const hasQ = state.ask.question.trim().length > 0;
+  const set = (id, disabled) => { const el = document.getElementById(id); if (el && !(busy && busy.id === id)) el.disabled = disabled; };
+  set("askai", !!busy || !hasQ || !aiReady());
+  set("askdraft", !!busy || !hasQ);
+  set("askgo", !!busy || !hasQ || !state.ask.answer.trim());
+  for (const id of ASK_INPUTS) set(id, !!busy);
+  document.querySelectorAll(".askcard .chip").forEach((c) => (c.disabled = !!busy));
+  const note = document.getElementById("ainote");
+  if (note) note.textContent = aiNote();
+  if (busy) {  // a re-render while waiting keeps the spinner on the button that is waiting
+    const btn = document.getElementById(busy.id);
+    if (btn && !btn.querySelector(".spin")) { btn.disabled = true; btn.replaceChildren(h("span", { class: "spin" }), ` ${busy.text} `, h("span", { class: "secs" }, "")); }
+  }
+}
+
+function busyButton(id, text) {
+  const t0 = performance.now();
+  state.ask.busy = { id, text };
+  updateAskButtons();
+  const tick = setInterval(() => { const s = document.querySelector(`#${id} .secs`); if (s) s.textContent = `${((performance.now() - t0) / 1000).toFixed(1)} s`; }, 100);
+  return () => { clearInterval(tick); state.ask.busy = null; };
+}
+
+async function askFor(kind) {
+  const r = askReport();
+  const question = state.ask.question;
+  if (state.ask.busy || !r || !question.trim() || (kind === "ai" && !aiReady())) return;
+  askError("");
+  const done = kind === "ai" ? busyButton("askai", "The AI is reading the report…") : busyButton("askdraft", "Writing from the table…");
+  const out = await api(kind === "ai" ? "/api/ask/ai" : "/api/ask/draft", { report: r.id, question });
+  done();
+  if (state.view !== "ask" || state.ask.report !== r.id || state.ask.question !== question) { if (state.view === "ask") renderAsk(); return; }
+  if (out.error) { renderAsk(); askError(out.error); return; }
+  state.ask.answer = out.answer;
+  state.ask.by = out.by;
+  state.ask.seconds = out.seconds;
+  renderAsk();
+  checkAsk();
+}
+
+async function checkAsk() {
+  const r = askReport();
+  const question = state.ask.question, answer = state.ask.answer;
+  if (state.ask.busy || !r || !question.trim() || !answer.trim()) return;
+  askError("");
+  const done = busyButton("askgo", "FaithGuard is checking…");
+  const data = await api("/api/ask", { report: r.id, question, answer });
+  done();
+  if (state.view !== "ask" || state.ask.report !== r.id || state.ask.question !== question) { if (state.view === "ask") renderAsk(); return; }
+  if (data.error) { renderAsk(); askError(data.error); return; }
+  state.asked.unshift({ id: data.id, question: data.question.text, report: r.name, by: data.generator.split(",")[0], action: data.output.action });
+  state.view = "case";
+  state.current = data.id;
+  state.data = data;
+  state.step = 0;
+  state.claim = firstClaim(data);
+  state.showAll = {};
+  renderSidebar();
+  render();
+  window.scrollTo(0, 0);
+  fetchPlanted(data.id);
+}
+
+function previewTable(t) {
+  const unit = { 3: "thousands", 6: "millions", 9: "billions" }[t.scale];
+  return h("div", {}, h("div", { class: "tabletitle" }, `${t.title || "Table"}`,
+    h("span", { class: "note" }, [unit ? ` · amounts in ${unit}` : "", t.currency ? ` · ${t.currency}` : "", ` · ${t.rows.length} rows`].join(""))),
+    h("div", { class: "tablewrap preview" }, h("table", { class: "ev" },
+      h("thead", {}, h("tr", {}, h("th", { class: "lab" }, ""), t.columns.map((c) => h("th", {}, c.label)))),
+      h("tbody", {}, t.rows.map((row) => h("tr", {}, h("td", { class: "lab" }, row.label),
+        row.cells.map((c) => h("td", { class: "cell" }, c ? c.text : ""))))))));
+}
+
+function renderAsk() {
+  const r = askReport();
+  const main = document.getElementById("main");
+  if (!r) { main.replaceChildren(h("p", { class: "note" }, "No report is loaded.")); return; }
+  const select = h("select", { id: "askreport", "aria-label": "Report", onchange: (ev) => {
+    state.ask.report = ev.target.value; state.ask.question = ""; state.ask.answer = ""; state.ask.allItems = false; renderAsk(); } },
+  state.reports.map((x) => h("option", { value: x.id, selected: x.id === r.id },
+    `${x.name}${x.real ? ` · real annual report (${x.country === "LK" ? "Sri Lanka" : "US"})` : ""}`)));
+  const input = h("input", { id: "askq", type: "text", class: "askq", maxlength: 300, autocomplete: "off", spellcheck: "false",
+    placeholder: "Type any question about this report…", "aria-label": "Your question",
+    oninput: (ev) => { state.ask.question = ev.target.value; updateAskButtons(); },
+    onkeydown: (ev) => { if (ev.key === "Enter") { ev.preventDefault(); askFor(aiReady() ? "ai" : "draft"); } } });
+  input.value = state.ask.question;
+  const items = state.ask.allItems ? r.line_items : r.line_items.slice(0, 14);
+  const busyNow = !!state.ask.busy;
+  const answer = h("textarea", { id: "askanswer", spellcheck: "false", "aria-label": "Answer to check",
+    placeholder: "…or type an answer here yourself, right or wrong",
+    oninput: (ev) => { state.ask.answer = ev.target.value; state.ask.by = null; updateAskButtons(); },
+    onkeydown: (ev) => { if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); checkAsk(); } } });
+  answer.value = state.ask.answer;
+  const card = h("section", { class: "card askcard" },
+    h("h2", {}, "Ask your own question"),
+    h("p", { class: "note lead" }, "Pick a report and ask anything its tables can answer. An AI answers, FaithGuard checks every number against the report, then sends, repairs or withholds the answer. Then plant an error and watch it get caught."),
+    h("div", { class: "askrow" }, h("label", { for: "askreport" }, "1 · Report"), select),
+    h("div", { class: "askrow" }, h("label", { for: "askq" }, "2 · Question"), input),
+    r.suggestions.length ? h("div", { class: "chips indent" }, h("span", { class: "note" }, "Try: "),
+      r.suggestions.map((s) => h("button", { class: "chip", onclick: () => setQuestion(s) }, s))) : null,
+    r.line_items.length ? h("div", { class: "chips indent" }, h("span", { class: "note" }, "Line items in this report: "),
+      items.map((x) => h("button", { class: "chip plain", title: x.question, onclick: () => setQuestion(x.question) }, x.label)),
+      r.line_items.length > 14 ? h("button", { id: "askall", class: "btn small", disabled: busyNow,
+        onclick: () => { state.ask.allItems = !state.ask.allItems; renderAsk(); } },
+      state.ask.allItems ? "fewer" : `all ${r.line_items.length}`) : null) : null,
+    h("div", { class: "askrow top" }, h("label", { for: "askanswer" }, "3 · Answer"),
+      h("div", { class: "askanswer" },
+        h("div", { class: "askbtns" },
+          h("button", { id: "askai", class: "btn primary big", onclick: () => askFor("ai") }, "Ask the AI ▶"),
+          h("button", { id: "askdraft", class: "btn big", onclick: () => askFor("draft") }, "Write the correct answer from the table")),
+        h("div", { class: "note", id: "ainote" }, aiNote()),
+        answer,
+        state.ask.by && state.ask.answer ? h("div", { class: "note" }, `Answer by ${state.ask.by}${state.ask.seconds ? `, in ${state.ask.seconds} s` : ""}.`) : null,
+        h("div", { class: "err", id: "askerr", hidden: true }),
+        h("div", { class: "askbtns" }, h("button", { id: "askgo", class: "btn primary big", onclick: checkAsk }, "Check it with FaithGuard ▶"),
+          h("span", { class: "note" }, "Enter in the question asks the AI; Ctrl+Enter in the answer checks it.")))));
+  const tables = h("section", { class: "card" }, h("h2", {}, "What the AI and FaithGuard see ",
+    h("button", { id: "asktables", class: "btn small", onclick: () => { state.ask.tables = !state.ask.tables; renderAsk(); } }, state.ask.tables ? "hide the tables" : "show the tables")),
+  h("p", { class: "note" }, r.real ? "Tables taken from the company's published annual report (a development issuer of the benchmark)." : "Made-up figures on a fictional bank."),
+  state.ask.tables ? r.evidence.tables.map(previewTable) : null);
+  main.replaceChildren(card, tables);
+  updateAskButtons();
 }
 
 // ---------------------------------------------------------------- start

@@ -11,6 +11,7 @@ DEMO = Path(__file__).resolve().parent.parent / "demo"
 sys.path.insert(0, str(DEMO))
 
 from app import bad_answer, friendly  # noqa: E402
+from ask import bad_question, draft, question_type  # noqa: E402
 from cases import Demo, UnknownExample, safe_path  # noqa: E402
 from views import channel_a_view  # noqa: E402
 
@@ -92,8 +93,115 @@ def test_channel_a_spans_widen_to_the_whole_number(demo):
     assert det["catch"]["claims"][0]["text"] == "7.0%"
 
 
+def test_own_questions_get_a_type_from_their_wording():
+    assert question_type("What was the Group's profit after tax in 2025?") == "lookup"
+    assert question_type("By what percentage did the Bank's deposits grow in 2025?") == "growth"
+    assert question_type("How did the Group's revenue change in 2026 compared with 2025?") == "growth"
+    assert question_type("By how much did net interest income increase?") == "difference"
+    assert question_type("What share of total assets were loans?") == "share"
+    assert bad_question("  ") and bad_question("x" * 400) and bad_question(None)
+    assert bad_question("What was the Group's revenue?") is None
+
+
+def test_a_line_item_named_in_the_question_does_not_set_its_type():
+    from faithguard.claims import Vocabulary
+    from faithguard.tables import table_from_grid
+
+    grid = [["t", "Group", "Group"], ["Rs. '000", "2025", "2024"], ["Change in fair value of investments", "1,200", "900"],
+            ["Share of profit of associates", "300", "250"]]
+    vocab = Vocabulary(table_from_grid("t1", grid, currency="LKR").cells)
+    assert question_type("What was the Group's change in fair value of investments in 2025?", vocab) == "lookup"
+    assert question_type("What was the Group's share of profit of associates in 2025?", vocab) == "lookup"
+    assert question_type("By what percentage did the Group's share of profit of associates grow in 2025?", vocab) == "growth"
+
+
+def test_the_template_takes_the_base_year_the_question_names_and_refuses_a_change_without_one(demo):
+    report = demo.reports["demo:fictional-bank"]
+    assert "from Rs. 13,004,180 thousand in 2024" in draft(report, "By what percentage did the Group's profit after tax grow from 2024 to 2025?")
+    with pytest.raises(ValueError):
+        draft(report, "By what percentage did the Group's profit after tax grow in 2024?")  # no 2023 in the table
+
+
+def test_questions_are_read_as_their_writers_meant(demo):
+    from ask import read_question
+
+    bank = demo.reports["demo:fictional-bank"]
+    assert read_question(bank, "What was the Group's net interest income in FY24?")[1] == "2024"
+    assert read_question(bank, "What was the Group's net interest income in the previous year?")[1] == "2024"
+    assert read_question(bank, "What was the Group's net interest income in 2025?")[1] is None  # the checker reads 4-digit years itself
+    assert "44,102,870" in draft(bank, "What was the Group's net interest income in FY24?")
+    real = next((r for r in demo.reports.values() if r.real and " Bank" in r.name), None)
+    if real is not None:  # the pilot data is on this laptop
+        text, _, note = read_question(real, f"What was {real.name.split()[0]} Bank's profit for the year in 2025?")
+        assert " Bank" not in text and note
+
+
+def test_the_template_refuses_what_it_cannot_write_right():
+    from ask import Report
+    from faithguard.records import Evidence
+    from faithguard.tables import table_from_grid
+
+    grid = [["Statement", "Group", "Group"], ["Rs. '000", "2025", "2024"], ["Loans and advances", "1,000", "900"],
+            ["Cost of sales", "(700)", "(650)"], ["Loans and advances", "50", "40"]]
+    report = Report("demo:test", "Test PLC", "LK", Evidence(tables=[table_from_grid("t1", grid, currency="LKR")]), True)
+    for question in ("What were the Group's loans and advances in 2025?",  # two rows of that name, different figures
+                     "What was the Group's cost of sales in 2025?",  # printed in brackets
+                     "By what percentage did the Group's cost of sales grow in 2025?"):
+        with pytest.raises(ValueError):
+            draft(report, question)
+
+
+def test_own_question_on_the_fictional_bank_template_answer_sent_and_planted_errors_repaired_back(demo):
+    report = demo.reports["demo:fictional-bank"]
+    chips = demo.chips(report.id)
+    questions = chips["suggestions"]
+    assert len(questions) >= 3 and chips["line_items"]
+    for question in questions:
+        answer = demo.ask_draft(report.id, question)["answer"]
+        case = demo.ask(report.id, question, answer)
+        assert case["group"] == "ask" and case["output"]["action"] == "send" and not case["caveats"], question
+        assert case["generator"].startswith("a template")
+        planted = demo.plant_errors(case["id"])["edits"]
+        kinds = {e["label"].split(":")[0] for e in planted}
+        assert {"Wrong entity", "Wrong scale", "Maths slip"} <= kinds, question
+        assert "Wrong year" in kinds or "grow" in question or "change" in question, question
+        for e in planted:
+            rerun = demo.case(case["id"], e["answer"])
+            assert rerun["output"]["action"] == e["expect"] == "repair", e["label"]
+            assert same_figures(rerun["output"]["text"], answer), e["label"]  # the repair gives the right figures back
+
+
+def same_figures(text: str, reference: str) -> bool:
+    """Each number equals the reference's to the coarser of the two printed precisions, with the same direction."""
+    from decimal import Decimal
+
+    from faithguard.claims import extract_claims
+
+    got, want = extract_claims(text), extract_claims(reference)
+    if len(got) != len(want):
+        return False
+    for a, b in zip(got, want):
+        unit = max(Decimal(1).scaleb(-c.decimals) * (Decimal(10) ** c.scale if c.kind == "amount" else 1) for c in (a, b))
+        if a.direction != b.direction or abs(a.value - b.value) > unit / 2:
+            return False
+    return True
+
+
+def test_typed_answers_are_labelled_typed_and_unknown_reports_refused(demo):
+    case = demo.ask("demo:fictional-bank", "What was the Group's profit after tax in 2025?", "It was Rs. 9 million.")
+    assert case["generator"] == "typed in the demo" and case["output"]["action"] != "send"
+    assert demo.example(case["id"]).group == "ask" and case["id"] not in {e["id"] for e in demo.listing()}
+    with pytest.raises(UnknownExample):
+        demo.ask("LK:NOPE", "What was revenue?", "Rs. 1 million.")
+    assert "error" in demo.ask_ai("demo:fictional-bank", "What was revenue?")  # no models in the tests
+    assert "error" in demo.ask_draft("demo:fictional-bank", "What was the Group's return on equity in 2025?")
+    listing = demo.report_listing()
+    assert listing and all(r["suggestions"] and r["evidence"]["tables"] for r in listing)
+    assert all(item["question"].endswith("?") for r in listing for item in r["line_items"])
+
+
 def test_the_demo_never_reads_gold_or_blinded_data():
-    for name in ("app.py", "cases.py", "views.py", "models.py", "results.py"):
+    for name in ("app.py", "cases.py", "views.py", "models.py", "results.py", "ask.py"):
         tree = ast.parse((DEMO / name).read_text(encoding="utf-8"))
         imported = {n.module for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module}
         imported |= {a.name for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}

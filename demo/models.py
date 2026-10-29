@@ -16,10 +16,20 @@ import time
 import traceback
 from pathlib import Path
 
-from faithguard.records import DetectorOutput, Item, RepairOutput
+from faithguard.records import DetectorOutput, Evidence, Item, RepairOutput
 
 BASE_MODEL = "Qwen/Qwen3.5-2B"
 MAX_FAILURES = 3  # consecutive inference errors before a model is marked failed and stored outputs take over
+ANSWER_TOKENS = 120
+# The benchmark generators' prompt asks for up to three sentences; the 2B base model fills them with its working
+# ("calculated as (14,212,560 - 13,004,180) / ..."), which the rule checker reads one year per clause. One sentence
+# that names each figure's year is what the benchmark's larger AIs mostly wrote.
+ANSWER_SYSTEM = (
+    "You answer questions about company annual reports. Use only the report extract provided. "
+    "Answer in one sentence. State each figure with its currency, unit and year. If a table's title has a units "
+    "note, write that unit as a word (thousand, million or billion); if it has none, the figures are in single units. "
+    "Do not show your working."
+)
 
 
 class Slot:
@@ -131,3 +141,28 @@ class LiveModels:
         started = time.perf_counter()
         out = self.repairer.run(lambda: self.repairer.model(item, det))
         return out, time.perf_counter() - started
+
+    def answer(self, question: str, evidence: Evidence) -> tuple[str | None, float]:
+        """The base model's own answer, the repair adapter switched off: the evidence and question rendered as
+        for the benchmark's generators (faithguard.generation.answers), with a one-sentence instruction."""
+        if self.repairer.state != "ready":
+            return None, 0.0
+        from faithguard.generation.answers import strip_thinking, user_prompt
+
+        gen = self.repairer.model.generate  # the Generator inside the ModelRepairer
+
+        def go() -> str:
+            ids = gen._ids(user_prompt(question, evidence), ANSWER_SYSTEM)
+            with gen.torch.no_grad(), gen.model.disable_adapter():
+                out = gen.model.generate(**ids, max_new_tokens=ANSWER_TOKENS, do_sample=False, pad_token_id=gen.tokenizer.pad_token_id)
+            return gen.tokenizer.decode(out[0][ids["input_ids"].shape[1]:], skip_special_tokens=True)
+
+        started = time.perf_counter()
+        with self.repairer.lock:  # the same GPU model, but its failures do not count against the trained repairer
+            try:
+                raw = go()
+            except Exception:
+                _free_gpu()
+                raise
+        text, _ = strip_thinking(raw)
+        return " ".join(text.split()), time.perf_counter() - started

@@ -76,6 +76,22 @@ Each script takes about three minutes. Examples are numbered as in the sidebar; 
 - Say plainly: on the controlled track the trained v1 corrects 65.7% against the rules' 59.6%, but on the 23 wrong pilot answers the rules correct more (43.5% against 39.1%; Results → Correct).
 - If asked about example 6's trained column: the trained repairer computes "return on equity" as net interest income over total assets, and the gate passes it, because return on equity is not in the evidence for provenance to check. The policy withholds that answer anyway; it is a known gap in the gate.
 
+### Ask your own question (any member, or a panel member at the keyboard)
+
+The sidebar's first entry. Pick a report (the fictional bank, or one of the five real annual reports the pilot used: Sunshine Holdings, Kinsale, Central Finance, Sampath Bank, Tokyo Cement), type a question or click a suggestion or a line item, then:
+
+- **Ask the AI ▶** (or Enter in the question): Qwen3.5-2B answers live on the GPU (4-13 s). It is the trained repairer's base model with the repair adapter switched off, so it has no FaithGuard training; it sees the tables rendered as the benchmark's generators saw them, and is asked for one sentence that names each figure's year (the generators' three-sentence prompt makes the 2B model show its working, which the rule checker reads badly). The answer goes straight into Catch.
+- **Write the correct answer from the table**: a template written from the cells the question names (lookups, growth rates and changes), for when the GPU is not available. It refuses rather than guess (two rows of the same name, a line printed in brackets, two line items in one question, no earlier year for a change).
+- Or type any answer, right or wrong, and press **Check it with FaithGuard ▶**.
+
+The *Try* suggestions and the line-item buttons are checked when the demo starts (about 25 s, in the background): each is kept only if the template answers it and the live pipeline sends that answer, so what is clicked on stage has been run. Rows printed in brackets (expenses) are left out of them (see the limitations below).
+
+On the answer, **Plant an error** writes one error of each kind into the original answer, each with the action the live pipeline takes: the other entity's figures (Group ↔ Company or Bank), the other year's figure, a neighbouring line item, thousand read as million, the direction word flipped, or a slip of 3 in the last digit (the commonest real error). The wrong figures are written by the executor from the wrong cells, in the answer's own style. Everything else works as for the examples: edit the answer, step through, run the trained repairer live. Own questions stay in the sidebar for the session.
+
+Suggested script (2 minutes): Tokyo Cement → *By what percentage did the Group's profit for the year grow in 2026?* → **Ask the AI**: it says profit "grew by 49.6%"; Catch marks it unsupported (profit fell from Rs. 3,459 million to Rs. 2,580 million), Control chooses REPAIR, Correct writes `CALCULATE` and the answer goes out as "declined by 25.4%". Then **Write the correct answer from the table** on the same question (sent unchanged) and **Plant an error: Wrong entity**: the Company's cells turn red and the repair gives the Group's figures back. The AI is greedy (no sampling), so the same question gets the same answer at every rehearsal. Other questions where the AI slips and FaithGuard fixes it: Sunshine, *By what percentage did the Group's profit for the year grow in 2026?* (AI: grew 15.0%; FaithGuard: declined by 2.5%); Central Finance, the same question for 2026 (AI: 57.6%; FaithGuard: 3.7%).
+
+Stress test before the talk (laptop GPU, prompt as shipped): 68 questions over the six reports. The AI's answers were sent 32 times, repaired 24 times and withheld 12 times; table-written answers were sent 61 of 62 times; of 312 planted errors, 308 were repaired back to the right figures, 3 withheld and 1 missed (a 0.3-point slip on a small Kinsale line, matched by chance to other cells). Sampath Bank's growth questions are withheld even when the AI is right (the policy is cautious on that report), so do not use them on stage.
+
 ### Output and Results (closing, any member)
 
 - Step **Output** shows what the user gets: the original, the repaired answer with the cells behind its numbers, or a refusal with the evidence. Real answers also show the development reference answer, which the pipeline never sees.
@@ -90,6 +106,14 @@ Start the demo, then record each script in turn with the Xbox Game Bar (Win+Alt+
 - The rule checker reads one period per clause: a base amount with no year ("rose 9.3% from Rs. 13,004 million to Rs. 14,213 million") is checked as FY2025 and "repaired" to the same figure. Typing the years avoids it, and so do the one-click edits, which `precompute.py` checks.
 - Channel A alone raises many false alarms; the policy reads Channel B's features.
 - The gate cannot check a metric the evidence does not name (example 6, trained column).
+- Own questions: expenses printed in brackets are stored as negative figures, so an answer giving an expense as a positive amount is "repaired" to a negative one, and a change in an expense takes the stored sign (cost of sales "decreased" when it rose). The suggestions and line-item buttons leave those rows out, and the screen shows a *Known limitation* note when a question or answer touches one.
+- Own questions: a units note written into the answer ("Rs 000") is read as a number, and the repair can write a figure over it; the AI is asked to write the unit as a word, and the screen notes it when it appears.
+- Own questions: the 2B AI's long answers with working ("from X to Y") run into the one-period-per-clause limit above, which is why it is asked for one sentence.
+- Own questions: "by how much" questions (typed as *difference*) are withheld on every real report even when every number is supported: the certified policy's P(unsafe) is 0.66 for them on tables this large (the controlled track's tables are small). Ask "By what percentage…" or "How did … change…" instead; the screen explains a withheld answer whose numbers are all supported. Sampath Bank's growth answers rounded to whole percents are withheld the same way.
+- Own questions: "profit attributable to owners/equity holders" can match a subtotal row, and rows that share a name (current and non-current, an impairment line and the loan book) are accepted either way by the checker. The template refuses both rather than guess; a typed answer to them is checked as the frozen checker reads it.
+- Own questions: a company name with "Bank" or "Company" in it reads as that column. The question is shortened to the name before it ("Sampath Bank's" → "Sampath's", shown on screen); an answer that says "Sampath Bank's" gets a note instead, as answers are never rewritten.
+- Own questions: when the question names no line item the report has, any figure from the tables passes (the checker has nothing to compare it with). Do not use that as a stunt.
+- Short year forms ("FY25", "the previous year") are read into the question's period, the field the benchmark's writers set by hand; four-digit years are left to the checker. The rule checker, policy and repairers are the frozen research system (D-104); none of the above is patched for the demo.
 
 ## Files
 
@@ -97,6 +121,7 @@ Start the demo, then record each script in turn with the Xbox Game Bar (Win+Alt+
 | --- | --- |
 | `app.py` | the local web server (Python standard library) and its API |
 | `cases.py` | the examples and how one is run: the live pipeline plus the trained models' outputs |
+| `ask.py` | your own question: the reports, suggestions, the template answer and the planted errors |
 | `views.py` | what each step shows, as JSON |
 | `models.py` | loading Channel A and the trained repairer, and running them |
 | `results.py` | the Results screen's tables from `runs/` |

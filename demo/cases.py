@@ -8,11 +8,17 @@ Two groups of examples:
 Every case runs the live pipeline (Channel B, the policy, the rule repairer, executor and gate). Channel A
 and the trained repairer run live when loaded (demo.models), else their stored outputs are shown:
 data/demo/cache.json (computed on this laptop by demo/precompute.py) or the Kaggle pilot run.
+
+A third group, "ask", holds the presenter's own questions on these reports (demo/ask.py), kept in memory
+for the session only.
 """
 
 from __future__ import annotations
 
 import json
+import secrets
+import threading
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -21,6 +27,7 @@ from faithguard.pipeline import run
 from faithguard.policy import ThresholdPolicy
 from faithguard.records import Item, RepairOutput, read_jsonl
 
+from ask import Unanswerable, candidate_questions, caveats, draft, make_item, plant, read_question, reports_of
 from views import catch_view, channel_a_view, control_view, evidence_view, jsonable, output_view, repair_view
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -55,6 +62,13 @@ FICTIONAL_EDITS = {
     "missing_operand": [("Another made-up ratio", "The Group return on equity was 29.6% in FY2025.", "abstain")],
 }
 BLINDED = ("data/benchmark-build/main", "data/benchmark-build/main-auto", "labelling")
+MAX_ASKED = 200  # own questions kept in memory; the oldest go first
+ANSWER_SOURCES = {
+    "ai": "Qwen3.5-2B, live on this laptop (the base model: no FaithGuard training)",
+    "template": "a template, written from the cells the question names",
+    "typed": "typed in the demo",
+}
+MAX_SUGGESTIONS = 4
 
 
 class UnknownExample(LookupError):
@@ -73,12 +87,15 @@ def safe_path(relative: str) -> Path:
 @dataclass
 class Example:
     item: Item
-    group: str  # fictional | pilot
+    group: str  # fictional | pilot | ask
     title: str
     caption: str
     expect: str | None = None  # the action the example is meant to show
     kaggle: dict = field(default_factory=dict)  # pilot only: the Kaggle run's detector record and trained repair
     edits: list = field(default_factory=list)  # (label, answer, expected action) for the try-it box
+    report: str | None = None  # ask only: the report's id
+    planted: bool = False  # ask only: edits hold the planted errors, each with the action the pipeline took
+    planted_on: str = "original"  # or "repaired": the answer had no supported figure, so they went into its repair
 
 
 def _rows(path: Path) -> dict[str, dict]:
@@ -139,6 +156,14 @@ class Demo:
         self.policy, self.certificate = load_policy()
         self.cache_path, self.cache_mtime, self._cache = cache_path, None, {}
         self.models = models
+        self.reports = reports_of(self.examples.values())
+        self.asked: OrderedDict[str, Example] = OrderedDict()
+        self.generated: dict[tuple[str, str, str], str] = {}  # (report, question, answer) -> source, for answers the demo wrote
+        self.ask_lock = threading.Lock()
+        self.ask_count = 0
+        self.run_id = secrets.token_hex(2)  # own questions' ids differ between server starts
+        self._chips: dict[str, dict] = {}
+        self._chips_lock = threading.Lock()
 
     @property
     def cache(self) -> dict:
@@ -170,10 +195,14 @@ class Demo:
                                      f"no {POLICY.relative_to(ROOT)}: run `faithguard policy`; threshold v0 decides meanwhile"},
                 "stored": stored, "examples": len(self.examples)}
 
-    def item_for(self, example_id: str, answer: str | None) -> tuple[Example, Item, bool]:
-        if example_id not in self.examples:
+    def example(self, example_id: str) -> Example:
+        e = self.examples.get(example_id) or self.asked.get(example_id)
+        if e is None:
             raise UnknownExample(example_id)
-        e = self.examples[example_id]
+        return e
+
+    def item_for(self, example_id: str, answer: str | None) -> tuple[Example, Item, bool]:
+        e = self.example(example_id)
         if answer is None or answer == e.item.answer.text:
             return e, e.item, False
         edited = e.item.model_copy(update={"answer": e.item.answer.model_copy(update={"text": answer, "generator": "edited in the demo"})})
@@ -225,10 +254,14 @@ class Demo:
             rule = repair_view(item, det, repair(item, det), "live", "rule repairer v0, live (for comparison: the policy withheld the answer)")
             rule["not_released"] = True
 
+        report = self.reports.get(e.report or "")
         return jsonable({
             "id": e.item.id, "group": e.group, "title": e.title, "caption": e.caption, "expect": e.expect, "edited": edited,
             "question": e.item.question.model_dump(mode="json"), "answer": item.answer.text, "original_answer": e.item.answer.text,
             "generator": e.item.answer.generator, "evidence": evidence_view(item, det),
+            "report": {"id": report.id, "name": report.name, "real": report.real} if report else None, "planted": e.planted,
+            "planted_on": e.planted_on,
+            "caveats": caveats(item, det, final.action) if e.group == "ask" else [],
             "edits": [{"label": label, "answer": answer, "expect": expect} for label, answer, expect in e.edits],
             "catch": catch_view(item, det, a_view),
             "control": control_view(item, det, final, self.policy, self.certificate),
@@ -263,3 +296,115 @@ class Demo:
         except Exception as err:
             return {"error": f"The trained repairer failed on this text ({type(err).__name__}); the rule repairer's result stands."}
         return jsonable(repair_view(item, det, rep, "live", f"trained repairer v1 candidate, live on this laptop's GPU in {seconds:.1f} s"))
+
+    # -- ask your own question ----------------------------------------------
+
+    def report(self, report_id: str):
+        if report_id not in self.reports:
+            raise UnknownExample(f"report {report_id}")
+        return self.reports[report_id]
+
+    def chips(self, report_id: str) -> dict:
+        """The report's one-click questions, kept only when the template answers them and the live pipeline sends that
+        answer: what is clicked on stage has been checked. Computed once per report (a few seconds on a real report)."""
+        with self._chips_lock:
+            if report_id in self._chips:
+                return self._chips[report_id]
+        r = self.report(report_id)
+        policy = self.policy or ThresholdPolicy()
+
+        def sent(question: str) -> bool:
+            try:
+                item = make_item(r, "chip", question, draft(r, question), "template")
+                return run(item, policy=policy).action == "send"
+            except Exception:
+                return False
+
+        suggested, items = candidate_questions(r)
+        out = {"suggestions": [q for q in suggested if sent(q)][:MAX_SUGGESTIONS],
+               "line_items": [{"label": label, "question": q} for label, q in items if sent(q)]}
+        with self._chips_lock:
+            self._chips[report_id] = out
+        return out
+
+    def prepare(self) -> threading.Thread:
+        """Check every report's one-click questions in the background, so the Ask screen opens at once."""
+        thread = threading.Thread(target=lambda: [self.chips(r) for r in self.reports], daemon=True)
+        thread.start()
+        return thread
+
+    def report_listing(self) -> list[dict]:
+        out = []
+        for r in self.reports.values():
+            preview = make_item(r, "preview", "", "", "")
+            out.append({"id": r.id, "name": r.name, "country": r.country, "real": r.real, **self.chips(r.id),
+                        "evidence": jsonable(evidence_view(preview, detect(preview)))})
+        return out
+
+    def ai_ready(self) -> bool:
+        return self.models is not None and self.models.repairer.state == "ready"
+
+    def ask_ai(self, report_id: str, question: str) -> dict:
+        r = self.report(report_id)
+        if not self.ai_ready():
+            return {"error": "The AI is not loaded on this laptop (it needs the GPU and the model files): "
+                             "write the answer from the table, or type one."}
+        try:
+            text, seconds = self.models.answer(question, r.evidence)
+        except Exception as err:
+            return {"error": f"The AI could not answer ({type(err).__name__}). Write the answer from the table, or type one."}
+        if not text:
+            return {"error": "The AI gave an empty answer. Ask again in other words, or type an answer."}
+        self.generated[(r.id, question.strip(), text)] = "ai"
+        return {"answer": text, "seconds": round(seconds, 1), "source": "ai", "by": ANSWER_SOURCES["ai"]}
+
+    def ask_draft(self, report_id: str, question: str) -> dict:
+        r = self.report(report_id)
+        try:
+            text = draft(r, question)
+        except Unanswerable as err:
+            return {"error": str(err)}
+        self.generated[(r.id, question.strip(), text)] = "template"
+        return {"answer": text, "source": "template", "by": ANSWER_SOURCES["template"]}
+
+    def ask(self, report_id: str, question: str, answer: str) -> dict:
+        """Register the question and its answer as an example of its own, and run it."""
+        r = self.report(report_id)
+        source = self.generated.get((r.id, question.strip(), answer), "typed")
+        with self.ask_lock:
+            self.ask_count += 1
+            item_id = f"ask-{self.run_id}-{self.ask_count}"
+            item = make_item(r, item_id, question, answer, ANSWER_SOURCES[source])
+            note = read_question(r, question)[2]
+            self.asked[item_id] = Example(item, "ask", "Your question", note, report=r.id)
+            while len(self.asked) > MAX_ASKED:
+                self.asked.popitem(last=False)
+        return self.case(item_id)
+
+    def plant_errors(self, example_id: str) -> dict:
+        """Errors planted in the question's original answer, each with the action the live pipeline takes on it."""
+        e = self.example(example_id)
+        if e.group != "ask":
+            return {"edits": []}
+        if not e.planted:
+            policy = self.policy or ThresholdPolicy()
+
+            def with_text(text: str) -> Item:
+                return e.item.model_copy(update={"answer": e.item.answer.model_copy(update={"text": text})})
+
+            base, variants = e.item, plant(e.item, detect(e.item))
+            if not variants:  # a wrong answer has no supported figure to spoil: plant into its repair, if it got one
+                final = run(e.item, policy=policy)
+                if final.action == "repair" and final.text:
+                    base = with_text(final.text)
+                    variants = plant(base, detect(base))
+                    e.planted_on = "repaired"
+            edits = []
+            for label, text in variants:
+                try:
+                    edits.append((label, text, run(with_text(text), policy=policy).action))
+                except Exception:  # a variant the pipeline cannot read is not offered
+                    continue
+            e.edits, e.planted = edits, True
+        return {"edits": [{"label": label, "answer": answer, "expect": expect} for label, answer, expect in e.edits],
+                "on": e.planted_on}
