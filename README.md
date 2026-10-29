@@ -187,16 +187,34 @@ Controlled track on development data, made from the project's own templates (pip
 | All answers generated and stored | Done (D-073): 800 answers (400 questions, Qwen3.5-9B and Gemma-4-12B), no thinking leaks or empty answers, 0.95 GPU hours; files pinned in [manifests/main-answers.json](manifests/main-answers.json); blinded labelling tasks made (`labelling/main-tasks.json`, not in git), with no suggested labels; superseded by D-100, which builds the main tasks with `labelling triage` after filing |
 | Evidence frozen and test set locked | Done (D-104): a second-reader pass by Claude (D-103) re-derived all 400 questions and checked the table rows they use; 6 questions with two readings excluded, so the locked test set is 394 questions and 788 answers ([manifests/locked-test.json](manifests/locked-test.json), [manifests/excluded-questions.json](manifests/excluded-questions.json)) |
 | Detector, repairer v1 and all variants frozen | Done (D-101, D-104): hashes in [manifests/frozen-detector.json](manifests/frozen-detector.json) and [manifests/frozen-repair.json](manifests/frozen-repair.json); the free-rewrite baseline's adapter was added when its Kaggle run ended (D-110) |
-| Pre-registration filed | Filed on 2026-10-29 as the git tag `prereg-v1` (D-104): [docs/preregistration.md](docs/preregistration.md); later changes are deviations in the decision log (D-105 to D-107) |
+| Pre-registration filed | Filed on 2026-10-29 as the git tag `prereg-v1` (D-104): [docs/preregistration.md](docs/preregistration.md); later changes are deviations in the decision log (D-105 to D-112; D-113 records the analysis) |
 
-### Phase 6: label the benchmark (labels done; system runs next)
+### Phase 6: label the benchmark (done)
 
 | Step | State |
 | --- | --- |
-| Run every frozen system on the items | `python -m faithguard.train.systems` (GPU) stores Channel A's spans and the trained repairer's outputs; large evidence is focused first (D-084). Dry run on the 120 pilot answers done (D-085) |
+| Run every frozen system on the items | Done: `python -m faithguard.train.systems` (GPU) ran systems_main on all 788 locked answers, storing Channel A's spans and every repairer's outputs, and every frozen file matched its hash; large evidence is focused first (D-084). The rewrite baseline was rerun after D-111, which has it decline narrative answers with no numbers. Dry run on the 120 pilot answers (D-085) |
 | Code checks on every repair | `faithguard systems` scores the stored outputs against gold, counts only: [runs/pilot/systems/report.md](runs/pilot/systems/report.md). On the pilot, after the gate and parser fixes (D-087, D-092, D-094), stage A corrects 34.8% of the wrong answers with the rule checker's spans and 39.1% with Channel A's, damaging none; the rules correct 43.5%. Without KEEP training the model corrects more with the rule checker's spans but loses more correct answers with Channel A's ([stage A](runs/pilot/systems-repair-sft/report.md), [no KEEP](runs/pilot/systems-repair-sft-nokeep/report.md)) |
 | Label the 788 locked answers | Done (D-105). Every label, check and adjudication is a separate blind Claude pass, not a person (D-103). The triage gave 311 code labels and sent 477 answers to the labeller; the audit overruled 4 of its 150 code labels, so the code labels fell and the labeller labelled every answer. A second labeller on 80 tasks: status kappa 0.89, usefulness 0.71, wrong-span 1.00; 15 disagreements adjudicated. 177 of 788 answers incorrect (22.5%). Counts: [runs/main/labels/report.md](runs/main/labels/report.md). A first pass made without each table's units note was discarded unused |
-| Check a sample of repairs | `faithguard repair-check draw` once the main systems' outputs are fetched: 50 changed repairs from each R-H1 arm and 50 across the other variants, labelled by a blind Claude pass and compared with code by `repair-check compare` (D-106) |
+| Check a sample of repairs | Done (D-106): a blind Claude pass labelled every changed repair of v1 with gold spans and 50 each from rewriting with gold spans and from the other variants. Code and labels disagree on 3 of 43 (7.0%), 3 of 50 (6.0%) and 8 of 50 (16.0%), so all 509 changed repairs of the other variants were labelled, and their labels replace the scorer's states in the repair summaries, R-H2 and R-H3 (D-112). Information preserved on the same sample (D-109): 97.7% for v1 with gold spans, 90.0% for rewriting with gold spans, 66.0% for the other variants |
+
+### Phase 7: analyse (done)
+
+`faithguard analyse` on the locked test set, with issuer-clustered bootstrap 95% intervals: [runs/main/report.md](runs/main/report.md).
+
+| Hypothesis | Estimate [95% interval] | Verdict |
+| --- | --- | --- |
+| D-H1: XBRL negatives raise wrong-context recall | 4 wrong-context test answers; the rule needs 20 | Untestable, as pre-registered |
+| D-H2: A + B beats B on Sri Lankan spans | Span F1 0.205 against 0.181 (246 answers, 12 issuers): 0.024 [−0.059, 0.146] | Rejected: no difference |
+| D-H3: the US threshold carries over to Sri Lanka | No US threshold certifies at alpha = 0.10; label-efficiency curve 0% at 100, 200 and all 250 labels | Untestable |
+| R-H1: edit programs make fewer new errors than rewriting (gold spans) | New errors 0.3% against 10.9%: −10.6 points [−13.7, −7.7]; correction 49.4% against 20.5%: +28.9 points [16.5, 43.7] | Confirmed |
+| R-H2: self-training helps out of distribution | Gemma's answers +18.2 points [4.7, 31.0]; held-out basis errors 0.0 [0.0, 0.0] on only 2 answers | Not confirmed: the rule needs a gain on both |
+| R-H3: KEEP training cuts damage | +0.4 points [−0.9, 1.8] (0.8% against 0.4%) | Rejected: no change |
+| P-H1: the outcome-aware policy beats the detector threshold | Neither certifies, so both send nothing: 0.0 [0.0, 0.0] | Rejected: no difference |
+| P-H2: alpha = 0.10 certifiable at useful coverage | LightGBM certifies in 0% of draws at 100, 200 and all 396 calibration answers; neural in 2% at 200 | Rejected: not reachable |
+| P-H3: the v0 policy carries over to v1 | The v0 policy is not certifiable on v0's natural calibration records | Untestable |
+
+No policy certifies because, with only 396 calibration answers, the bound on wrong-among-sent needs a low error rate at high coverage: repairing everything sends 266 of them (67.2%) with 18 wrong, where certifying allows at most 13, and the outcome models, trained on template answers, are miscalibrated on natural ones (the oracle with hindsight reaches 86.0% useful coverage with nothing wrong sent, so the gap is in prediction and label budget).
 
 ### Phase 4: components (built and trained; development-data runs done)
 
