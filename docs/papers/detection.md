@@ -2,11 +2,11 @@
 
 M.L Ahamed, M.S.A Ahamed, Sharaf
 
-> **Draft status (2026-10-13).** Written before the benchmark is labelled. The introduction, related work, method, setup and limitations are drafts to revise. Results are placeholders, `[RESULT: …]`, filled in phase 7 from the pre-registered analysis ([preregistration](../preregistration.md)). Numbers marked *development* come from the controlled track or the pilot's development issuers and test no hypothesis. Citations marked `[verify]` or `[CITE: …]` must be checked against the source and entered in [related-work/detection.md](../related-work/detection.md) before submission.
+> **Draft status (2026-10-29).** The test set is locked (394 questions, 788 answers; D-104) and labelled (D-105). Filled from the locked labels: the benchmark and label description (§5.1), the disclosure that every label, check and adjudication was made by separate Claude passes (§3, §5.1, Limitations), the limitations and the AI assistance statement. Still waiting for the main GPU runs, which are in progress: every detection result on the main answers, kept as placeholders, `[RESULT: …]`, and filled in phase 7 from the pre-registered analysis ([preregistration](../preregistration.md)). The introduction, related work and method are drafts to revise. Numbers marked *development* come from the controlled track or the pilot's development issuers and test no hypothesis. Citations marked `[verify]` or `[CITE: …]` must be checked against the source and entered in [related-work/detection.md](../related-work/detection.md) before submission.
 
 ## Abstract
 
-Answers about financial reports can quote a real figure from the evidence under the wrong context: the Bank's profit given as the Group's, last year's revenue given for this year, thousands read as millions. Such "right number, wrong context" errors are hard for general hallucination detectors, because the number does appear in the evidence. We train a span detector to catch them using supervision mined automatically from US XBRL filings: each fact is paired with a sibling fact that differs in one part of its context, and an answer stating the sibling's value under the original context becomes a labelled negative. A second head names the failing relation (entity or scope, metric, period, scale or currency, sign, basis, missing operand). The learned channel is fused with an exact rule checker and calibrated, and its threshold is certified with Learn-then-Test. On a new benchmark of 800 human-labelled answers about 48 US and Sri Lankan annual reports, `[RESULT: wrong-context recall with vs without XBRL supervision at an equal clean false-alarm rate]`. `[RESULT: A + B against B alone on Sri Lankan reports]`. A threshold certified on US filings `[RESULT: holds / fails]` on Sri Lankan reports, and `[RESULT: n]` local labels restore it.
+Answers about financial reports can quote a real figure from the evidence under the wrong context: the Bank's profit given as the Group's, last year's revenue given for this year, thousands read as millions. Such "right number, wrong context" errors are hard for general hallucination detectors, because the number does appear in the evidence. We train a span detector to catch them using supervision mined automatically from US XBRL filings: each fact is paired with a sibling fact that differs in one part of its context, and an answer stating the sibling's value under the original context becomes a labelled negative. A second head names the failing relation (entity or scope, metric, period, scale or currency, sign, basis, missing operand). The learned channel is fused with an exact rule checker and calibrated, and its threshold is certified with Learn-then-Test. On a new benchmark of 788 answers about 48 US and Sri Lankan annual reports, labelled by separate blind passes of Claude rather than by people, `[RESULT: wrong-context recall with vs without XBRL supervision at an equal clean false-alarm rate]`. `[RESULT: A + B against B alone on Sri Lankan reports]`. A threshold certified on US filings `[RESULT: holds / fails]` on Sri Lankan reports, and `[RESULT: n]` local labels restore it.
 
 ## 1. Introduction
 
@@ -20,7 +20,7 @@ Our contributions:
 
 1. **XBRL-mined wrong-context supervision** for a span detector: 14,512 labelled examples from the latest 10-Ks of 120 companies that never appear in the evaluation.
 2. **A relation-slot head** that names the failing part of a flagged span, alongside the span head, so a downstream repairer or reviewer knows what to fix.
-3. **A two-channel detector**, the learned channel fused with an exact rule checker and calibrated, evaluated on human-labelled natural answers with the false-alarm rate on correct answers as a headline metric.
+3. **A two-channel detector**, the learned channel fused with an exact rule checker and calibrated, evaluated on natural answers (labelled by separate blind Claude passes, not by people; §5.1) with the false-alarm rate on correct answers as a headline metric.
 4. **A cross-market test**: a threshold certified on US filings, applied to Sri Lankan annual reports as it is and after recalibration with 25 to 200 local labels.
 
 We do not claim the first financial hallucination detector, nor the first typed or span-plus-evidence detector; related systems exist (§2).
@@ -51,7 +51,7 @@ The input is a question, frozen evidence (report tables and, where present, text
 | missing_operand | The evidence lacks what the claim needs | A ratio whose inputs the extract never shows |
 | value | Wrong, with no better description | Includes computed figures off in a printed digit |
 
-Human labels also mark unsupported non-numeric text. The slot set is the one the annotation guide uses ([annotation-guide.md](../annotation-guide.md)).
+The benchmark labels also mark unsupported non-numeric text (unsupported_text). The slot set is the one the annotation guide uses ([annotation-guide.md](../annotation-guide.md)). The labels are made by separate, blind passes of Claude (Anthropic), not by people (§5.1).
 
 ## 4. Method
 
@@ -103,9 +103,33 @@ For each numeric claim, features from both channels (Channel B's verdict, the nu
 
 ### 5.1 Data
 
-**Benchmark.** 400 question groups about the latest annual reports of 24 Sri Lankan and 24 US issuers (12 test and 12 calibration per country, issuer-disjoint from all training and development data), each with a gold answer written as an expression over cells of hand-corrected tables. Each question is answered once by Qwen3.5-9B and Gemma 4 12B (4-bit, llama.cpp, thinking off), giving 800 answers. Human annotators, blind to the generator, mark unsupported spans with slots, the answer's status (correct, incorrect, ambiguous, unhelpful) and usefulness; 20% are double-labelled, agreement is reported with Cohen's kappa, and disagreements go to an accounting adjudicator. Full details are in the benchmark paper (`[cross-reference]`).
+**Benchmark.** 400 questions about the latest annual reports of 24 Sri Lankan and 24 US issuers (12 test and 12 calibration per country, issuer-disjoint from all training and development data), each with a gold answer written as an expression over cells of hand-corrected tables. A second-reader pass re-derived every gold answer from the report and the question's wording, without the author's answer, and checked the table rows each question uses against the source pages and filings. It found no wrong gold, but six questions whose wording admits a second reading: two "why" questions the tables only partly answer, two about a line item the report prints twice, one on net income with or without the noncontrolling share, and one on a company-defined ratio the filing rounds differently. They were excluded before filing, so the locked test set is 394 questions. Each is answered once by Qwen3.5-9B and Gemma 4 12B (4-bit, llama.cpp, thinking off), giving 788 answers: 496 about Sri Lankan reports and 292 about US reports, 392 on test issuers and 396 on calibration issuers. Full details are in the benchmark paper (`[cross-reference]`).
 
-**Pilot** *(development)*. 120 answers to 60 questions on 8 development issuers, labelled by an AI annotator and awaiting human review: 23 incorrect (19.2%), mostly a computed percentage off in a printed digit, a reversed sign or a wrong scale. Channel B flagged 19 of the 23 and 16 of the other 81 numeric answers. These figures guide design only.
+**Who labelled.** The project had no human labellers, second readers or adjudicator. Every one of those roles was taken by Claude (Anthropic), each as a separate pass (decision D-103): the second reader above, the labeller, the second labeller and the adjudicator. The labelling passes were blind to the generator, the system and any code label; the second reader did not see the author's answer. No person labelled, checked or adjudicated any benchmark answer. The agreement figures below are agreement between Claude's passes, not between people. There is no human agreement figure and no external adjudicator.
+
+**How the labels were made.** Labels follow annotation guide v2: unsupported spans with slots, the answer's status (correct, incorrect, ambiguous, unhelpful) and usefulness. A pre-registered triage gave a code label (correct, useful, no spans) to 311 answers whose every number matched a gold value and whose words could not still make them wrong. The other 477 went to the labeller, with a hidden, stratified audit sample of 150 code labels; the code labels would stand only if at most 1 of the 150 was overruled. A first labelling pass was discarded before anything used it: its tasks left out each table's units note, which the generators saw, so scale and currency errors could not be judged. The tasks were rebuilt with the note and labelled again. The labeller labelled all 627 routed and audit tasks, and a second labeller the 80 pre-registered double-labelled tasks (60 routed, 20 audit), both blind. On the 80, Cohen's kappa per field:
+
+| Field | Agreement | Kappa |
+| --- | --- | --- |
+| Status | 95% | 0.89 |
+| Usefulness | 91% | 0.71 |
+| Answer has a wrong span | 100% | 1.00 |
+
+All but one of the 7 usefulness disagreements were on answers both passes called incorrect, and both marked the same 26 spans with the same slots. The 15 tasks whose labels differed in status, usefulness or span text went to the adjudicator pass, whose label decides. The audit overruled 4 of the 150 code labels (95% upper bound 6.0%): two answers that copy a table's thousands note onto a per-share figure, one with a wrong currency code, and one claiming its figure is printed on another line that shows a different one. With more than one overruled, the code labels fell, as pre-registered, and the labeller labelled the other 161 code-labelled answers. No code label decides any answer: 773 are decided by the labeller and 15 by the adjudicator. So the pre-registered re-analysis on answers not labelled by code is the main analysis itself.
+
+**What the labels say.** Of the 788 answers, 592 are correct, 177 incorrect (22.5%; 170 of the 672 numeric answers, 25.3%), 16 unhelpful and 3 ambiguous.
+
+| Country, generator | Answers | Correct | Incorrect | Unhelpful | Ambiguous |
+| --- | --- | --- | --- | --- | --- |
+| Sri Lanka, Gemma | 248 | 186 | 54 | 7 | 1 |
+| Sri Lanka, Qwen | 248 | 188 | 53 | 7 | 0 |
+| US, Gemma | 146 | 101 | 41 | 2 | 2 |
+| US, Qwen | 146 | 117 | 29 | 0 | 0 |
+| All | 788 | 592 | 177 | 16 | 3 |
+
+Growth questions hold 88 of the 177 incorrect answers. The labelled spans by slot are value 130, unsupported_text 30, scale_currency 28, sign 17, entity_scope 5, period 3, basis 2 and metric 1; no span is labelled unit or missing_operand. So the wrong-context slots (entity_scope, metric, period) carry 9 spans across all 788 answers (see Limitations). Of the 392 test answers, 86 have spans. On the 672 numeric answers, test and calibration pooled, the rule checker flags 144 of the 170 labelled incorrect and 110 of the other 502; this describes the labels and tests no hypothesis.
+
+**Pilot** *(development)*. 120 answers to 60 questions on 8 development issuers, labelled by Claude (D-103, D-105): 23 incorrect (19.2%), mostly a computed percentage off in a printed digit, a reversed sign or a wrong scale. Channel B flagged 19 of the 23 and 16 of the other 81 numeric answers. The pilot's tasks had the same missing units note as the discarded first pass, so these labels are development-only and guide design only.
 
 **Controlled track** *(development)*. FinQA and TAT-QA items with planted errors, split by issuer into fit, tune, calibration and test shares. Development results use 2,000 tune-share items.
 
@@ -147,7 +171,7 @@ On template answers the rule checker alone reaches AUROC 0.997, and the calibrat
 
 ### 6.2 Natural answers (test split)
 
-- D-H1: `[RESULT]`
+- D-H1: `[RESULT: pre-registered rule: untestable if test has fewer than 20 wrong-context answers; the labels carry 9 wrong-context spans across all 788 answers, so give the test count and report D-H1 as the rule says]`
 - D-H2: `[RESULT]`
 - D-H3, with the label-efficiency curve: `[RESULT]`
 - Released detectors and the slot head's typed output against LettuceDetect v2's taxonomy head: `[RESULT]`
@@ -155,17 +179,18 @@ On template answers the rule checker alone reaches AUROC 0.997, and the calibrat
 
 ## Limitations
 
-- **Authoring and labels.** The benchmark's questions and gold answers were drafted with an AI assistant and the pilot was labelled by one; the test set is locked only after every table and question has a human second reader, and all reported labels are human (see the AI assistance statement).
-- **How often wrong-context errors occur.** The pilot's natural errors were mostly miscalculated percentages, signs and scales. The main questions were written around wrong-context traps (Group against Company, prior-year columns, repeated line items) to raise their rate, but if natural answers still contain few such errors, D-H1's test has little power; the number of wrong-context spans is reported with the result.
+- **No human labels, checks or adjudication.** Claude (Anthropic) drafted the benchmark's questions and gold answers, and separate, blind Claude passes took every role the plan gave to people: the second reader of the questions and tables, the labeller, the second labeller and the adjudicator (D-103). No person labelled, checked or adjudicated any benchmark answer. The kappa values in §5.1 measure agreement between Claude's passes, not between people, and passes of one model can share blind spots that their agreement does not show. There is no human agreement figure and no external adjudicator. Every detection metric here is measured against Claude's labels. The safeguards that remain are code labels only where the gold cells decide, an independent audit of them (which overruled enough that no code label is used), and the pre-registered sensitivity analyses.
+- **Triage rules.** The triage and gold-scorer rules stay as filed. The four audit overrules show what they miss: unit words copied onto per-share figures, currency codes and claims with no figure.
+- **Few wrong-context errors.** The main questions were written around wrong-context traps (Group against Company, prior-year columns, repeated line items) to raise their rate, but the labels mark only 9 wrong-context spans in all 788 answers (5 entity_scope, 3 period, 1 metric), against 130 value spans. As in the pilot, natural errors fall mostly under other slots: value (the slot that includes computed figures off in a printed digit), scale or currency (28 spans) and sign (17). The test split therefore holds fewer than the 20 wrong-context answers the pre-registered rule needs, and D-H1, the paper's primary test of XBRL supervision, is reported as untestable under that rule.
 - **Template supervision.** Controlled-track and XBRL-mined answers are written from templates. They teach the detector what wrong-context errors look like, but natural answers phrase things more freely, which is why every hypothesis is tested on natural answers.
 - **US-only mining.** XBRL exists only for US filings. The Sri Lankan test measures how far US-mined supervision transfers; it cannot use Sri Lankan XBRL.
 - **Hand-corrected evidence.** The main test checks answers against hand-corrected tables, so table-reading errors cannot be mistaken for model errors. A secondary condition uses automatically extracted tables (§ benchmark paper).
-- **Scale.** 12 test issuers per country give wide issuer-clustered intervals; we report them rather than per-answer intervals.
+- **Scale.** 12 test issuers per country (392 test answers) give wide issuer-clustered intervals; we report them rather than per-answer intervals.
 - **One training run per variant**, on free GPUs; seed variance is not measured.
 
 ## AI assistance statement
 
-`[Finalise before submission.]` Claude (Anthropic) wrote most of the project's code, drafted the benchmark questions and gold answers, produced the pilot labels used only for design decisions, and drafted this paper. Every benchmark table and question is checked by a person before the test set is locked, the reported labels are human, and the authors take responsibility for all content.
+`[Finalise before submission.]` Claude (Anthropic) wrote most of the project's code, drafted the benchmark questions and gold answers, produced the pilot labels used only for design decisions, and drafted this paper. At the authors' direction, Claude also took every labelling and checking role the plan gave to people (D-103), each as a separate, blind pass: the second reader of the 400 main questions and 96 tables, the labeller of every benchmark answer, the second labeller of the 80 double-labelled tasks, and the adjudicator of the 15 disagreements. No person labelled, checked or adjudicated the benchmark. The reported kappa is agreement between Claude's passes, not between people, and there is no human agreement figure or external adjudicator. The authors take responsibility for all content.
 
 ## References
 

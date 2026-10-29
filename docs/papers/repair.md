@@ -2,11 +2,11 @@
 
 M.S.A Ahamed, M.L Ahamed, Sharaf
 
-> **Draft status (2026-10-13).** Written before the benchmark is labelled and before repairer v1 is frozen. The introduction, related work, method, setup and limitations are drafts to revise. Results are placeholders, `[RESULT: …]`, filled in phase 7 from the pre-registered analysis ([preregistration](../preregistration.md)). Numbers marked *development* come from the controlled track or the pilot's development issuers and test no hypothesis. Citations marked `[verify]` or `[CITE: …]` must be checked against the source and entered in [related-work/repair.md](../related-work/repair.md) before submission.
+> **Draft status (2026-10-29).** The test set is locked, the pre-registration filed (D-104) and the main answers labelled (D-105). Now filled: the benchmark and label description and the gold-span setting (§5.1), and the limitations and AI assistance statement, which say that every label and check was made by Claude, not by people (D-103). Repairer v1 is frozen (D-101); the method's note on its training data (§4.4) is still to fill. Still waiting for the main runs: every result on the main answers (repairs with gold and predicted spans, the baselines and variants, the repair checks). The introduction, related work and method remain drafts to revise. Results are placeholders, `[RESULT: …]`, filled in phase 7 from the pre-registered analysis ([preregistration](../preregistration.md)). Numbers marked *development* come from the controlled track or the pilot's development issuers and test no hypothesis. Citations marked `[verify]` or `[CITE: …]` must be checked against the source and entered in [related-work/repair.md](../related-work/repair.md) before submission.
 
 ## Abstract
 
-When an answer about a financial report contains a wrong number, the usual remedies are to withhold the answer or to ask a language model to rewrite it. Rewriting can fix the number but can also change others. We instead have a small local model write an *edit program*: for each flagged claim, keep it, copy a value from a named table cell, calculate it from named cells, or decline. A deterministic executor applies the program in the answer's own number format, and a hard gate checks provenance, dependency closure, that nothing outside the flagged claims changed, and that every number in the result traces to the evidence; a program that fails gets one retry, then the answer is withheld. A 2B-parameter model, fine-tuned on a free T4 GPU from FinQA and TAT-QA programs and then self-trained on its own executor-verified programs, `[RESULT: correction and new-error rates against free rewriting with the same backbone and data, on human-labelled natural errors]`. `[RESULT: self-training on held-out error types and generator]`. `[RESULT: predicted spans and KEEP training]`.
+When an answer about a financial report contains a wrong number, the usual remedies are to withhold the answer or to ask a language model to rewrite it. Rewriting can fix the number but can also change others. We instead have a small local model write an *edit program*: for each flagged claim, keep it, copy a value from a named table cell, calculate it from named cells, or decline. A deterministic executor applies the program in the answer's own number format, and a hard gate checks provenance, dependency closure, that nothing outside the flagged claims changed, and that every number in the result traces to the evidence; a program that fails gets one retry, then the answer is withheld. A 2B-parameter model, fine-tuned on a free T4 GPU from FinQA and TAT-QA programs and then self-trained on its own executor-verified programs, `[RESULT: correction and new-error rates against free rewriting with the same backbone and data, on natural errors in the benchmark's 392 test answers, labelled by Claude]`. `[RESULT: self-training on held-out error types and generator]`. `[RESULT: predicted spans and KEEP training]`.
 
 ## 1. Introduction
 
@@ -21,7 +21,7 @@ Our contributions:
 1. **An edit language and executor** for numeric repair: four typed operations, an arithmetic grammar over cell references that cannot express arbitrary code, and rendering in the answer's own number format.
 2. **A hard gate** that checks provenance, dependency closure, the edit envelope, re-verification by the rule checker, and relevance, with one retry and abstention.
 3. **A training recipe** that fits a free GPU: supervised fine-tuning on targets derived from FinQA and TAT-QA programs, with false-flag (KEEP) and evidence-removed (CANNOT_FIX) items, then rejection-sampling self-training on executor-verified programs.
-4. **An evaluation of correction against harm** on human-labelled natural errors: corrections, new errors, damage to correct answers, and withheld answers, with gold and predicted spans.
+4. **An evaluation of correction against harm** on natural errors in a locked benchmark, labelled by separate blind passes of an AI model (§5.1): corrections, new errors, damage to correct answers, and withheld answers, with gold and predicted spans.
 
 Executable edits, deterministic copying and verify-repair-abstain loops are not new in themselves (§2). The contribution is their combination in a small local model and the measurement of harm against free rewriting.
 
@@ -89,11 +89,19 @@ Errors on the wrong growth base are held out of training entirely, so RQ2 can te
 
 ### 5.1 Data
 
-**Benchmark.** 800 human-labelled answers (two generators × 400 questions about 48 US and Sri Lankan annual reports), described in the benchmark paper `[cross-reference]`. Repairs are run on the test split with gold spans (the human-labelled spans) and with predicted spans (from the detection paper's detector). Every repaired answer is scored by code against the gold answer; 400 sampled repairs are also checked by people, and if code and people disagree on more than about 10%, human checking is expanded.
+**Benchmark.** The locked test set of the benchmark paper `[cross-reference]`: 788 answers, from two generators (Gemma and Qwen), to 394 questions about the annual reports of 48 US and Sri Lankan issuers (12 test and 12 calibration issuers per country). The plan had 400 questions; a second-reader pass excluded 6 before filing because their wording admits a second reading, though their gold is right (D-104). The test set was locked, and the pre-registration filed, before any system ran on a main answer.
+
+**Who labels.** Every label and check on the benchmark was made by Claude (Anthropic), not by people (D-103). The second reader of the questions, the labeller, the second labeller and the adjudicator are separate, blind passes by Claude. The second reader re-derived each gold answer from the report without the author's value; the labelling passes see neither code labels nor which generator wrote the answer. Labels follow annotation guide v2: a status (correct, incorrect, ambiguous or unhelpful), usefulness, and spans typed by slot.
+
+**How the labels were made** (D-100, D-105). Code triage first labelled 311 answers correct and useful, with no spans, where every number and word matched the gold cells, and routed the other 477 to the labeller; a stratified random audit of 150 code labels was hidden among them. A first labelling pass was discarded unused: its tasks left out each table's units note, which the generators saw, so scale and currency errors could not be judged. In the relabel, the labeller labelled all 627 routed and audit tasks, and a second labeller the 80 pre-registered double-labelled tasks (60 routed, 20 audit). On those 80, status agreed in 95% (kappa 0.89), usefulness in 91% (kappa 0.71) and whether the answer has a wrong span in 100% (kappa 1.00). These kappas measure agreement between Claude's passes, not between people. The 15 tasks whose labels differed went to the adjudicator, whose label decides. The audit overruled 4 of the 150 code labels (95% upper bound 6.0%); the pre-registration let the code labels stand only if at most 1 was overruled, so they fell and the labeller labelled the other 161 code-labelled answers. No code label decides any answer: 773 answers are decided by the labeller and 15 by the adjudicator.
+
+**Labels.** Of the 788 answers, 592 are labelled correct, 177 incorrect (22.5%), 16 unhelpful and 3 ambiguous; 170 of the 672 numeric answers are incorrect (25.3%). Incorrect answers are commonest on growth questions (88) and shares (25). The labelled spans are mostly wrong values (130), then unsupported text (30), scale or currency (28) and sign (17), with few entity (5), period (3), basis (2) or metric (1) spans. The rule checker, which supplies the repair gate's recheck, flags 144 of the 170 incorrect numeric answers.
+
+**Spans and scoring.** Repairs are run on the 392 test answers with gold spans and with predicted spans (from the detection paper's detector). The gold spans are the span offsets of each test answer's deciding label; 86 of the 392 have spans. Every repaired answer is scored by code against the gold answer, read with the answer's evidence (D-100). At least 50 changed repairs from each R-H1 arm (edit programs, free rewriting) and 50 across the other variants are also checked against the evidence `[Settle: who does the repair check; pre-registration §6 says people, and D-103 does not name this role]`; if the check and code disagree on more than 10% of an arm's checked repairs, every changed repair of that arm is checked.
 
 **Controlled track** *(development)*. 500 items from the tune share of the controlled track, and 207 tune-share arithmetic slips.
 
-**Pilot** *(development)*. 120 natural answers on 8 development issuers, 23 of them wrong, labelled by an AI annotator and awaiting human review.
+**Pilot** *(development)*. 120 natural answers on 8 development issuers, 23 of them wrong. Claude labelled them from tasks that left out each table's units note, as in the discarded first pass; they are development-only labels and test no hypothesis (D-105).
 
 ### 5.2 Systems
 
@@ -114,7 +122,7 @@ Errors on the wrong growth base are held out of training entirely, so RQ2 can te
 - **New-error rate**: sent answers containing a wrong number the original did not have.
 - **Damage rate**: correct originals made wrong.
 - **Withheld when needed**, and **still wrong when sent**.
-- Valid-program rate in the deployed 4-bit runtime, gate pass rate, latency, and information preserved (human-scored sample).
+- Valid-program rate in the deployed 4-bit runtime, gate pass rate, latency, and information preserved (scored by Claude on a sample, not by a person; D-103).
 
 | Hypothesis | Confirmed if | Rejected if |
 | --- | --- | --- |
@@ -157,11 +165,13 @@ On the pilot's 23 wrong natural answers the picture differs. Stage A corrected 3
 - **The gate shares the rule checker's blind spots.** Recheck uses the same checker that flags claims. A wrong repair the checker cannot see, such as a value it traces under the wrong relation, can pass; we count these among new errors, scored against gold.
 - **The main baseline has no gate.** Free rewriting cannot be executed, so R-H1 compares two complete systems; the representation's own effect is separated only if the exploratory gated-rewrite run is added.
 - **One small backbone** (2B) and two self-training rounds, on free GPUs; a 4B model and other backbones are future work.
-- **Authoring and labels**: see the AI assistance statement.
+- **No human labels.** The labeller, second labeller, adjudicator and second reader of the questions are separate blind passes by Claude (Anthropic), not people (D-103). The kappas in §5.1 measure agreement between Claude's passes, not between people. There is no human agreement figure and no external adjudicator. An error Claude makes the same way in every pass would pass every check, and the gold spans that R-H1's repairs start from are Claude's. Claude also drafted the questions and gold answers, so one model made both the gold and the labels.
+- **Repairs are scored by code.** The gold scorer that scores every repair also underlies the triage's code labels. The 4 code labels the audit overruled show what the scorer and the triage rules miss: unit words copied onto per-share figures, a currency code, and a claim with no figure (D-105). A repair that makes such an error could be counted correct; the repair check (§5.1) bounds this only on the checked sample.
+- **Small test set.** 392 test answers, 86 with gold spans, from 24 test issuers; intervals are issuer-clustered and wide where errors are few. `[FILL: test answers labelled incorrect, by generator; not in the label report, which counts all 788]`
 
 ## AI assistance statement
 
-`[Finalise before submission.]` Claude (Anthropic) wrote most of the project's code, drafted the benchmark questions and gold answers, produced the pilot labels used only for design decisions, and drafted this paper. Every benchmark table and question is checked by a person before the test set is locked, the reported labels are human, and the authors take responsibility for all content.
+`[Finalise before submission.]` Claude (Anthropic) wrote most of the project's code, drafted the benchmark questions and gold answers, and drafted this paper. Claude also took the roles the plan gave to people (D-103): the second reading of every main question and table, the labelling of every answer routed to a person and of the audit sample, the labelling of the code-labelled answers after the audit, the second labelling for kappa, and the adjudication, each a separate blind pass. No person labelled an answer, checked a gold answer or adjudicated a disagreement. The pilot labels, used only for design decisions, are Claude's too. The authors take responsibility for all content.
 
 ## References
 
