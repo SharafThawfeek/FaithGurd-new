@@ -71,11 +71,14 @@ def _evaluate(name: str, tune, cal, test, cands: tuple[dict, dict, dict], alpha,
         # report the most cautious setting for reference, clearly marked as uncertified
         ref = cert.order[0]
         out["uncertified_reference"] = {"setting": ref, "p": cert.pvalues[ref], "test": policy_metrics(states(test, cands[2][ref]))}
+        out["_test_actions"] = ["abstain"] * len(test)  # with nothing certified, the family withholds every answer
+        out["_reference_actions"] = cands[2][ref]
         return out
     acts = cands[2][cert.chosen]
     m = policy_metrics(states(test, acts))
     m["regret"] = oracle_useful - m["useful_coverage"]
     out["test"] = m
+    out["_test_actions"] = acts  # for paired comparisons (evaluate.analysis); not saved
     out["test_ci"] = {k: _ci(test, acts, k, seed) for k in ("residual_risk", "useful_coverage", "emission_coverage")}
     out["cluster_p_calibration"] = cluster_pvalue(cal, cands[1][cert.chosen], alpha)
     out["cluster_upper_calibration"] = cluster_upper(cal, cands[1][cert.chosen], seed=seed)
@@ -382,6 +385,7 @@ def save(result: dict, out: str | Path) -> Path:
     if deployable is not None:
         deployable.save(out / "policy.pkl")
     clean = {k: v for k, v in result.items() if k != "deployable" and not k.startswith("_models_")}
+    clean["families"] = [{k: v for k, v in f.items() if not k.startswith("_")} for f in clean["families"]]
     (out / "results.json").write_text(json.dumps(clean, indent=2, default=str) + "\n", encoding="utf-8")
     (out / "report.md").write_text(report(clean), encoding="utf-8")
     return out

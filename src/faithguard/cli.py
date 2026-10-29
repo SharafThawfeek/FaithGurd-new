@@ -512,6 +512,41 @@ def cmd_hashes(args) -> None:
     print(f"{len(files)} files -> {out}")
 
 
+def cmd_analyse(args) -> None:
+    """Phase 7: the pre-registered analyses (evaluate.analysis). --rehearse runs them on the pilot, its development
+    issuers split into calibration and test by a hash, to exercise the code before the main labels exist."""
+    from faithguard.controlled import load_or_build
+    from faithguard.evaluate import analysis
+    from faithguard.gold import GoldStore
+    from faithguard.replay import ReplayRecord
+
+    items = list(read_jsonl(args.items, Item))
+    if args.rehearse:
+        for item in items:
+            item.question.split = ("calibration", "test")[analysis.hash_half(item.question.issuer)]
+    elif any(item.question.split not in ("calibration", "test") for item in items):
+        sys.exit("the analyses run on test and calibration items only (or pass --rehearse for the pilot)")
+    gold = GoldStore.load(args.gold)
+    outputs = analysis.load_outputs(args.systems)
+    gold_spans = None
+    if args.gold_spans and Path(args.gold_spans).exists():
+        rows = [json.loads(x) for x in Path(args.gold_spans).read_text(encoding="utf-8").splitlines() if x.strip()]
+        gold_spans = {r["item_id"]: [tuple(s) for s in r["spans"]] for r in rows}
+    controlled = []
+    for source in ("tatqa", "finqa"):
+        for split in ("train", "dev", "test"):
+            controlled += load_or_build(source, split)[2]
+    controlled_v1 = list(read_jsonl(args.controlled_v1, ReplayRecord)) if args.controlled_v1 and Path(args.controlled_v1).exists() else None
+    result = {"detection": analysis.detection(items, gold, outputs, args.seed),
+              "repair": analysis.repair(items, gold, outputs, gold_spans, args.seed),
+              "policy": analysis.policy(items, gold, outputs, controlled, controlled_v1, args.seed)}
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "results.json").write_text(json.dumps(result, indent=2, default=str) + "\n", encoding="utf-8")
+    (out / "report.md").write_text(analysis.report(result), encoding="utf-8")
+    print(analysis.report(result))
+
+
 def cmd_labelling(args) -> None:
     from faithguard import labelling
     from faithguard.gold import GoldStore
@@ -765,6 +800,17 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--note", default="", help="what the files are, e.g. the run and its settings")
     p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_hashes)
+
+    p = sub.add_parser("analyse", help="phase 7: the pre-registered analyses on the labelled main benchmark (D-102)")
+    p.add_argument("--items", default="data/benchmark-build/main/items.jsonl")
+    p.add_argument("--gold", default="data/benchmark-build/main/gold")
+    p.add_argument("--systems", default="data/benchmark-build/main/systems", help="folder of the fetched GPU outputs")
+    p.add_argument("--gold-spans", default="data/benchmark-build/main/gold-spans.jsonl", help="span offsets cut from the labels (R-H1)")
+    p.add_argument("--controlled-v1", default="runs/policy/transfer-replays/replay.jsonl", help="repairer v1's controlled replays (P-H3)")
+    p.add_argument("--rehearse", action="store_true", help="run on the pilot, its issuers split into calibration and test by a hash")
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--out", default="runs/main")
+    p.set_defaults(fn=cmd_analyse)
 
     p = sub.add_parser("labelling", help="blinded Label Studio tasks, code labels with a person's audit (D-100), label import")
     p.add_argument("action", choices=["tasks", "triage", "audit", "import"])

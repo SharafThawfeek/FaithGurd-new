@@ -36,11 +36,13 @@ def _row(item: Item, gold: GoldStore, out: RepairOutput, before: str) -> dict:
     }
 
 
-def score(items: Sequence[Item], gold: GoldStore, detector_rows: dict[str, dict], repairs: dict[str, dict[str, dict]],
-          label_state: dict[str, str] | None = None) -> dict:
-    """repairs: {"rule_spans": {item_id: RepairOutput dict}, "channel_a_spans": {...}}; label_state: item id -> state."""
+def score_rows(items: Sequence[Item], gold: GoldStore, detector_rows: dict[str, dict], repairs: dict[str, dict[str, dict]],
+               label_state: dict[str, str] | None = None, gold_spans: dict[str, list] | None = None) -> dict[str, list[dict]]:
+    """Per-item rows, by "repairer, span source". repairs: {"rule_spans": {item_id: RepairOutput dict}, "channel_a_spans": {...},
+    "gold_spans": {...}}; label_state: item id -> state; gold_spans: item id -> [(start, end)] cut from the labels (R-H1)."""
     from faithguard.detect.channel_a import flag_claims
     from faithguard.repair.rules import repair as rule_repair
+    from faithguard.train.systems import gold_flags
 
     label_state = label_state or {}
     rows: dict[str, list[dict]] = defaultdict(list)
@@ -53,12 +55,20 @@ def score(items: Sequence[Item], gold: GoldStore, detector_rows: dict[str, dict]
         rec = detector_rows[item.id]
         a_max = {c["claim_id"]: c["a_max"] for c in rec["claims"]}  # Channel A's probability over each claim
         tokens = [(c.start, c.end, a_max.get(c.id, 0.0), 0) for c in det_b.claims]
-        det_a = flag_claims(det_b, tokens, rec["threshold"])
-        for source, det in (("rule_spans", det_b), ("channel_a_spans", det_a)):
+        sources = [("rule_spans", det_b), ("channel_a_spans", flag_claims(det_b, tokens, rec["threshold"]))]
+        if gold_spans is not None and item.id in gold_spans:
+            sources.append(("gold_spans", gold_flags(det_b, gold_spans[item.id])))
+        for source, det in sources:
             if item.id in repairs.get(source, {}):
                 rows[f"trained repairer, {source}"].append(_row(item, gold, RepairOutput.model_validate(repairs[source][item.id]), before))
             rows[f"rule repairer, {source}"].append(_row(item, gold, rule_repair(item, det), before))
-    return {name: summarise(rs) for name, rs in sorted(rows.items())}
+    return dict(sorted(rows.items()))
+
+
+def score(items: Sequence[Item], gold: GoldStore, detector_rows: dict[str, dict], repairs: dict[str, dict[str, dict]],
+          label_state: dict[str, str] | None = None, gold_spans: dict[str, list] | None = None) -> dict:
+    """The summary of every "repairer, span source" (see score_rows)."""
+    return {name: summarise(rs) for name, rs in score_rows(items, gold, detector_rows, repairs, label_state, gold_spans).items()}
 
 
 def report(summary: dict, title: str = "Repair on natural answers") -> str:
