@@ -812,7 +812,7 @@ def main(argv: list[str] | None = None) -> None:
     p.set_defaults(fn=cmd_hashes)
 
     p = sub.add_parser("analyse", help="phase 7: the pre-registered analyses on the labelled main benchmark (D-102)")
-    p.add_argument("--items", default="data/benchmark-build/main/items.jsonl")
+    p.add_argument("--items", default="data/benchmark-build/main/items-locked.jsonl", help="the locked test set (D-104)")
     p.add_argument("--gold", default="data/benchmark-build/main/gold")
     p.add_argument("--systems", default="data/benchmark-build/main/systems", help="folder of the fetched GPU outputs")
     p.add_argument("--gold-spans", default="data/benchmark-build/main/gold-spans.jsonl", help="span offsets cut from the labels (R-H1)")
