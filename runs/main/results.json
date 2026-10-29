@@ -1,0 +1,2293 @@
+{
+  "detection": {
+    "items": {
+      "calibration": 395,
+      "test": 390
+    },
+    "D-H1": {
+      "wrong_context_test_answers": 4,
+      "thresholds": {
+        "full": 0.9070670008659363,
+        "no_xbrl": 0.9411557912826538
+      },
+      "recall_full": 0.25,
+      "recall_no_xbrl": 0.0,
+      "difference": {
+        "estimate": 0.25,
+        "ci95": [
+          0.0,
+          1.0
+        ],
+        "items": 390,
+        "issuers": 24,
+        "resamples_used": 1976
+      },
+      "verdict": "untestable (fewer than 20 wrong-context test answers)"
+    },
+    "D-H2": {
+      "span_f1_b": 0.18054746651135703,
+      "span_f1_a_plus_b": 0.20464700625558535,
+      "difference": {
+        "estimate": 0.02409953974422832,
+        "ci95": [
+          -0.05941289460942112,
+          0.14643915285855372
+        ],
+        "items": 246,
+        "issuers": 12,
+        "resamples_used": 2000
+      },
+      "verdict": "no difference"
+    },
+    "spans": {
+      "channel-b": {
+        "span_f1": {
+          "estimate": 0.2340468093618724,
+          "ci95": [
+            0.14983140302008502,
+            0.3434065934065934
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "recall_by_slot": {
+          "basis": {
+            "estimate": 0.5,
+            "ci95": [
+              0.2222222222222222,
+              1.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1758
+          },
+          "entity_scope": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1760
+          },
+          "metric": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1326
+          },
+          "none": {
+            "estimate": 0.0011435105774728416,
+            "ci95": [
+              0.0,
+              0.00468384074941452
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          },
+          "period": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1247
+          },
+          "scale_currency": {
+            "estimate": 0.6558139534883721,
+            "ci95": [
+              0.40641711229946526,
+              0.9197530864197531
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          },
+          "sign": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          },
+          "value": {
+            "estimate": 0.7725631768953068,
+            "ci95": [
+              0.6684210526315789,
+              0.8937381404174574
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          }
+        }
+      },
+      "fused-a+b": {
+        "span_f1": {
+          "estimate": 0.2446043165467626,
+          "ci95": [
+            0.14106280193236714,
+            0.4109062980030722
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "recall_by_slot": {
+          "basis": {
+            "estimate": 0.14285714285714285,
+            "ci95": [
+              0.0,
+              0.2222222222222222
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1758
+          },
+          "entity_scope": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1760
+          },
+          "metric": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1326
+          },
+          "none": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          },
+          "period": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1247
+          },
+          "scale_currency": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          },
+          "sign": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          },
+          "value": {
+            "estimate": 0.6985559566787004,
+            "ci95": [
+              0.5939947780678851,
+              0.8167539267015707
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          }
+        }
+      },
+      "channel-a": {
+        "span_f1": {
+          "estimate": 0.12560841576385617,
+          "ci95": [
+            0.0819357930043124,
+            0.1786346645681684
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "recall_by_slot": {
+          "basis": {
+            "estimate": 0.5,
+            "ci95": [
+              0.2222222222222222,
+              1.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1758
+          },
+          "entity_scope": {
+            "estimate": 0.875,
+            "ci95": [
+              0.7916666666666666,
+              0.9583333333333334
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1760
+          },
+          "metric": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1326
+          },
+          "none": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          },
+          "period": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1247
+          },
+          "scale_currency": {
+            "estimate": 0.09302325581395349,
+            "ci95": [
+              0.0,
+              0.23857868020304568
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          },
+          "sign": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          },
+          "value": {
+            "estimate": 0.5848375451263538,
+            "ci95": [
+              0.5023183925811437,
+              0.6947115384615384
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          }
+        },
+        "slot_accuracy": {
+          "estimate": 0.034482758620689655,
+          "ci95": [
+            0.0,
+            0.08695652173913043
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        }
+      },
+      "channel-a-noslot": {
+        "span_f1": {
+          "estimate": 0.14485677083333334,
+          "ci95": [
+            0.09478797426808455,
+            0.20983858570330516
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "recall_by_slot": {
+          "basis": {
+            "estimate": 0.5,
+            "ci95": [
+              0.2222222222222222,
+              1.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1758
+          },
+          "entity_scope": {
+            "estimate": 0.125,
+            "ci95": [
+              0.0,
+              0.25
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1760
+          },
+          "metric": {
+            "estimate": 0.56,
+            "ci95": [
+              0.56,
+              0.56
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1326
+          },
+          "none": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          },
+          "period": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 1247
+          },
+          "scale_currency": {
+            "estimate": 0.2837209302325581,
+            "ci95": [
+              0.0,
+              0.696078431372549
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          },
+          "sign": {
+            "estimate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          },
+          "value": {
+            "estimate": 0.631768953068592,
+            "ci95": [
+              0.5610619469026549,
+              0.7414772727272727
+            ],
+            "items": 390,
+            "issuers": 24,
+            "resamples_used": 2000
+          }
+        }
+      }
+    },
+    "D-H3": {
+      "us_threshold": null,
+      "lk_test_risk_as_is": null,
+      "restored_share_with_100_lk_labels": 0.0,
+      "label_efficiency_curve": {
+        "100": 0.0,
+        "200": 0.0,
+        "all": 0.0
+      },
+      "lk_calibration_labels": 250,
+      "verdict": "untestable (no US threshold certified)"
+    },
+    "fused_calibration": {
+      "claim": {
+        "brier": {
+          "estimate": 0.03410764856929565,
+          "ci95": [
+            0.022515569473685965,
+            0.04912455397711721
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "ece": {
+          "estimate": 0.021504162503896966,
+          "ci95": [
+            0.011636496862070363,
+            0.03785699541636741
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        }
+      },
+      "answer": {
+        "brier": {
+          "estimate": 0.11440077353048163,
+          "ci95": [
+            0.09062387289039253,
+            0.14145882509880311
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "ece": {
+          "estimate": 0.10037099550366142,
+          "ci95": [
+            0.08460352335201128,
+            0.13661212764519443
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        }
+      }
+    },
+    "selective": {
+      "threshold": null,
+      "certified": false,
+      "test_coverage": null,
+      "test_risk": null
+    },
+    "detectors": {
+      "channel-a": {
+        "auroc": {
+          "estimate": 0.5790047429620563,
+          "ci95": [
+            0.5321637426900585,
+            0.6238372563293699
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "threshold_at_10pct_calibration_false_alarms": 0.9070670008659363,
+        "calibration_false_alarms": 0.09868421052631579,
+        "test_false_alarms": {
+          "estimate": 0.11842105263157894,
+          "ci95": [
+            0.06948640483383686,
+            0.18050541516245489
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_recall": {
+          "estimate": 0.08139534883720931,
+          "ci95": [
+            0.02702702702702703,
+            0.14
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_wrong_context_recall": {
+          "estimate": 0.25,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 1976
+        }
+      },
+      "channel-a-noxbrl": {
+        "auroc": {
+          "estimate": 0.5921243880048959,
+          "ci95": [
+            0.5430020283975658,
+            0.6447079037800687
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "threshold_at_10pct_calibration_false_alarms": 0.9411557912826538,
+        "calibration_false_alarms": 0.09868421052631579,
+        "test_false_alarms": {
+          "estimate": 0.06578947368421052,
+          "ci95": [
+            0.037162162162162164,
+            0.1
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_recall": {
+          "estimate": 0.046511627906976744,
+          "ci95": [
+            0.0,
+            0.0975609756097561
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_wrong_context_recall": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 1976
+        }
+      },
+      "channel-a-noslot": {
+        "auroc": {
+          "estimate": 0.6140032129742963,
+          "ci95": [
+            0.5571024734982333,
+            0.671957671957672
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "threshold_at_10pct_calibration_false_alarms": 0.8523765802383423,
+        "calibration_false_alarms": 0.09868421052631579,
+        "test_false_alarms": {
+          "estimate": 0.13815789473684212,
+          "ci95": [
+            0.07523510971786834,
+            0.20496894409937888
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_recall": {
+          "estimate": 0.12790697674418605,
+          "ci95": [
+            0.0625,
+            0.19767441860465115
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_wrong_context_recall": {
+          "estimate": 0.25,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 1976
+        }
+      },
+      "channel-b": {
+        "auroc": {
+          "estimate": 0.8027080783353733,
+          "ci95": [
+            0.7636507936507937,
+            0.837552114353782
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "threshold_at_10pct_calibration_false_alarms": 1.0,
+        "calibration_false_alarms": 0.0,
+        "test_false_alarms": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_recall": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_wrong_context_recall": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 1976
+        }
+      },
+      "fused-a+b": {
+        "auroc": {
+          "estimate": 0.8492770807833537,
+          "ci95": [
+            0.8040506511259804,
+            0.8948591201186358
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "threshold_at_10pct_calibration_false_alarms": 0.5,
+        "calibration_false_alarms": 0.023026315789473683,
+        "test_false_alarms": {
+          "estimate": 0.029605263157894735,
+          "ci95": [
+            0.012345679012345678,
+            0.048701298701298704
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_recall": {
+          "estimate": 0.627906976744186,
+          "ci95": [
+            0.5113636363636364,
+            0.7529411764705882
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_wrong_context_recall": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 1976
+        }
+      },
+      "lettuce-v1": {
+        "auroc": {
+          "estimate": 0.6408736230110159,
+          "ci95": [
+            0.5651260504201681,
+            0.7128166860803729
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "threshold_at_10pct_calibration_false_alarms": 0.9780539274215698,
+        "calibration_false_alarms": 0.09868421052631579,
+        "test_false_alarms": {
+          "estimate": 0.05921052631578947,
+          "ci95": [
+            0.03308823529411765,
+            0.08333333333333333
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_recall": {
+          "estimate": 0.046511627906976744,
+          "ci95": [
+            0.011627906976744186,
+            0.08860759493670886
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_wrong_context_recall": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 1976
+        }
+      },
+      "lettuce-v2": {
+        "auroc": {
+          "estimate": 0.6883032435740514,
+          "ci95": [
+            0.6068664965986394,
+            0.7619921262852118
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "threshold_at_10pct_calibration_false_alarms": 0.9488321542739868,
+        "calibration_false_alarms": 0.09868421052631579,
+        "test_false_alarms": {
+          "estimate": 0.06907894736842106,
+          "ci95": [
+            0.033846153846153845,
+            0.10819672131147541
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_recall": {
+          "estimate": 0.13953488372093023,
+          "ci95": [
+            0.0759493670886076,
+            0.20481927710843373
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_wrong_context_recall": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 1976
+        }
+      },
+      "hhem": {
+        "auroc": {
+          "estimate": 0.6094706242350061,
+          "ci95": [
+            0.5651822147178838,
+            0.6618296529968455
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "threshold_at_10pct_calibration_false_alarms": 0.9210102558135986,
+        "calibration_false_alarms": 0.09868421052631579,
+        "test_false_alarms": {
+          "estimate": 0.05921052631578947,
+          "ci95": [
+            0.03474903474903475,
+            0.08653846153846154
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_recall": {
+          "estimate": 0.05813953488372093,
+          "ci95": [
+            0.011111111111111112,
+            0.1232876712328767
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_wrong_context_recall": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 1976
+        }
+      },
+      "granite": {
+        "auroc": {
+          "estimate": 0.6101591187270502,
+          "ci95": [
+            0.5559983330728759,
+            0.6585962337979946
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "threshold_at_10pct_calibration_false_alarms": 1.0,
+        "calibration_false_alarms": 0.0,
+        "test_false_alarms": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_recall": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 2000
+        },
+        "test_wrong_context_recall": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "items": 390,
+          "issuers": 24,
+          "resamples_used": 1976
+        }
+      }
+    },
+    "ambiguous": {
+      "test": 2,
+      "calibration": 1,
+      "test_flagged": {
+        "channel-a": 0,
+        "channel-a-noxbrl": 0,
+        "channel-a-noslot": 0,
+        "channel-b": 0,
+        "fused-a+b": 0,
+        "lettuce-v1": 0,
+        "lettuce-v2": 0,
+        "hhem": 1,
+        "granite": 0
+      }
+    },
+    "auroc_differences": {
+      "fused-a+b minus channel-a": {
+        "estimate": 0.27027233782129745,
+        "ci95": [
+          0.20708372383630114,
+          0.3363275039745628
+        ],
+        "items": 390,
+        "issuers": 24,
+        "resamples_used": 2000
+      },
+      "fused-a+b minus channel-a-noxbrl": {
+        "estimate": 0.25715269277845787,
+        "ci95": [
+          0.17999527261266934,
+          0.3318125579956698
+        ],
+        "items": 390,
+        "issuers": 24,
+        "resamples_used": 2000
+      },
+      "fused-a+b minus channel-a-noslot": {
+        "estimate": 0.23527386780905746,
+        "ci95": [
+          0.16064145346681502,
+          0.3119805956499264
+        ],
+        "items": 390,
+        "issuers": 24,
+        "resamples_used": 2000
+      },
+      "fused-a+b minus channel-b": {
+        "estimate": 0.046569002447980457,
+        "ci95": [
+          0.012571527657360915,
+          0.07927621404268492
+        ],
+        "items": 390,
+        "issuers": 24,
+        "resamples_used": 2000
+      },
+      "fused-a+b minus lettuce-v1": {
+        "estimate": 0.20840345777233782,
+        "ci95": [
+          0.1259750948257352,
+          0.281672473867596
+        ],
+        "items": 390,
+        "issuers": 24,
+        "resamples_used": 2000
+      },
+      "fused-a+b minus lettuce-v2": {
+        "estimate": 0.16097383720930236,
+        "ci95": [
+          0.09593528754192038,
+          0.23140350877192983
+        ],
+        "items": 390,
+        "issuers": 24,
+        "resamples_used": 2000
+      },
+      "fused-a+b minus hhem": {
+        "estimate": 0.23980645654834765,
+        "ci95": [
+          0.18737331081081088,
+          0.28981514397440455
+        ],
+        "items": 390,
+        "issuers": 24,
+        "resamples_used": 2000
+      },
+      "fused-a+b minus granite": {
+        "estimate": 0.23911796205630353,
+        "ci95": [
+          0.17484239558707648,
+          0.30917366946778724
+        ],
+        "items": 390,
+        "issuers": 24,
+        "resamples_used": 2000
+      },
+      "channel-a minus channel-a-noslot": {
+        "estimate": -0.03499847001223999,
+        "ci95": [
+          -0.0805295409873974,
+          0.008335154372053899
+        ],
+        "items": 390,
+        "issuers": 24,
+        "resamples_used": 2000
+      }
+    }
+  },
+  "repair": {
+    "summaries": {
+      "repair-sft, channel_a_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.3133,
+        "abstained_when_needed": 0.3855,
+        "still_wrong_when_sent": 0.4902,
+        "new_error_rate": 0.0084,
+        "damage_rate": 0.0078,
+        "valid_program_rate": 1.0,
+        "gate_pass_rate": 0.5662,
+        "mean_attempts": 1.413,
+        "status": {
+          "nothing_to_fix": 115,
+          "repaired": 124,
+          "gate_failed": 95,
+          "cannot_fix": 4
+        }
+      },
+      "repair-sft, rule_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.2892,
+        "abstained_when_needed": 0.5663,
+        "still_wrong_when_sent": 0.3333,
+        "new_error_rate": 0.0043,
+        "damage_rate": 0.0,
+        "valid_program_rate": 1.0,
+        "gate_pass_rate": 0.2016,
+        "mean_attempts": 1.738,
+        "status": {
+          "nothing_to_fix": 208,
+          "gate_failed": 99,
+          "cannot_fix": 6,
+          "repaired": 25
+        }
+      },
+      "repair-sft-nokeep, channel_a_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.3253,
+        "abstained_when_needed": 0.3976,
+        "still_wrong_when_sent": 0.46,
+        "new_error_rate": 0.0048,
+        "damage_rate": 0.0039,
+        "valid_program_rate": 1.0,
+        "gate_pass_rate": 0.4247,
+        "mean_attempts": 1.565,
+        "status": {
+          "nothing_to_fix": 115,
+          "repaired": 93,
+          "gate_failed": 126,
+          "cannot_fix": 4
+        }
+      },
+      "repair-sft-nokeep, rule_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.3976,
+        "abstained_when_needed": 0.3855,
+        "still_wrong_when_sent": 0.3529,
+        "new_error_rate": 0.0079,
+        "damage_rate": 0.0235,
+        "valid_program_rate": 1.0,
+        "gate_pass_rate": 0.3622,
+        "mean_attempts": 1.608,
+        "status": {
+          "nothing_to_fix": 208,
+          "repaired": 46,
+          "gate_failed": 81,
+          "cannot_fix": 3
+        }
+      },
+      "repair-v1, channel_a_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.4096,
+        "abstained_when_needed": 0.2892,
+        "still_wrong_when_sent": 0.4237,
+        "new_error_rate": 0.0043,
+        "damage_rate": 0.0,
+        "valid_program_rate": 0.9955,
+        "gate_pass_rate": 0.5479,
+        "mean_attempts": 1.43,
+        "status": {
+          "nothing_to_fix": 115,
+          "repaired": 120,
+          "gate_failed": 99,
+          "cannot_fix": 4
+        }
+      },
+      "repair-v1, gold_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.494,
+        "abstained_when_needed": 0.3373,
+        "still_wrong_when_sent": 0.2545,
+        "new_error_rate": 0.0032,
+        "damage_rate": 0.0,
+        "valid_program_rate": 1.0,
+        "gate_pass_rate": 0.6533,
+        "mean_attempts": 1.291,
+        "status": {
+          "nothing_to_fix": 259,
+          "repaired": 49,
+          "gate_failed": 26,
+          "cannot_fix": 4
+        }
+      },
+      "repair-v1, rule_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.506,
+        "abstained_when_needed": 0.3494,
+        "still_wrong_when_sent": 0.2222,
+        "new_error_rate": 0.004,
+        "damage_rate": 0.0,
+        "valid_program_rate": 1.0,
+        "gate_pass_rate": 0.3386,
+        "mean_attempts": 1.623,
+        "status": {
+          "nothing_to_fix": 208,
+          "gate_failed": 84,
+          "repaired": 43,
+          "cannot_fix": 3
+        }
+      },
+      "rewrite-v1, channel_a_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.2048,
+        "abstained_when_needed": 0.0,
+        "still_wrong_when_sent": 0.7952,
+        "new_error_rate": 0.2404,
+        "damage_rate": 0.2,
+        "valid_program_rate": 0.0045,
+        "gate_pass_rate": 1.0,
+        "mean_attempts": 1.0,
+        "status": {
+          "nothing_to_fix": 115,
+          "repaired": 222,
+          "cannot_fix": 1
+        }
+      },
+      "rewrite-v1, gold_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.2048,
+        "abstained_when_needed": 0.0,
+        "still_wrong_when_sent": 0.7952,
+        "new_error_rate": 0.1095,
+        "damage_rate": 0.0,
+        "valid_program_rate": 0.0,
+        "gate_pass_rate": 1.0,
+        "mean_attempts": 1.0,
+        "status": {
+          "nothing_to_fix": 259,
+          "repaired": 79
+        }
+      },
+      "rewrite-v1, rule_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.2048,
+        "abstained_when_needed": 0.0,
+        "still_wrong_when_sent": 0.7952,
+        "new_error_rate": 0.1543,
+        "damage_rate": 0.0627,
+        "valid_program_rate": 0.0077,
+        "gate_pass_rate": 1.0,
+        "mean_attempts": 1.0,
+        "status": {
+          "nothing_to_fix": 208,
+          "repaired": 129,
+          "cannot_fix": 1
+        }
+      },
+      "rule repairer, channel_a_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.2651,
+        "abstained_when_needed": 0.4458,
+        "still_wrong_when_sent": 0.4565,
+        "new_error_rate": 0.0491,
+        "damage_rate": 0.0275,
+        "valid_program_rate": 1.0,
+        "gate_pass_rate": 1.0,
+        "mean_attempts": 1.04,
+        "status": {
+          "nothing_to_fix": 115,
+          "cannot_fix": 175,
+          "repaired": 48
+        }
+      },
+      "rule repairer, gold_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.4337,
+        "abstained_when_needed": 0.4217,
+        "still_wrong_when_sent": 0.2083,
+        "new_error_rate": 0.01,
+        "damage_rate": 0.0,
+        "valid_program_rate": 1.0,
+        "gate_pass_rate": 0.9767,
+        "mean_attempts": 1.038,
+        "status": {
+          "nothing_to_fix": 259,
+          "cannot_fix": 36,
+          "repaired": 42,
+          "gate_failed": 1
+        }
+      },
+      "rule repairer, rule_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.506,
+        "abstained_when_needed": 0.2289,
+        "still_wrong_when_sent": 0.2812,
+        "new_error_rate": 0.0615,
+        "damage_rate": 0.0627,
+        "valid_program_rate": 1.0,
+        "gate_pass_rate": 0.9902,
+        "mean_attempts": 1.0,
+        "status": {
+          "nothing_to_fix": 208,
+          "repaired": 101,
+          "cannot_fix": 28,
+          "gate_failed": 1
+        }
+      },
+      "stage-b, channel_a_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.3614,
+        "abstained_when_needed": 0.3373,
+        "still_wrong_when_sent": 0.4545,
+        "new_error_rate": 0.0084,
+        "damage_rate": 0.0353,
+        "valid_program_rate": 1.0,
+        "gate_pass_rate": 0.5571,
+        "mean_attempts": 1.453,
+        "status": {
+          "nothing_to_fix": 115,
+          "repaired": 122,
+          "gate_failed": 97,
+          "cannot_fix": 4
+        }
+      },
+      "stage-b, rule_spans": {
+        "items": 338,
+        "needing_repair": 83,
+        "correction_rate": 0.4337,
+        "abstained_when_needed": 0.4217,
+        "still_wrong_when_sent": 0.25,
+        "new_error_rate": 0.0081,
+        "damage_rate": 0.0039,
+        "valid_program_rate": 1.0,
+        "gate_pass_rate": 0.304,
+        "mean_attempts": 1.654,
+        "status": {
+          "nothing_to_fix": 208,
+          "gate_failed": 87,
+          "cannot_fix": 5,
+          "repaired": 38
+        }
+      }
+    },
+    "R-H1": {
+      "new_error_difference": {
+        "estimate": -0.10622070237454853,
+        "ci95": [
+          -0.13664596273291926,
+          -0.07671174978867286
+        ],
+        "items": 338,
+        "issuers": 24,
+        "resamples_used": 2000,
+        "verdict": "confirmed",
+        "a": "repair-v1, gold_spans",
+        "b": "rewrite-v1, gold_spans"
+      },
+      "correction_difference": {
+        "estimate": 0.2891566265060241,
+        "ci95": [
+          0.16455696202531647,
+          0.43749999999999994
+        ],
+        "items": 338,
+        "issuers": 24,
+        "resamples_used": 2000,
+        "verdict": "confirmed",
+        "a": "repair-v1, gold_spans",
+        "b": "rewrite-v1, gold_spans"
+      },
+      "verdict": "confirmed"
+    },
+    "R-H2": {
+      "basis": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "items": 2,
+        "issuers": 2,
+        "resamples_used": 2000,
+        "verdict": "no difference",
+        "a": "stage-b, rule_spans",
+        "b": "repair-sft, rule_spans"
+      },
+      "gemma": {
+        "estimate": 0.18181818181818182,
+        "ci95": [
+          0.046511627906976716,
+          0.3095238095238094
+        ],
+        "items": 169,
+        "issuers": 24,
+        "resamples_used": 2000,
+        "verdict": "confirmed",
+        "a": "stage-b, rule_spans",
+        "b": "repair-sft, rule_spans"
+      },
+      "verdict": "not confirmed"
+    },
+    "R-H3": {
+      "estimate": 0.00392156862745098,
+      "ci95": [
+        -0.00865800865800866,
+        0.01809954751131222
+      ],
+      "items": 338,
+      "issuers": 24,
+      "resamples_used": 2000,
+      "verdict": "no difference",
+      "a": "repair-sft, channel_a_spans",
+      "b": "repair-sft-nokeep, channel_a_spans"
+    },
+    "labelled_arms": {
+      "repair-v1, channel_a_spans": {
+        "changed": 35,
+        "unlabelled": 0,
+        "label_differs_from_code": 3
+      },
+      "repair-v1, rule_spans": {
+        "changed": 43,
+        "unlabelled": 0,
+        "label_differs_from_code": 3
+      },
+      "repair-sft, channel_a_spans": {
+        "changed": 29,
+        "unlabelled": 0,
+        "label_differs_from_code": 3
+      },
+      "repair-sft, rule_spans": {
+        "changed": 25,
+        "unlabelled": 0,
+        "label_differs_from_code": 2
+      },
+      "repair-sft-nokeep, channel_a_spans": {
+        "changed": 29,
+        "unlabelled": 0,
+        "label_differs_from_code": 3
+      },
+      "repair-sft-nokeep, rule_spans": {
+        "changed": 46,
+        "unlabelled": 0,
+        "label_differs_from_code": 14
+      },
+      "stage-b, channel_a_spans": {
+        "changed": 39,
+        "unlabelled": 0,
+        "label_differs_from_code": 9
+      },
+      "stage-b, rule_spans": {
+        "changed": 38,
+        "unlabelled": 0,
+        "label_differs_from_code": 2
+      },
+      "rewrite-v1, channel_a_spans": {
+        "changed": 137,
+        "unlabelled": 0,
+        "label_differs_from_code": 8
+      },
+      "rewrite-v1, rule_spans": {
+        "changed": 88,
+        "unlabelled": 0,
+        "label_differs_from_code": 5
+      }
+    },
+    "code_scored": {
+      "summaries": {
+        "repair-sft, channel_a_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.3012,
+          "abstained_when_needed": 0.3855,
+          "still_wrong_when_sent": 0.5098,
+          "new_error_rate": 0.0084,
+          "damage_rate": 0.0078,
+          "valid_program_rate": 1.0,
+          "gate_pass_rate": 0.5662,
+          "mean_attempts": 1.413,
+          "status": {
+            "nothing_to_fix": 115,
+            "repaired": 124,
+            "gate_failed": 95,
+            "cannot_fix": 4
+          }
+        },
+        "repair-sft, rule_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.2892,
+          "abstained_when_needed": 0.5663,
+          "still_wrong_when_sent": 0.3333,
+          "new_error_rate": 0.0043,
+          "damage_rate": 0.0,
+          "valid_program_rate": 1.0,
+          "gate_pass_rate": 0.2016,
+          "mean_attempts": 1.738,
+          "status": {
+            "nothing_to_fix": 208,
+            "gate_failed": 99,
+            "cannot_fix": 6,
+            "repaired": 25
+          }
+        },
+        "repair-sft-nokeep, channel_a_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.3133,
+          "abstained_when_needed": 0.3976,
+          "still_wrong_when_sent": 0.48,
+          "new_error_rate": 0.0048,
+          "damage_rate": 0.0039,
+          "valid_program_rate": 1.0,
+          "gate_pass_rate": 0.4247,
+          "mean_attempts": 1.565,
+          "status": {
+            "nothing_to_fix": 115,
+            "repaired": 93,
+            "gate_failed": 126,
+            "cannot_fix": 4
+          }
+        },
+        "repair-sft-nokeep, rule_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.4458,
+          "abstained_when_needed": 0.3855,
+          "still_wrong_when_sent": 0.2745,
+          "new_error_rate": 0.0079,
+          "damage_rate": 0.0,
+          "valid_program_rate": 1.0,
+          "gate_pass_rate": 0.3622,
+          "mean_attempts": 1.608,
+          "status": {
+            "nothing_to_fix": 208,
+            "repaired": 46,
+            "gate_failed": 81,
+            "cannot_fix": 3
+          }
+        },
+        "repair-v1, channel_a_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.3855,
+          "abstained_when_needed": 0.2892,
+          "still_wrong_when_sent": 0.4576,
+          "new_error_rate": 0.0043,
+          "damage_rate": 0.0039,
+          "valid_program_rate": 0.9955,
+          "gate_pass_rate": 0.5479,
+          "mean_attempts": 1.43,
+          "status": {
+            "nothing_to_fix": 115,
+            "repaired": 120,
+            "gate_failed": 99,
+            "cannot_fix": 4
+          }
+        },
+        "repair-v1, gold_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.494,
+          "abstained_when_needed": 0.3373,
+          "still_wrong_when_sent": 0.2545,
+          "new_error_rate": 0.0032,
+          "damage_rate": 0.0,
+          "valid_program_rate": 1.0,
+          "gate_pass_rate": 0.6533,
+          "mean_attempts": 1.291,
+          "status": {
+            "nothing_to_fix": 259,
+            "repaired": 49,
+            "gate_failed": 26,
+            "cannot_fix": 4
+          }
+        },
+        "repair-v1, rule_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.494,
+          "abstained_when_needed": 0.3494,
+          "still_wrong_when_sent": 0.2407,
+          "new_error_rate": 0.004,
+          "damage_rate": 0.0,
+          "valid_program_rate": 1.0,
+          "gate_pass_rate": 0.3386,
+          "mean_attempts": 1.623,
+          "status": {
+            "nothing_to_fix": 208,
+            "gate_failed": 84,
+            "repaired": 43,
+            "cannot_fix": 3
+          }
+        },
+        "rewrite-v1, channel_a_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.1928,
+          "abstained_when_needed": 0.0,
+          "still_wrong_when_sent": 0.8072,
+          "new_error_rate": 0.2404,
+          "damage_rate": 0.2196,
+          "valid_program_rate": 0.0045,
+          "gate_pass_rate": 1.0,
+          "mean_attempts": 1.0,
+          "status": {
+            "nothing_to_fix": 115,
+            "repaired": 222,
+            "cannot_fix": 1
+          }
+        },
+        "rewrite-v1, gold_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.2048,
+          "abstained_when_needed": 0.0,
+          "still_wrong_when_sent": 0.7952,
+          "new_error_rate": 0.1095,
+          "damage_rate": 0.0,
+          "valid_program_rate": 0.0,
+          "gate_pass_rate": 1.0,
+          "mean_attempts": 1.0,
+          "status": {
+            "nothing_to_fix": 259,
+            "repaired": 79
+          }
+        },
+        "rewrite-v1, rule_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.1928,
+          "abstained_when_needed": 0.0,
+          "still_wrong_when_sent": 0.8072,
+          "new_error_rate": 0.1543,
+          "damage_rate": 0.0706,
+          "valid_program_rate": 0.0077,
+          "gate_pass_rate": 1.0,
+          "mean_attempts": 1.0,
+          "status": {
+            "nothing_to_fix": 208,
+            "repaired": 129,
+            "cannot_fix": 1
+          }
+        },
+        "rule repairer, channel_a_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.2651,
+          "abstained_when_needed": 0.4458,
+          "still_wrong_when_sent": 0.4565,
+          "new_error_rate": 0.0491,
+          "damage_rate": 0.0275,
+          "valid_program_rate": 1.0,
+          "gate_pass_rate": 1.0,
+          "mean_attempts": 1.04,
+          "status": {
+            "nothing_to_fix": 115,
+            "cannot_fix": 175,
+            "repaired": 48
+          }
+        },
+        "rule repairer, gold_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.4337,
+          "abstained_when_needed": 0.4217,
+          "still_wrong_when_sent": 0.2083,
+          "new_error_rate": 0.01,
+          "damage_rate": 0.0,
+          "valid_program_rate": 1.0,
+          "gate_pass_rate": 0.9767,
+          "mean_attempts": 1.038,
+          "status": {
+            "nothing_to_fix": 259,
+            "cannot_fix": 36,
+            "repaired": 42,
+            "gate_failed": 1
+          }
+        },
+        "rule repairer, rule_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.506,
+          "abstained_when_needed": 0.2289,
+          "still_wrong_when_sent": 0.2812,
+          "new_error_rate": 0.0615,
+          "damage_rate": 0.0627,
+          "valid_program_rate": 1.0,
+          "gate_pass_rate": 0.9902,
+          "mean_attempts": 1.0,
+          "status": {
+            "nothing_to_fix": 208,
+            "repaired": 101,
+            "cannot_fix": 28,
+            "gate_failed": 1
+          }
+        },
+        "stage-b, channel_a_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.3494,
+          "abstained_when_needed": 0.3373,
+          "still_wrong_when_sent": 0.4727,
+          "new_error_rate": 0.0084,
+          "damage_rate": 0.0039,
+          "valid_program_rate": 1.0,
+          "gate_pass_rate": 0.5571,
+          "mean_attempts": 1.453,
+          "status": {
+            "nothing_to_fix": 115,
+            "repaired": 122,
+            "gate_failed": 97,
+            "cannot_fix": 4
+          }
+        },
+        "stage-b, rule_spans": {
+          "items": 338,
+          "needing_repair": 83,
+          "correction_rate": 0.4337,
+          "abstained_when_needed": 0.4217,
+          "still_wrong_when_sent": 0.25,
+          "new_error_rate": 0.0081,
+          "damage_rate": 0.0039,
+          "valid_program_rate": 1.0,
+          "gate_pass_rate": 0.304,
+          "mean_attempts": 1.654,
+          "status": {
+            "nothing_to_fix": 208,
+            "gate_failed": 87,
+            "cannot_fix": 5,
+            "repaired": 38
+          }
+        }
+      },
+      "R-H2": {
+        "basis": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "items": 2,
+          "issuers": 2,
+          "resamples_used": 2000,
+          "verdict": "no difference",
+          "a": "stage-b, rule_spans",
+          "b": "repair-sft, rule_spans"
+        },
+        "gemma": {
+          "estimate": 0.18181818181818182,
+          "ci95": [
+            0.046511627906976716,
+            0.3095238095238094
+          ],
+          "items": 169,
+          "issuers": 24,
+          "resamples_used": 2000,
+          "verdict": "confirmed",
+          "a": "stage-b, rule_spans",
+          "b": "repair-sft, rule_spans"
+        },
+        "verdict": "not confirmed"
+      },
+      "R-H3": {
+        "estimate": 0.00392156862745098,
+        "ci95": [
+          0.0,
+          0.013157894736842105
+        ],
+        "items": 338,
+        "issuers": 24,
+        "resamples_used": 2000,
+        "verdict": "no difference",
+        "a": "repair-sft, channel_a_spans",
+        "b": "repair-sft-nokeep, channel_a_spans"
+      }
+    },
+    "repair_check": {
+      "other variants": {
+        "planned": 50,
+        "labelled": 50,
+        "disagree": 8,
+        "rate": 0.16,
+        "label_every_changed_repair": true,
+        "disagreements": [
+          {
+            "repair": "DIPD-2026-06:qwen@stage-b, channel_a_spans",
+            "code": "supported_unhelpful",
+            "label": "unsupported"
+          },
+          {
+            "repair": "HHL-2026-09:qwen@stage-b, channel_a_spans",
+            "code": "supported_useful",
+            "label": "unsupported"
+          },
+          {
+            "repair": "KVAL-2026-03:qwen@repair-sft-nokeep, rule_spans",
+            "code": "supported_useful",
+            "label": "unsupported"
+          },
+          {
+            "repair": "KVAL-2026-05:qwen@repair-v1, channel_a_spans",
+            "code": "unsupported",
+            "label": "supported_useful"
+          },
+          {
+            "repair": "KVAL-2026-06:gemma@stage-b, channel_a_spans",
+            "code": "supported_unhelpful",
+            "label": "unsupported"
+          },
+          {
+            "repair": "KVAL-2026-09:gemma@rewrite-v1, channel_a_spans",
+            "code": "unsupported",
+            "label": "supported_useful"
+          },
+          {
+            "repair": "KVAL-2026-09:qwen@rewrite-v1, rule_spans",
+            "code": "unsupported",
+            "label": "supported_useful"
+          },
+          {
+            "repair": "PLC-2026-01:qwen@rewrite-v1, rule_spans",
+            "code": "unsupported",
+            "label": "supported_useful"
+          }
+        ]
+      },
+      "repair-v1, gold_spans": {
+        "planned": 43,
+        "labelled": 43,
+        "disagree": 3,
+        "rate": 0.06976744186046512,
+        "label_every_changed_repair": false,
+        "disagreements": [
+          {
+            "repair": "ENSG-2025-02:qwen@repair-v1, gold_spans",
+            "code": "supported_useful",
+            "label": "unsupported"
+          },
+          {
+            "repair": "GRAN-2025-05:qwen@repair-v1, gold_spans",
+            "code": "unsupported",
+            "label": "supported_useful"
+          },
+          {
+            "repair": "KVAL-2026-05:qwen@repair-v1, gold_spans",
+            "code": "unsupported",
+            "label": "supported_useful"
+          }
+        ]
+      },
+      "rewrite-v1, gold_spans": {
+        "planned": 50,
+        "labelled": 50,
+        "disagree": 3,
+        "rate": 0.06,
+        "label_every_changed_repair": false,
+        "disagreements": [
+          {
+            "repair": "KVAL-2026-09:gemma@rewrite-v1, gold_spans",
+            "code": "unsupported",
+            "label": "supported_useful"
+          },
+          {
+            "repair": "KVAL-2026-09:qwen@rewrite-v1, gold_spans",
+            "code": "unsupported",
+            "label": "supported_useful"
+          },
+          {
+            "repair": "LLUB-2025-05:qwen@rewrite-v1, gold_spans",
+            "code": "supported_useful",
+            "label": "unsupported"
+          }
+        ]
+      }
+    },
+    "information_preserved": {
+      "other variants": {
+        "planned": 50,
+        "checked": 50,
+        "preserved": {
+          "estimate": 0.66,
+          "ci95": [
+            0.5192307692307693,
+            0.8148148148148148
+          ],
+          "items": 50,
+          "issuers": 23,
+          "resamples_used": 2000
+        }
+      },
+      "repair-v1, gold_spans": {
+        "planned": 43,
+        "checked": 43,
+        "preserved": {
+          "estimate": 0.9767441860465116,
+          "ci95": [
+            0.925,
+            1.0
+          ],
+          "items": 43,
+          "issuers": 22,
+          "resamples_used": 2000
+        }
+      },
+      "rewrite-v1, gold_spans": {
+        "planned": 50,
+        "checked": 50,
+        "preserved": {
+          "estimate": 0.9,
+          "ci95": [
+            0.8163265306122449,
+            0.9743589743589743
+          ],
+          "items": 50,
+          "issuers": 23,
+          "resamples_used": 2000
+        }
+      }
+    }
+  },
+  "policy": {
+    "study": {
+      "alpha": 0.1,
+      "delta": 0.05,
+      "counts": {
+        "fit": {
+          "items": 13383,
+          "issuers": 984
+        },
+        "tune": {
+          "items": 2447,
+          "issuers": 194
+        },
+        "calibration": {
+          "items": 396,
+          "issuers": 24
+        },
+        "test": {
+          "items": 392,
+          "issuers": 24
+        }
+      },
+      "oracle_test": {
+        "items": 392,
+        "emitted": 345,
+        "emission_coverage": 0.8801020408163265,
+        "residual_risk": 0.0,
+        "useful_coverage": 0.8596938775510204,
+        "unsafe_emitted": 0
+      },
+      "families": [
+        {
+          "family": "send_all",
+          "settings": 1,
+          "certified": 0,
+          "chosen": null,
+          "calibration": {},
+          "p_chosen": null,
+          "uncertified_reference": {
+            "setting": "send",
+            "p": 1.0,
+            "test": {
+              "items": 392,
+              "emitted": 392,
+              "emission_coverage": 1.0,
+              "residual_risk": 0.22448979591836735,
+              "useful_coverage": 0.7551020408163265,
+              "unsafe_emitted": 88
+            }
+          }
+        },
+        {
+          "family": "repair_all",
+          "settings": 1,
+          "certified": 0,
+          "chosen": null,
+          "calibration": {},
+          "p_chosen": null,
+          "uncertified_reference": {
+            "setting": "repair",
+            "p": 0.3429344349117311,
+            "test": {
+              "items": 392,
+              "emitted": 262,
+              "emission_coverage": 0.6683673469387755,
+              "residual_risk": 0.05725190839694656,
+              "useful_coverage": 0.6198979591836735,
+              "unsafe_emitted": 15
+            }
+          }
+        },
+        {
+          "family": "verified_only",
+          "settings": 3,
+          "certified": 0,
+          "chosen": null,
+          "calibration": {},
+          "p_chosen": null,
+          "uncertified_reference": {
+            "setting": "risk<0.25",
+            "p": 0.45791185472542234,
+            "test": {
+              "items": 392,
+              "emitted": 219,
+              "emission_coverage": 0.5586734693877551,
+              "residual_risk": 0.0593607305936073,
+              "useful_coverage": 0.5153061224489796,
+              "unsafe_emitted": 13
+            }
+          }
+        },
+        {
+          "family": "threshold_v0",
+          "settings": 3,
+          "certified": 0,
+          "chosen": null,
+          "calibration": {},
+          "p_chosen": null,
+          "uncertified_reference": {
+            "setting": "risk<0.25",
+            "p": 0.3429344349117311,
+            "test": {
+              "items": 392,
+              "emitted": 253,
+              "emission_coverage": 0.6454081632653061,
+              "residual_risk": 0.05928853754940711,
+              "useful_coverage": 0.5969387755102041,
+              "unsafe_emitted": 15
+            }
+          }
+        },
+        {
+          "family": "four_state",
+          "settings": 6,
+          "certified": 0,
+          "chosen": null,
+          "calibration": {},
+          "p_chosen": null,
+          "uncertified_reference": {
+            "setting": "conf>=0.95",
+            "p": 0.7484964204662543,
+            "test": {
+              "items": 392,
+              "emitted": 92,
+              "emission_coverage": 0.23469387755102042,
+              "residual_risk": 0.043478260869565216,
+              "useful_coverage": 0.22448979591836735,
+              "unsafe_emitted": 4
+            }
+          }
+        },
+        {
+          "family": "outcome_aware[lightgbm]",
+          "settings": 56,
+          "certified": 0,
+          "chosen": null,
+          "calibration": {},
+          "p_chosen": null,
+          "uncertified_reference": {
+            "setting": "send<0.02,fix>0.99",
+            "p": 0.9897550245530407,
+            "test": {
+              "items": 392,
+              "emitted": 25,
+              "emission_coverage": 0.06377551020408163,
+              "residual_risk": 0.0,
+              "useful_coverage": 0.06377551020408163,
+              "unsafe_emitted": 0
+            }
+          }
+        },
+        {
+          "family": "outcome_aware[neural]",
+          "settings": 56,
+          "certified": 0,
+          "chosen": null,
+          "calibration": {},
+          "p_chosen": null,
+          "uncertified_reference": {
+            "setting": "send<0.02,fix>0.99",
+            "p": 0.17488160740889777,
+            "test": {
+              "items": 392,
+              "emitted": 282,
+              "emission_coverage": 0.7193877551020408,
+              "residual_risk": 0.05319148936170213,
+              "useful_coverage": 0.6658163265306123,
+              "unsafe_emitted": 15
+            }
+          }
+        }
+      ],
+      "models": {
+        "lightgbm": {
+          "rows": 13383,
+          "unsafe": {
+            "auroc": 0.8073975777511961,
+            "brier": 0.3170763432686504,
+            "ece": 0.3293422004040503
+          },
+          "fix": {
+            "auroc": 0.623525837545226,
+            "brier": 0.2435946481387765,
+            "ece": 0.22883937190333112
+          },
+          "excluding_missing_operand": {
+            "items": 392,
+            "unsafe": {
+              "auroc": 0.8073975777511961,
+              "brier": 0.3170763432686504,
+              "ece": 0.3293422004040503
+            },
+            "fix": {
+              "auroc": 0.623525837545226,
+              "brier": 0.2435946481387765,
+              "ece": 0.22883937190333112
+            }
+          },
+          "by_error": {}
+        },
+        "neural": {
+          "rows": 13383,
+          "unsafe": {
+            "auroc": 0.7946134868421053,
+            "brier": 0.18820291464121797,
+            "ece": 0.18253259419443382
+          },
+          "fix": {
+            "auroc": 0.3938741127406302,
+            "brier": 0.3596879227873553,
+            "ece": 0.35602434288096607
+          },
+          "excluding_missing_operand": {
+            "items": 392,
+            "unsafe": {
+              "auroc": 0.7946134868421053,
+              "brier": 0.18820291464121797,
+              "ece": 0.18253259419443382
+            },
+            "fix": {
+              "auroc": 0.3938741127406302,
+              "brier": 0.3596879227873553,
+              "ece": 0.35602434288096607
+            }
+          },
+          "by_error": {}
+        }
+      },
+      "budget_curve": {
+        "lightgbm": [
+          {
+            "calibration_items": 100,
+            "draws": 50,
+            "certified_share": 0.0,
+            "mean_test_useful_coverage_when_certified": null
+          },
+          {
+            "calibration_items": 200,
+            "draws": 50,
+            "certified_share": 0.0,
+            "mean_test_useful_coverage_when_certified": null
+          },
+          {
+            "calibration_items": 396,
+            "draws": 1,
+            "certified_share": 0.0,
+            "mean_test_useful_coverage_when_certified": null
+          }
+        ],
+        "neural": [
+          {
+            "calibration_items": 100,
+            "draws": 50,
+            "certified_share": 0.0,
+            "mean_test_useful_coverage_when_certified": null
+          },
+          {
+            "calibration_items": 200,
+            "draws": 50,
+            "certified_share": 0.02,
+            "mean_test_useful_coverage_when_certified": 0.6658
+          },
+          {
+            "calibration_items": 396,
+            "draws": 1,
+            "certified_share": 0.0,
+            "mean_test_useful_coverage_when_certified": null
+          }
+        ]
+      },
+      "chosen_by_error": {},
+      "labels_needed": {
+        "lightgbm": null,
+        "neural": 792
+      },
+      "score_comparator": {
+        "guarantee": "expected risk among sent answers <= alpha (not a high-probability bound)",
+        "subsample": {
+          "calibration": 396,
+          "test": 392,
+          "repeats": 3,
+          "prune": "homo"
+        },
+        "emission_coverage": 0.727,
+        "residual_risk": 0.1193,
+        "useful_coverage": 0.625
+      },
+      "seconds": 3.8
+    },
+    "P-H1": {
+      "estimate": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "items": 392,
+      "issuers": 24,
+      "resamples_used": 2000,
+      "comparator_certified": false,
+      "verdict": "outcome-aware policy not certified",
+      "secondary_vs_uncertified_threshold": {
+        "estimate": -0.5153061224489796,
+        "ci95": [
+          -0.5566502463054187,
+          -0.4720812182741117
+        ],
+        "items": 392,
+        "issuers": 24,
+        "resamples_used": 2000,
+        "setting": "risk<0.25",
+        "verdict": "-"
+      }
+    },
+    "P-H2": {
+      "certified": false,
+      "useful_coverage_test": null,
+      "budget_curve": [
+        {
+          "calibration_items": 100,
+          "draws": 50,
+          "certified_share": 0.0,
+          "mean_test_useful_coverage_when_certified": null
+        },
+        {
+          "calibration_items": 200,
+          "draws": 50,
+          "certified_share": 0.0,
+          "mean_test_useful_coverage_when_certified": null
+        },
+        {
+          "calibration_items": 396,
+          "draws": 1,
+          "certified_share": 0.0,
+          "mean_test_useful_coverage_when_certified": null
+        }
+      ],
+      "labels_needed": null,
+      "verdict": "not confirmed"
+    },
+    "neural_vs_lightgbm": {
+      "useful_coverage_difference": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "items": 392,
+        "issuers": 24,
+        "resamples_used": 2000
+      },
+      "certified": {
+        "neural": false,
+        "lightgbm": false
+      }
+    },
+    "ambiguous": {
+      "test_answers": 2,
+      "sent_by_chosen_policy": 0
+    },
+    "generator_shift": {
+      "counts": {
+        "fit": {
+          "items": 13383,
+          "issuers": 984
+        },
+        "tune": {
+          "items": 2447,
+          "issuers": 194
+        },
+        "calibration": {
+          "items": 198,
+          "issuers": 24
+        },
+        "test": {
+          "items": 196,
+          "issuers": 24
+        }
+      },
+      "families": [
+        {
+          "family": "verified_only",
+          "settings": 3,
+          "certified": 0,
+          "chosen": null,
+          "calibration": {},
+          "p_chosen": null,
+          "uncertified_reference": {
+            "setting": "risk<0.25",
+            "p": 0.9977194666677945,
+            "test": {
+              "items": 196,
+              "emitted": 112,
+              "emission_coverage": 0.5714285714285714,
+              "residual_risk": 0.026785714285714284,
+              "useful_coverage": 0.5459183673469388,
+              "unsafe_emitted": 3
+            }
+          }
+        },
+        {
+          "family": "outcome_aware[lightgbm]",
+          "settings": 56,
+          "certified": 0,
+          "chosen": null,
+          "calibration": {},
+          "p_chosen": null,
+          "uncertified_reference": {
+            "setting": "send<0.02,fix>0.99",
+            "p": 1.0,
+            "test": {
+              "items": 196,
+              "emitted": 13,
+              "emission_coverage": 0.0663265306122449,
+              "residual_risk": 0.0,
+              "useful_coverage": 0.0663265306122449,
+              "unsafe_emitted": 0
+            }
+          }
+        }
+      ]
+    },
+    "P-H3": {
+      "alpha": 0.1,
+      "delta": 0.05,
+      "counts": {
+        "fit": [
+          13383,
+          1000
+        ],
+        "tune": [
+          2447,
+          1000
+        ],
+        "calibration": [
+          396,
+          396
+        ],
+        "test": [
+          392,
+          392
+        ]
+      },
+      "v0_setting": null,
+      "skipped": "the v0 policy is not certifiable on v0's calibration records",
+      "verdict": "untestable (the v0 policy is not certifiable)"
+    }
+  }
+}
