@@ -1,0 +1,223 @@
+{
+  "by_country_and_generator": {
+    "LK gemma": {
+      "answers": 248,
+      "empty": 0,
+      "thinking_leaks": 0,
+      "supported_useful": 155,
+      "checker_flagged": 74,
+      "passed_and_auto_right": 138,
+      "unsupported": 54,
+      "flagged_and_auto_wrong": 54,
+      "narrative": 36,
+      "flagged_but_auto_right": 20,
+      "supported_unhelpful": 3,
+      "mean_words": 26.6
+    },
+    "LK qwen": {
+      "answers": 248,
+      "empty": 0,
+      "thinking_leaks": 0,
+      "supported_useful": 141,
+      "checker_flagged": 76,
+      "passed_and_auto_right": 116,
+      "unsupported": 66,
+      "missed_auto_wrong": 20,
+      "flagged_and_auto_wrong": 46,
+      "flagged_but_auto_right": 30,
+      "narrative": 36,
+      "supported_unhelpful": 5,
+      "mean_words": 48.8
+    },
+    "US gemma": {
+      "answers": 146,
+      "empty": 0,
+      "thinking_leaks": 0,
+      "supported_useful": 85,
+      "checker_flagged": 56,
+      "passed_and_auto_right": 68,
+      "unsupported": 38,
+      "flagged_and_auto_wrong": 38,
+      "narrative": 22,
+      "flagged_but_auto_right": 18,
+      "supported_unhelpful": 1,
+      "mean_words": 26.2
+    },
+    "US qwen": {
+      "answers": 146,
+      "empty": 0,
+      "thinking_leaks": 0,
+      "supported_useful": 85,
+      "checker_flagged": 48,
+      "passed_and_auto_right": 67,
+      "unsupported": 37,
+      "flagged_and_auto_wrong": 28,
+      "flagged_but_auto_right": 20,
+      "narrative": 22,
+      "missed_auto_wrong": 9,
+      "supported_unhelpful": 2,
+      "mean_words": 43.1
+    }
+  },
+  "auto_score_by_question_type": {
+    "comparison": {
+      "supported_useful": 31,
+      "unsupported": 5
+    },
+    "difference": {
+      "supported_useful": 99,
+      "unsupported": 19,
+      "supported_unhelpful": 2
+    },
+    "growth": {
+      "unsupported": 89,
+      "supported_useful": 65
+    },
+    "lookup": {
+      "supported_useful": 203,
+      "unsupported": 46,
+      "supported_unhelpful": 1
+    },
+    "ratio": {
+      "supported_useful": 27,
+      "unsupported": 13
+    },
+    "share": {
+      "supported_useful": 41,
+      "supported_unhelpful": 8,
+      "unsupported": 23
+    }
+  },
+  "checker_flags_by_slot": {
+    "value": 122,
+    "metric": 92,
+    "period": 69,
+    "entity_scope": 37,
+    "scale_currency": 31,
+    "missing_operand": 27,
+    "sign": 26,
+    "basis": 2
+  },
+  "labels": {
+    "annotators": {
+      "claude-labeller@d103": 773,
+      "claude-adjudicator@d103": 15
+    },
+    "by_country_and_generator": {
+      "LK gemma": {
+        "labelled": 248,
+        "correct": 186,
+        "useful": 206,
+        "numeric": 212,
+        "numeric_incorrect": 54,
+        "checker_passed_and_right": 135,
+        "scorer_right_and_right": 155,
+        "incorrect": 54,
+        "checker_flagged_and_wrong": 51,
+        "scorer_wrong_and_wrong": 51,
+        "checker_flagged_but_right": 23,
+        "unhelpful": 7,
+        "checker_missed_wrong": 3,
+        "scorer_missed_wrong": 3,
+        "scorer_wrong_but_right": 3,
+        "ambiguous": 1
+      },
+      "LK qwen": {
+        "labelled": 248,
+        "unhelpful": 7,
+        "useful": 218,
+        "numeric": 212,
+        "numeric_incorrect": 47,
+        "checker_passed_and_right": 121,
+        "scorer_right_and_right": 133,
+        "incorrect": 53,
+        "checker_missed_wrong": 15,
+        "scorer_wrong_and_wrong": 34,
+        "correct": 188,
+        "scorer_wrong_but_right": 32,
+        "checker_flagged_and_wrong": 32,
+        "checker_flagged_but_right": 44,
+        "scorer_missed_wrong": 13
+      },
+      "US gemma": {
+        "labelled": 146,
+        "correct": 101,
+        "useful": 112,
+        "numeric": 124,
+        "numeric_incorrect": 41,
+        "checker_passed_and_right": 65,
+        "scorer_right_and_right": 83,
+        "incorrect": 41,
+        "checker_flagged_and_wrong": 38,
+        "scorer_wrong_and_wrong": 38,
+        "checker_flagged_but_right": 18,
+        "checker_missed_wrong": 3,
+        "scorer_missed_wrong": 3,
+        "ambiguous": 2,
+        "unhelpful": 2
+      },
+      "US qwen": {
+        "labelled": 146,
+        "correct": 117,
+        "useful": 131,
+        "numeric": 124,
+        "numeric_incorrect": 28,
+        "checker_passed_and_right": 71,
+        "scorer_right_and_right": 81,
+        "incorrect": 29,
+        "checker_flagged_and_wrong": 23,
+        "scorer_wrong_and_wrong": 22,
+        "checker_missed_wrong": 5,
+        "scorer_missed_wrong": 6,
+        "checker_flagged_but_right": 25,
+        "scorer_wrong_but_right": 15
+      }
+    },
+    "by_question_type": {
+      "comparison": {
+        "correct": 29,
+        "incorrect": 7
+      },
+      "difference": {
+        "correct": 102,
+        "incorrect": 17,
+        "unhelpful": 1
+      },
+      "growth": {
+        "incorrect": 88,
+        "correct": 65,
+        "unhelpful": 1
+      },
+      "lookup": {
+        "unhelpful": 4,
+        "incorrect": 24,
+        "correct": 222
+      },
+      "narrative": {
+        "correct": 100,
+        "incorrect": 7,
+        "unhelpful": 6,
+        "ambiguous": 3
+      },
+      "ratio": {
+        "correct": 31,
+        "incorrect": 9
+      },
+      "share": {
+        "correct": 43,
+        "incorrect": 25,
+        "unhelpful": 4
+      }
+    },
+    "spans_by_slot": {
+      "value": 130,
+      "unsupported_text": 30,
+      "scale_currency": 28,
+      "sign": 17,
+      "entity_scope": 5,
+      "period": 3,
+      "basis": 2,
+      "metric": 1
+    }
+  }
+}
