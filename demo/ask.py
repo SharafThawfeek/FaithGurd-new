@@ -154,8 +154,9 @@ def _in_sentence(label: str) -> str:
 
 
 def _verb(label: str) -> str:
-    """'was' or 'were' for the head of the label: 'revenue from contracts with customers was', 'total assets were'."""
-    head = re.split(r"\s+(?:from|of|on|in|with|for|to|at|attributable|net of)\s+", label.strip(), maxsplit=1, flags=re.I)[0]
+    """'was' or 'were' for the head of the label: 'revenue from contracts with customers was', 'total assets were',
+    'amounts due to related parties were'."""
+    head = re.split(r"\s+(?:due|from|of|on|in|with|for|to|at|attributable|net of)\s+", label.strip(), maxsplit=1, flags=re.I)[0]
     last = head.split()[-1].lower() if head.split() else ""
     return "were" if last.endswith("s") and not last.endswith(("ss", "us", "is")) else "was"
 
@@ -180,7 +181,7 @@ def read_question(report: Report, text: str) -> tuple[str, str | None, str]:
     The benchmark's writers set a question's period by hand; here it is read from short forms the checker's year
     reader skips ("FY25", "the previous year"). A company name with "Bank" or "Company" in it would read as that
     column ("Sampath Bank's profit" as the Bank's, not the Group's), so it is shortened to the name before it."""
-    text = " ".join(text.split())
+    text = typography(" ".join(text.split()))
     note = ""
     if report.real:
         short = _ENTITY_IN_NAME.split(report.name, maxsplit=1)[0]
@@ -291,12 +292,21 @@ def candidate_questions(report: Report) -> tuple[list[str], list[tuple[str, str]
 # ---------------------------------------------------------------------------
 
 
+_PLURAL_POSSESSIVE = re.compile(r"(?<=[sS])'(?=\s|$)")
+
+
+def typography(text: str) -> str:
+    """A plural possessive with a straight apostrophe written as the reports print it: the frozen checker drops "’" but
+    keeps "'", so "stockholders' equity" would not match the line "Stockholders’ equity" and read as a shorter one."""
+    return _PLURAL_POSSESSIVE.sub("’", text)
+
+
 def make_item(report: Report, item_id: str, question: str, answer: str, generator: str) -> Item:
     text, period, _ = read_question(report, question)
     q = Question(id=item_id, issuer=report.id, country=report.country, text=text, period=period,
                  question_type=question_type(text, report.vocab()), source="demo")
     return Item(id=item_id, question=q, evidence=report.evidence,
-                answer=Answer(id=item_id, question_id=item_id, generator=generator, text=answer))
+                answer=Answer(id=item_id, question_id=item_id, generator=generator, text=typography(answer)))
 
 
 def _find(report: Report, metric: str | None, entity: str | None, period: str | None, question: str = "") -> Cell | None:
@@ -455,12 +465,43 @@ def caveats(item: Item, det: DetectorOutput, action: str) -> list[str]:
 
 UNKNOWN_LINE = "Unknown line item:"
 UNTRUSTED = "Careful, this fix is not trustworthy:"
+ROUNDED = "Rounded:"
 EXPLAIN = re.compile(r"\b(driven by|due to(?! (?:depositors|banks|other banks|customers|related|subsidiar|the group|the parent|holding))|"
                      r"because of|because|as a result of|owing to|thanks to|reflecting|on the back of|"
                      r"supported by|led by|record (?:year|profit|high|growth)|strong demand|higher demand|lower costs)\b[^.]*", re.I)
 COUNT_AFTER = re.compile(r"\s*(people|employees|staff|years?|factories|branches|stores|outlets|customers|countries|shareholders|"
                          r"plants|offices|members|directors|times)\b", re.I)
 _BARE = re.compile(r"^\d{1,3}(st|nd|rd|th)?$")
+
+
+SYNONYMS = {"shareholder": "stockholder", "equityholder": "stockholder"}
+
+
+def _words(text: str) -> set[str]:
+    words = {_stem(w) for w in normalise_metric(text).split()} - {_stem(w) for w in STOPWORDS}
+    return {SYNONYMS.get(w, w) for w in words if w}
+
+
+def _named_line(item: Item, old, copied: list[str]) -> str | None:
+    """The row label of a cell holding exactly the figure a repair replaced, in the copied cell's column, when the
+    sentence names that whole line and the copied line's name is part of it: the figure was right, and the checker read
+    a shorter line ("total liabilities" in "total liabilities and shareholders' equity")."""
+    ids = {c.id for c in item.evidence.cells()}
+    if old is None or old.kind != "amount" or len(copied) != 1 or copied[0] not in ids:
+        return None
+    read = item.evidence.cell(copied[0])
+    text = item.answer.text
+    start = max(text.rfind(". ", 0, old.start) + 1, 0)
+    end = text.find(". ", old.end)
+    sentence = _words(text[start:end if end >= 0 else len(text)])
+    for cell in item.evidence.cells():
+        if (cell.id == read.id or cell.kind != "amount" or cell.value is None or cell.value != old.value
+                or (cell.period, cell.entity) != (read.period, read.entity)):
+            continue
+        label = _words(cell.row_label)
+        if len(label) >= 2 and _words(read.row_label) < label <= sentence:
+            return cell.row_label.strip()
+    return None
 
 
 def released_problems(item: Item, final) -> list[str]:
@@ -483,6 +524,18 @@ def released_problems(item: Item, final) -> list[str]:
                 _BARE.match(old.text.strip()) or COUNT_AFTER.match(item.answer.text[old.end:old.end + 25])):
             out.append(f"{UNTRUSTED} “{old.text}” looks like a count or a reference, not a report figure, and FaithGuard wrote "
                        f"{ch.new} over it (it reads every number as a figure: a known limitation).")
+            break
+    for ch in res.changes:
+        cell = item.evidence.cell(ch.cells[0]) if len(ch.cells) == 1 and ch.cells[0] in {c.id for c in item.evidence.cells()} else None
+        written = extract_claims(ch.new)
+        if (cell is not None and cell.kind == "amount" and cell.value and written
+                and abs(written[0].value - cell.value) > abs(cell.value) * Decimal("0.001")):
+            out.append(f"{ROUNDED} the fix keeps the answer's unit, so the report's figure {cell.text} is written as {ch.new}.")
+            break
+    for ch in res.changes:
+        if (named := _named_line(item, claims.get(ch.claim_id), ch.cells)):
+            out.append(f"{UNTRUSTED} “{claims[ch.claim_id].text}” is the report's figure for “{named}”, the line the answer "
+                       f"names, but FaithGuard read a shorter line name and changed it to {ch.new} (a known limitation).")
             break
     changed, shift = [], 0
     for start, end, new_text in sorted(res.replacements):

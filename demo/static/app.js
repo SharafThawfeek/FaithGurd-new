@@ -11,7 +11,7 @@ const VERDICT_ICON = { supported: "✓", unsupported: "✗", unverifiable: "?" }
 const ACTION_WORD = { send: "SEND", repair: "REPAIR", abstain: "ABSTAIN" };
 
 const state = { examples: [], current: null, data: null, step: 0, claim: null, showAll: {}, view: "case",
-                runSeq: 0, loadSeq: 0, timer: null, resultsTab: "detection", results: null, trainedLive: {}, modelStates: {},
+                runSeq: 0, loadSeq: 0, timer: null, resultsTab: "main", results: null, trainedLive: {}, modelStates: {},
                 reports: null, ask: { report: null, question: "", answer: "", busy: null, allItems: false, tables: false }, asked: [] };
 
 // ---------------------------------------------------------------- helpers
@@ -124,7 +124,7 @@ function renderSidebar() {
   }
   side.append(h("h3", {}, "Evaluation"));
   side.append(h("button", { class: `ex${state.view === "results" ? " active" : ""}`, onclick: showResults },
-    h("span", { class: "t" }, "Results"), h("span", { class: "c" }, "development tables: detection, repair, policy")));
+    h("span", { class: "t" }, "Results"), h("span", { class: "c" }, "the locked test (D-113), then the development tables")));
 }
 
 function selectExample(id) {
@@ -773,9 +773,12 @@ const REPAIR_COLS = [["Repairer", (x) => x.label], ["Corrected", (x) => pct(x.co
 function renderResults() {
   const r = state.results;
   const main = document.getElementById("main");
-  const tabs = [["detection", "Catch · detection"], ["repair", "Correct · repair"], ["policy", "Control · policy"]];
+  const tabs = [["main", "Locked test · D-113"], ["detection", "Catch · detection"], ["repair", "Correct · repair"], ["policy", "Control · policy"]];
   const body = h("div", {});
-  if (state.resultsTab === "detection") {
+  const locked = state.resultsTab === "main";
+  if (locked) {
+    put(body, h("section", { class: "card" }, r.reports.main ? md(r.reports.main) : h("p", { class: "note" }, "runs/main/report.md is not on this laptop.")));
+  } else if (state.resultsTab === "detection") {
     put(body, h("section", { class: "card" }, h("h2", {}, "Detectors on controlled-track development answers (Kaggle)"),
       resTable([["Detector", (x) => x.label], ["Answers", (x) => (x.items || 0).toLocaleString(), 1], ["AUROC", (x) => fmt(x.auroc), 1],
         ["False alarms on clean answers", (x) => pct(x.false_alarm_clean), 1], ["Recall on wrong-context errors", (x) => pct(x.wrong_context_recall), 1]], r.detectors),
@@ -796,8 +799,11 @@ function renderResults() {
     put(body, h("section", { class: "card" }, md(r.reports.policy)));
   }
   main.replaceChildren(
-    h("div", { class: "banner" }, "Development results, not the locked test set: these numbers come from the controlled track (injected errors) and Kaggle development runs. "
-      + "The locked test set (788 answers) is labelled by separate blind Claude passes, not by people (D-103, D-105); on its 672 numeric answers the rule checker flags 144 of the 170 labelled incorrect and 110 of the 502 labelled right (runs/main/labels). The pre-registered results on it are in runs/main/report.md (D-113)."),
+    h("div", { class: "banner" }, locked
+      ? "The locked test set, scored once after the pre-registration was filed (D-104, D-113): 394 questions and 788 answers on 48 Sri Lankan and US companies (392 test and 396 calibration answers). "
+        + "The labels are made by separate blind Claude passes, not by people (D-103, D-105). One of the nine hypotheses is confirmed (R-H1); no policy setting is certified. Shown as generated, from runs/main/report.md."
+      : "Development results, not the locked test set: these numbers come from the controlled track (injected errors) and Kaggle development runs. "
+        + "The locked test set (788 answers) is labelled by separate blind Claude passes, not by people (D-103, D-105); on its 672 numeric answers the rule checker flags 144 of the 170 labelled incorrect and 110 of the 502 labelled right (runs/main/labels). Its pre-registered results are in the Locked test tab (D-113)."),
     h("div", { class: "tabs" }, tabs.map(([k, label]) => h("button", { class: `tab${state.resultsTab === k ? " active" : ""}`,
       onclick: () => { state.resultsTab = k; renderResults(); } }, label))),
     body);

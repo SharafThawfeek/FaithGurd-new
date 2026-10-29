@@ -158,7 +158,7 @@ flowchart TD
     subgraph S2["2. Datasets"]
         CT["Controlled track<br/>~27,700 items, planted errors,<br/>fit / tune / calibration / test"]
         XM["XBRL-mined examples<br/>14,512 wrong-context answers"]
-        BM["Benchmark<br/>96 tables, 400 questions,<br/>800 answers, human labels"]
+        BM["Benchmark<br/>96 tables, 400 questions,<br/>800 answers, Claude labels (D-103)"]
     end
     subgraph S3["3. Training (Kaggle T4)"]
         TA["Channel A<br/>span + slot heads"]

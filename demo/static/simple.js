@@ -333,6 +333,11 @@ function verdict(d) {
       h("div", {}, h("div", { class: "head" }, "FaithGuard missed your planted mistake."),
         h("div", { class: "sub" }, "It sent the answer with the mistake in it. This is one of the cases it cannot see yet; step 1 shows what it checked.")));
   }
+  if (a === "repair" && has(d, "Careful, this fix is not trustworthy")) {
+    return h("div", { class: "verdict abstain" }, h("div", { class: "icon" }, "!"),
+      h("div", {}, h("div", { class: "head" }, "Careful: FaithGuard's fix is not trustworthy."),
+        h("div", { class: "sub" }, "The repair passed FaithGuard's own checks, but it changed a figure it should have kept or wrote one where it does not belong. The note below says which (a known limitation).")));
+  }
   if ((a === "send" || a === "repair") && contradicts(d)) {
     return h("div", { class: "verdict abstain" }, h("div", { class: "icon" }, "!"),
       h("div", {}, h("div", { class: "head" }, "Careful: the answer FaithGuard sent does not add up."),

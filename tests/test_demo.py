@@ -235,6 +235,21 @@ def test_typed_answers_are_labelled_typed_and_unknown_reports_refused(demo):
     assert all(item["question"].endswith("?") for r in listing for item in r["line_items"])
 
 
+def test_typography_and_a_longer_line_the_answer_names():
+    from ask import _verb, typography
+
+    assert typography("stockholders' equity and Kinsale's revenue") == "stockholders’ equity and Kinsale's revenue"
+    assert _verb("Amounts due to related parties") == "were" and _verb("Income tax due") == "was"
+
+
+def test_the_results_screen_shows_the_locked_test_and_says_who_labelled():
+    from results import results
+
+    reports = results(DEMO.parent)["reports"]
+    assert "## Hypotheses" in reports["main"] and "R-H1" in reports["main"]
+    assert "human-labelled" not in reports["policy"] and "Claude passes" in reports["policy"]
+
+
 def test_the_demo_never_reads_gold_or_blinded_data():
     for name in ("app.py", "cases.py", "views.py", "models.py", "results.py", "ask.py"):
         tree = ast.parse((DEMO / name).read_text(encoding="utf-8"))

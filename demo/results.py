@@ -21,6 +21,16 @@ REPAIRERS = [  # results file under runs/repair, label, has a gate
     ("kaggle/eval-v1/results.json", "Repairer v1 (frozen, D-101: stage A + arithmetic slips)", True),
 ]
 PILOT = "runs/pilot/v1run-repair-v1/summary.json"  # natural answers, counts only (D-095 adapter, current code)
+MAIN = "runs/main/report.md"  # the pre-registered analyses on the locked test (D-113)
+# The policy study's report was written before D-103; the run file is left as generated, the screen says who labelled
+STALE = {"the paper's claims rest on the human-labelled natural test.":
+         "the paper's claims rest on the natural test set, labelled by separate blind Claude passes, not by people (D-103): see the Locked test tab."}
+
+
+def _fresh(text: str | None) -> str | None:
+    for old, new in STALE.items():
+        text = text.replace(old, new) if text else text
+    return text
 
 
 def _json(path: Path) -> dict | None:
@@ -61,7 +71,8 @@ def results(root: Path) -> dict:
                    **{k: s.get(k) for k in KEYS}} for name, s in sorted((pilot or {}).items())]
     reports = {
         "fusion": _text(root / "runs/detector/fusion/report.md"),
-        "policy": _text(root / "runs/policy/controlled/report.md"),
+        "policy": _fresh(_text(root / "runs/policy/controlled/report.md")),
+        "main": _text(root / MAIN),
     }
     return {"detectors": det_rows, "repairers": rep_rows, "pilot_repair": pilot_rows, "reports": reports,
             "repair_reports": {p.parent.name: _text(p) for p in sorted((root / "runs/repair/kaggle").glob("*/report.md"))}}

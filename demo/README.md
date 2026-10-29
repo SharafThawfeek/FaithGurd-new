@@ -1,6 +1,6 @@
 # FaithGuard demo
 
-A local, offline demo for the progress presentation. It opens in the browser and walks one answer through the pipeline: **1 Catch → 2 Control → 3 Correct → Output**, with a **Results** screen for the development tables. Each member drives their own step. Decision D-097.
+A local, offline demo for the progress presentation. It opens in the browser and walks one answer through the pipeline: **1 Catch → 2 Control → 3 Correct → Output**, with a **Results** screen for the locked-test results (D-113) and the development tables. Each member drives their own step. Decision D-097.
 
 ```
 .venv\Scripts\python demo\app.py
@@ -51,7 +51,7 @@ Each script takes about three minutes. Examples are numbered as in the sidebar; 
 
 1. **2. Entity error**, step **1 Catch**. "The question asks for the Group; the answer's numbers are the Bank's." Click **Rs. 12,450 million**: verdict *unsupported*, failing slot `entity_scope`. In the evidence table the asked-for Group cell is green (✓) and the Bank cell the number came from is red (✗). Below: what the evidence supports, Rs. 14,213 million.
 2. Click **7.0%**: the checker matches it to the Bank's growth and recomputes the Group's, a rise of 9.3%.
-3. Channel A card: the per-token heat map from the fine-tuned mmBERT, and the slot head's guess under *Flagged spans* (hover a word for its probability). "Channel A is trained to find wrong spans; Channel B traces them to cells."
+3. Channel A card: the per-token heat map from the fine-tuned mmBERT, and the slot head's guess under *Flagged spans* (hover a word for its probability). "Channel A is trained to find wrong spans; Channel B traces them to cells." Its slot guess here is wrong (scale_currency and basis for an entity error): say so before anyone asks. On the locked test the slot head is right on 3.4% of spans (`runs/main/report.md`, "Spans on the test split"), and the policy does not use Channel A.
 4. **3. Scale error**: the cell is outlined green with a red dashed border, "the right cell, read at the wrong scale".
 5. **Try it**: open **1. Correct answer**, click the edit **Swap in the Bank's figure**. The amount turns red at once, and Channel A follows half a second later.
 6. Real answer **8**: Channel A flags only the wrong growth rate.
@@ -100,7 +100,7 @@ Stress tests before the talk:
 ### Output and Results (closing, any member)
 
 - Step **Output** shows what the user gets: the original, the repaired answer with the cells behind its numbers, or a refusal with the evidence. Real answers also show the development reference answer, which the pipeline never sees.
-- **Results** (sidebar): detection, repair and policy tables from `runs/`, under a banner that says they are development results, that the locked test set is labelled by separate blind Claude passes, not by people (D-103, D-105), and what the rule checker does on its 672 labelled numeric answers.
+- **Results** (sidebar): opens on **Locked test · D-113**, `runs/main/report.md` as generated (the nine hypotheses first, then detectors, spans and repair on the test split), under a banner with the split sizes, who labelled (separate blind Claude passes, not people; D-103, D-105) and the headline: one of nine hypotheses confirmed (R-H1), no policy setting certified. The other tabs are the development tables from `runs/`, under a banner that says so and what the rule checker does on the 672 labelled numeric answers.
 
 ## Recording a backup video
 
