@@ -552,7 +552,7 @@ def cmd_labelling(args) -> None:
     from faithguard.gold import GoldStore
 
     needed = {"tasks": ("items", "mapping"), "triage": ("items", "gold"), "audit": ("items", "gold"),
-              "import": ("export", "mapping", "gold")}[args.action]
+              "import": ("export", "mapping", "gold"), "spans": ("items", "gold")}[args.action]
     if missing := [f"--{name}" for name in needed if getattr(args, name) is None]:
         sys.exit(f"labelling {args.action} needs {', '.join(missing)}")
 
@@ -634,6 +634,16 @@ def cmd_labelling(args) -> None:
                     store.add_label(triage.code_label(by_id[i]))
             store.save()
             print(f"added {len(verdict['code_labels_kept'])} code labels to {store.root}")
+    elif args.action == "spans":
+        from faithguard.evaluate.pilot import label_of
+
+        # R-H1's gold-span setting: the deciding label's span offsets for every labelled test answer
+        store = GoldStore.load(args.gold)
+        rows = [{"item_id": item.id, "spans": [[s.start, s.end] for s in label.spans]}
+                for item in read_jsonl(args.items, Item) if item.question.split == "test" and (label := label_of(store, item.id))]
+        out = Path(args.out or "data/benchmark-build/main/gold-spans.jsonl")
+        out.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8", newline="\n")
+        print(f"wrote span offsets for {len(rows)} labelled test answers ({sum(bool(r['spans']) for r in rows)} with spans)")
     else:
         export = json.loads(Path(args.export).read_text(encoding="utf-8"))
         mapping = json.loads(Path(args.mapping).read_text(encoding="utf-8"))
@@ -813,9 +823,9 @@ def main(argv: list[str] | None = None) -> None:
     p.set_defaults(fn=cmd_analyse)
 
     p = sub.add_parser("labelling", help="blinded Label Studio tasks, code labels with a person's audit (D-100), label import")
-    p.add_argument("action", choices=["tasks", "triage", "audit", "import"])
+    p.add_argument("action", choices=["tasks", "triage", "audit", "import", "spans"])
     p.add_argument("--items")
-    p.add_argument("--out", help="the blinded tasks for a person (never overwritten)")
+    p.add_argument("--out", help="the blinded tasks for a person (never overwritten); spans: the span-offset file")
     p.add_argument("--mapping", help="the task key -> item file, kept with the gold store (tasks, import)")
     p.add_argument("--salt", help="task-key salt; random when left out, so nobody can recompute the keys")
     p.add_argument("--export")
