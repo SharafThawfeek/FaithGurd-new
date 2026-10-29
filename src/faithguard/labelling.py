@@ -24,6 +24,9 @@ SLOT_LABELS = {
 
 
 def table_html(table: Table) -> str:
+    """The table as the generators saw it (generation.answers.render_evidence): title with its units note, headers, values."""
+    from faithguard.generation.answers import unit_note
+
     rows: dict[int, dict[int, str]] = {}
     labels: dict[int, str] = {}
     headers: dict[int, str] = {}
@@ -32,7 +35,7 @@ def table_html(table: Table) -> str:
         labels[c.row] = c.row_label
         headers[c.col] = c.column_label
     cols = sorted(headers)
-    head = "<tr><th>{}</th>{}</tr>".format(html.escape(table.title), "".join(f"<th>{html.escape(headers[c])}</th>" for c in cols))
+    head = "<tr><th>{}</th>{}</tr>".format(html.escape((table.title or "Table") + unit_note(table.currency, table.scale)), "".join(f"<th>{html.escape(headers[c])}</th>" for c in cols))
     body = "".join(
         "<tr><td>{}</td>{}</tr>".format(html.escape(labels[r]), "".join(f"<td>{html.escape(rows[r].get(c, ''))}</td>" for c in cols))
         for r in sorted(rows)

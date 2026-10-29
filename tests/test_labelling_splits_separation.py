@@ -18,6 +18,12 @@ def test_tasks_are_blinded_and_labels_come_back():
     data = tasks[0]["data"]
     assert set(data) == {"task_key", "question", "evidence_html", "answer"}  # no generator, no item id
     assert "<table>" in data["evidence_html"] and "14,212,560" in data["evidence_html"]
+    # the units note the generators saw under each title, so a scale or currency error can be judged
+    from faithguard.labelling import table_html
+
+    table = items[0].evidence.tables[0]
+    assert "(amounts in Rs. &#x27;000 / thousands)" in table_html(table.model_copy(update={"scale": 3, "currency": "LKR"}))
+    assert "(amounts in US$ millions)" in table_html(table.model_copy(update={"scale": 6, "currency": "USD"}))
     export = [{
         "data": data,
         "annotations": [{
