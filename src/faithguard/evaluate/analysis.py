@@ -410,8 +410,11 @@ def _threshold_transfer(cal, test, lab, outputs, fusion, claim_rows, seed, alpha
 
 # ---------------------------------------------------------------- repair (R-H1 to R-H3)
 
+REPAIRERS = ("repair-v1", "repair-sft", "repair-sft-nokeep", "stage-b", "rewrite-v1")
+
+
 def repair(items: Sequence[Item], gold: GoldStore, outputs: dict, gold_spans: dict[str, list] | None, seed: int = 0) -> dict:
-    from faithguard.evaluate.repair import summarise
+    from faithguard.evaluate import repair_check
     from faithguard.evaluate.systems import LABEL_STATE, score_rows
 
     lab = labels(items, gold)
@@ -419,7 +422,7 @@ def repair(items: Sequence[Item], gold: GoldStore, outputs: dict, gold_spans: di
     test = [i for i in items if i.question.split == "test"]
     by_id = {i.id: i for i in items}
     rows_by = {}
-    for system in ("repair-v1", "repair-sft", "repair-sft-nokeep", "stage-b", "rewrite-v1"):
+    for system in REPAIRERS:
         o = outputs.get(system)
         if not o or not o["detector"]:
             continue
@@ -428,6 +431,41 @@ def repair(items: Sequence[Item], gold: GoldStore, outputs: dict, gold_spans: di
         for name, rs in rows.items():
             key = name.replace("trained repairer", system) if name.startswith("trained") else name
             rows_by.setdefault(key, rs)
+    # D-112: a group whose checked repairs disagreed with the gold scorer on more than 10% has every changed repair labelled
+    # (D-106); for that group's trained arms a changed repair's state is its label's, and the scorer's results are kept beside
+    check = gold.root / "repair-check-result.json"
+    flagged = {g for g, r in json.loads(check.read_text(encoding="utf-8")).items() if r["label_every_changed_repair"]} if check.exists() else set()
+    changes = repair_check.changed(test, outputs) if flagged else {}
+    code_rows, labelled_arms = rows_by, {}
+    rows_by = {}
+    for key, rs in code_rows.items():
+        if key.split(", ")[0] not in REPAIRERS or repair_check.group_of(key) not in flagged:
+            rows_by[key] = rs
+            continue
+        new, unlabelled, differs = [], 0, 0
+        for r in rs:
+            label = repair_check.repair_label(gold, f"{r['item_id']}@{key}") if r["item_id"] in changes.get(key, {}) else None
+            if r["item_id"] in changes.get(key, {}) and label is None:
+                unlabelled += 1
+            if label is not None:
+                differs += LABEL_STATE[label.status] != r["after"]
+                r = r | {"after": LABEL_STATE[label.status]}
+            new.append(r)
+        rows_by[key] = new
+        labelled_arms[key] = {"changed": len(changes.get(key, {})), "unlabelled": unlabelled, "label_differs_from_code": differs}
+
+    out: dict = hypotheses(rows_by, by_id, lab, seed)
+    if labelled_arms:
+        code = hypotheses(code_rows, by_id, lab, seed)
+        out["labelled_arms"] = labelled_arms
+        out["code_scored"] = {k: code[k] for k in ("summaries", "R-H2", "R-H3")}
+    return out
+
+
+def hypotheses(rows_by: dict[str, list[dict]], by_id: dict[str, Item], lab: dict, seed: int = 0) -> dict:
+    """The repair summaries and R-H1 to R-H3 from rows by "repairer, span source"."""
+    from faithguard.evaluate.repair import summarise
+
     out: dict = {"summaries": {k: summarise(v) for k, v in sorted(rows_by.items())}}
 
     def rate(rs: list[dict], keep: Callable[[dict], bool], hit: Callable[[dict], bool]) -> float | None:
@@ -710,6 +748,16 @@ def report(result: dict) -> str:
                   "| --- | --- | --- | --- | --- | --- |"]
         for name, s in rep["summaries"].items():
             lines.append(f"| {name} | {s['needing_repair']} | {f(s['correction_rate'])} | {f(s['abstained_when_needed'])} | {f(s['new_error_rate'])} | {f(s['damage_rate'])} |")
+    if rep.get("labelled_arms"):
+        arms = rep["labelled_arms"]
+        cs = rep["code_scored"]
+        lines += ["", "Every changed repair of a group the check failed is labelled, and its label's state replaces the gold scorer's (D-112): "
+                  + "; ".join(f"{k} {v['changed']} changed, {v['label_differs_from_code']} scored differently"
+                              + (f", {v['unlabelled']} without a label" if v["unlabelled"] else "") for k, v in arms.items()) + ".",
+                  f"With the gold scorer's states instead: R-H2 basis {ci(cs['R-H2']['basis'])}, Gemma {ci(cs['R-H2']['gemma'])} "
+                  f"({cs['R-H2']['verdict']}); R-H3 {ci(cs['R-H3'])} ({cs['R-H3']['verdict']}).",
+                  "The policy's natural records keep the gold scorer's states for repairer v1 on the rule checker's spans: the check labels "
+                  "test repairs only, and the policy is certified on calibration answers."]
     if rep.get("repair_check"):
         lines += ["", "## Repair check (D-106)", "", "| Group | Checked | Code and label disagree | Every changed repair labelled |", "| --- | --- | --- | --- |"]
         for g, r in rep["repair_check"].items():

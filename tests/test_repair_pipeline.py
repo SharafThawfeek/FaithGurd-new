@@ -307,3 +307,39 @@ def test_repair_check_samples_changed_test_repairs_and_compares_code_with_labels
     summary = repair_check.info_summary([item], [{"task_key": info["data"]["task_key"], "preserved": True}], mapping, sample)
     assert summary["repair-v1, gold_spans"]["checked"] == 1 and summary["repair-v1, gold_spans"]["preserved"]["estimate"] == 1.0
     assert summary["other variants"]["checked"] == 0
+
+
+def test_labels_replace_the_scorer_for_a_group_the_repair_check_failed(tmp_path):
+    import json
+    from decimal import Decimal
+
+    from faithguard.evaluate import analysis
+    from faithguard.gold import GoldLabel, GoldQuestion, GoldStore, GoldValue
+
+    item = bank_item("Group profit after tax was Rs. 12,450 million.")
+    item.question.split = "test"
+    det = detect(item)
+    fixed = {"item_id": item.id, "repairer": "trained", "status": "repaired", "text": "Group profit after tax was Rs. 14,213 million."}
+    record = {"item_id": item.id, "threshold": 0.5, "claims": [{"claim_id": c.id, "a_max": 0.9} for c in det.claims]}
+    system = {"detector": {item.id: record}, "repair_rule_spans": {item.id: fixed}, "repair_channel_a_spans": {item.id: fixed}, "repair_gold_spans": {}}
+    outputs = {"repair-sft": system, "repair-sft-nokeep": system}
+    gold = GoldStore(tmp_path)
+    gold.add_question(GoldQuestion(question_id="q-bank", answer_text="Rs. 14,213 million", cells=["t1r3c1"],
+                                   values=[GoldValue(value=Decimal("14212560000"), kind="amount")], source="test"))
+    gold.add_label(GoldLabel(item_id=item.id, target="original", status="incorrect", annotator="claude-labeller@d103"))
+    gold.add_label(GoldLabel(item_id=f"{item.id}@repair-sft, rule_spans", target="repair", status="incorrect", annotator="claude-labeller@d106"))
+
+    plain = analysis.repair([item], gold, outputs, None)
+    assert "labelled_arms" not in plain and plain["summaries"]["repair-sft, rule_spans"]["correction_rate"] == 1.0  # the scorer's state
+
+    (tmp_path / "repair-check-result.json").write_text(json.dumps({"other variants": {"label_every_changed_repair": True}}), encoding="utf-8")
+    out = analysis.repair([item], gold, outputs, None)
+    # D-112: the label's state replaces the scorer's for the failed group's changed repairs; the scorer's results stay beside
+    assert out["summaries"]["repair-sft, rule_spans"]["correction_rate"] == 0.0
+    assert out["code_scored"]["summaries"]["repair-sft, rule_spans"]["correction_rate"] == 1.0
+    assert out["labelled_arms"]["repair-sft, rule_spans"] == {"changed": 1, "unlabelled": 0, "label_differs_from_code": 1}
+    assert out["labelled_arms"]["repair-sft, channel_a_spans"]["unlabelled"] == 1  # a changed repair with no label keeps the scorer's
+    assert out["summaries"]["repair-sft, channel_a_spans"]["correction_rate"] == 1.0
+    assert out["summaries"]["rule repairer, rule_spans"] == out["code_scored"]["summaries"]["rule repairer, rule_spans"]  # not a trained arm
+    assert set(out["code_scored"]) == {"summaries", "R-H2", "R-H3"}
+    assert "replaces the gold scorer's (D-112)" in analysis.report({"repair": out})
