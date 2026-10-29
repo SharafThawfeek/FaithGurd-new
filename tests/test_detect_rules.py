@@ -150,3 +150,25 @@ def test_holders_of_the_bank_do_not_make_a_claim_about_the_bank():
 def test_a_share_with_the_wrong_numerator_is_still_flagged(answer):
     _, got = checks(lk_item(answer))
     assert got[-1][0] != "supported"
+
+
+def test_granite_reply_read_in_chunks_matches_generate():
+    """The released-detector baseline reads long prompts into the cache in chunks (a T4 runs out of memory otherwise);
+    its greedy reply must be the one model.generate gives, here on a tiny random Granite with grouped KV heads."""
+    torch = pytest.importorskip("torch")
+    transformers = pytest.importorskip("transformers")
+    from faithguard.detect.baselines import greedy_reply
+
+    torch.manual_seed(0)
+    config = transformers.GraniteConfig(vocab_size=97, hidden_size=32, intermediate_size=64, num_hidden_layers=2,
+                                        num_attention_heads=4, num_key_value_heads=2, max_position_embeddings=128)
+    model = transformers.GraniteForCausalLM(config).eval()
+    model.generation_config.eos_token_id = None
+    model.generation_config.pad_token_id = 0
+    ids = torch.randint(1, 97, (1, 23))
+    with torch.no_grad():
+        expected = model.generate(ids, max_new_tokens=8, do_sample=False)[0, 23:].tolist()
+    assert greedy_reply(model, ids, max_new_tokens=8, chunk=5) == expected
+    assert greedy_reply(model, ids, max_new_tokens=8) == expected
+    model.generation_config.eos_token_id = expected[3]  # stops before the end-of-text token, as generate does
+    assert greedy_reply(model, ids, max_new_tokens=8, chunk=5) == expected[: expected.index(expected[3])]

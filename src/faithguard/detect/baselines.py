@@ -93,7 +93,6 @@ class GraniteGuardianBaseline:
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
-        self.torch = torch
         self.tokenizer = AutoTokenizer.from_pretrained(model_id)
         kwargs: dict = {"device_map": "auto"}
         if load_in_4bit:
@@ -112,13 +111,32 @@ class GraniteGuardianBaseline:
             {"role": "user", "content": guardian_block()},
         ]
         text = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, documents=documents)
-        ids = self.tokenizer(text, return_tensors="pt").to(self.model.device)
-        with self.torch.no_grad():
-            out = self.model.generate(**ids, max_new_tokens=24, do_sample=False)
-        reply = self.tokenizer.decode(out[0, ids["input_ids"].shape[1] :], skip_special_tokens=True)
+        ids = self.tokenizer(text, return_tensors="pt")["input_ids"].to(self.model.device)
+        reply = self.tokenizer.decode(greedy_reply(self.model, ids, max_new_tokens=24), skip_special_tokens=True)
         reply = re.sub(r"<think>.*?</think>", "", reply, flags=re.DOTALL)
         score = re.findall(r"<score>\s*(.*?)\s*</score>", reply, re.DOTALL)
         return 1.0 if score and score[0].strip().lower() == "yes" else 0.0
+
+
+def greedy_reply(model, ids, max_new_tokens: int, chunk: int = 1024) -> list[int]:
+    """Greedy decoding as model.generate(do_sample=False) does it, with the prompt read into the cache `chunk` tokens
+    at a time: on a T4 the attention of a 9,000-token prompt in one pass does not fit in memory (no flash attention)."""
+    import torch
+    from transformers import DynamicCache
+
+    eos = model.generation_config.eos_token_id
+    eos = set(eos if isinstance(eos, list) else [] if eos is None else [eos])
+    cache, out, reply = DynamicCache(), None, []
+    with torch.no_grad():
+        for start in range(0, ids.shape[1], chunk):
+            out = model(input_ids=ids[:, start : start + chunk], past_key_values=cache, use_cache=True, logits_to_keep=1)
+        for _ in range(max_new_tokens):
+            token = int(out.logits[0, -1].argmax())
+            if token in eos:
+                break
+            reply.append(token)
+            out = model(input_ids=torch.tensor([[token]], device=ids.device), past_key_values=cache, use_cache=True, logits_to_keep=1)
+    return reply
 
 
 def make(name: str):
