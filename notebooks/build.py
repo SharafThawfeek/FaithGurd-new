@@ -241,6 +241,72 @@ NOTEBOOKS = {
              "!python -m faithguard.train.repair_eval --adapter $ADAPTER --load $MODE --arithmetic --out {OUT}/eval-sft-arithmetic"),
         ],
     },
+    "systems_main": {
+        "title": "Phase 6: every frozen system on the 800 main answers",
+        "about": "Runs after the pre-registration is filed. Stores Channel A's spans and fusion features (and its two ablations' "
+                 "detector records), the neural outcome model's probabilities, and every frozen repairer's output with the rule "
+                 "checker's and Channel A's spans: repairer v1, stage A, no-KEEP, stage B and the free-rewrite baseline (D-101). Two "
+                 "queues run side by side, one per T4. Attach: the faithguard-main-items dataset (no gold), the faithguard-detector-models "
+                 "dataset, and the outputs of the notebooks detector_ablation, repair_v1, repair_sft, repair_spans, repair_self_train, "
+                 "repair_rewrite_v1 and outcome_model. The outputs are scored on a laptop against the labels. Expect about 8 GPU hours.",
+        "cells": [
+            ("Inputs: the items, the detectors, the neural model and the repairers' adapters",
+             "import glob, os, subprocess, sys\n"
+             "for flat in glob.glob('/kaggle/input/**/*__model__*', recursive=True):  # the models dataset, folders flattened\n"
+             "    target = os.path.join(WORK, 'prev', *os.path.basename(flat).split('__'))\n"
+             "    os.makedirs(os.path.dirname(target), exist_ok=True)\n"
+             "    if not os.path.exists(target):\n"
+             "        os.symlink(flat, target)\n"
+             "def first(pattern):\n"
+             "    found = sorted(glob.glob(pattern, recursive=True))\n"
+             "    return found[0] if found else None\n"
+             "ITEMS = first('/kaggle/input/**/items.jsonl')\n"
+             "DETECTORS = {'channel-a': os.path.join(WORK, 'prev', 'channel-a', 'model'), 'channel-a-noslot': os.path.join(WORK, 'prev', 'channel-a-noslot', 'model'),\n"
+             "             'channel-a-noxbrl': first('/kaggle/input/**/channel-a-noxbrl/model')}\n"
+             "NEURAL = first('/kaggle/input/**/outcome-model/model')\n"
+             "ADAPTERS = {'repair-v1': first('/kaggle/input/**/repair-v1/adapter'), 'repair-sft': first('/kaggle/input/**/repair-sft/adapter'),\n"
+             "            'repair-sft-nokeep': first('/kaggle/input/**/repair-sft-nokeep/adapter'), 'stage-b': first('/kaggle/input/**/self-train/round-2/adapter'),\n"
+             "            'rewrite-v1': first('/kaggle/input/**/rewrite-v1/adapter')}\n"
+             "print(ITEMS, DETECTORS, NEURAL, ADAPTERS, sep='\\n')\n"
+             "assert ITEMS and all(DETECTORS.values()) and NEURAL and all(ADAPTERS.values()), 'attach every input listed above'"),
+            ("Two queues, one per T4 (each resumes where it stopped)",
+             "A = DETECTORS['channel-a']\n"
+             "def run(name, *extra):\n"
+             "    return [sys.executable, '-m', 'faithguard.train.systems', '--items', ITEMS, '--out', f'{OUT}/systems-main-{name}', *extra]\n"
+             "queues = [\n"
+             "    [run('repair-v1', '--channel-a', A, '--adapter', ADAPTERS['repair-v1'], '--neural', NEURAL),\n"
+             "     run('repair-sft', '--channel-a', A, '--adapter', ADAPTERS['repair-sft']),\n"
+             "     run('channel-a-noslot', '--channel-a', DETECTORS['channel-a-noslot']),\n"
+             "     run('channel-a-noxbrl', '--channel-a', DETECTORS['channel-a-noxbrl'])],\n"
+             "    [run('repair-sft-nokeep', '--channel-a', A, '--adapter', ADAPTERS['repair-sft-nokeep']),\n"
+             "     run('stage-b', '--channel-a', A, '--adapter', ADAPTERS['stage-b']),\n"
+             "     run('rewrite-v1', '--channel-a', A, '--adapter', ADAPTERS['rewrite-v1'], '--mode', 'rewrite')],\n"
+             "]\n"
+             "script = 'import subprocess, sys, json\\nfor cmd in json.loads(sys.argv[1]):\\n    subprocess.run(cmd, check=True)\\n'\n"
+             "import json\n"
+             "procs = [subprocess.Popen([sys.executable, '-c', script, json.dumps(q)], env={**os.environ, 'CUDA_VISIBLE_DEVICES': str(i)},\n"
+             "                          stdout=open(f'{OUT}/queue-{i}.log', 'w'), stderr=subprocess.STDOUT) for i, q in enumerate(queues)]\n"
+             "codes = [p.wait() for p in procs]\n"
+             "print(codes)\n"
+             "for i in range(2):\n"
+             "    print(open(f'{OUT}/queue-{i}.log').read()[-3000:])\n"
+             "assert codes == [0, 0]"),
+        ],
+    },
+    "baselines_main": {
+        "title": "Phase 6: the released detectors on the 800 main answers",
+        "about": "Runs after the pre-registration is filed. Scores every main answer with LettuceDetect v1-large and v2, HHEM-2.1-Open "
+                 "and Granite Guardian 4.1-8B (4-bit), on the same focused evidence as Channel A (D-091); no gold is read. Attach the "
+                 "faithguard-main-items dataset. Expect about 2 GPU hours.",
+        "cells": [
+            ("The items", "import glob\nITEMS = sorted(glob.glob('/kaggle/input/**/items.jsonl', recursive=True))[0]\nprint(ITEMS)"),
+            ("LettuceDetect v1-large and v2 mmBERT, HHEM-2.1-Open",
+             "!python -m faithguard.train.baseline_eval --detector lettuce-v1-large --items $ITEMS --out {OUT}/main-base-lettuce-v1\n"
+             "!python -m faithguard.train.baseline_eval --detector lettuce-v2-mmbert --items $ITEMS --out {OUT}/main-base-lettuce-v2\n"
+             "!python -m faithguard.train.baseline_eval --detector hhem --items $ITEMS --out {OUT}/main-base-hhem"),
+            ("Granite Guardian 4.1-8B (4-bit)", "!python -m faithguard.train.baseline_eval --detector granite --items $ITEMS --out {OUT}/main-base-granite"),
+        ],
+    },
     "repair_rewrite_v1": {
         "title": "Repair baseline: free rewriting on repairer v1's data",
         "about": "The R-H1 comparator trained on the same data as repairer v1 (stage A's items plus the arithmetic slips, D-088), "

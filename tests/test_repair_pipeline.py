@@ -177,6 +177,27 @@ def test_systems_runner_stores_both_repairs_and_the_detector_record():
     assert row["repair_rule_spans"]["status"] == row["repair_channel_a_spans"]["status"] == "nothing_to_fix"
 
 
+def test_systems_runner_repairs_inside_gold_spans_and_runs_parts_alone():
+    from faithguard.records import RepairOutput
+    from faithguard.train.systems import gold_flags, run_systems
+
+    text = "Group profit after tax rose 7.0% to Rs. 14,213 million."  # 7.0% is the Bank's growth; the amount is right
+    item = bank_item(text)
+    seen = []
+
+    def repairer(it, det):
+        seen.append([det.check(c.id).verdict for c in det.claims])
+        return RepairOutput(item_id=it.id, repairer="fake", status="nothing_to_fix", text=it.answer.text)
+
+    start = text.index("Rs.")
+    (row,) = run_systems([item], None, repairer, gold_spans={item.id: [(start, len(text) - 1)]})
+    assert seen[-1] == ["supported", "unsupported"]  # only the labelled span is flagged, whatever the checker says
+    assert set(row) == {"repair_rule_spans", "repair_gold_spans"}  # no Channel A asked for, so no detector record
+    assert all(c.verdict == "supported" for c in gold_flags(detect(item), []).checks)  # no labelled span, nothing flagged
+    (row,) = run_systems([item], neural=lambda it, d: (0.2, 0.9))
+    assert row == {"neural": {"item_id": item.id, "p_unsafe": 0.2, "p_fix": 0.9}}
+
+
 def test_stored_system_outputs_are_scored_against_gold():
     from decimal import Decimal
 

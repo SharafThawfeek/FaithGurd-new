@@ -78,6 +78,10 @@ NOTEBOOKS = {
                      ROOT / "runs" / "repair" / "kaggle"),
     "repair_v1": (ROOT / "notebooks", "FaithGuard repair v1", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl",
                   ROOT / "runs" / "repair" / "kaggle"),
+    "systems_main": (ROOT / "notebooks", "FaithGuard systems main", r"detector[.]jsonl|repair-(rule|channel-a|gold)-spans[.]jsonl|neural[.]jsonl",
+                     ROOT / "data" / "benchmark-build" / "main" / "systems"),  # answer and repair text: private
+    "baselines_main": (ROOT / "notebooks", "FaithGuard baselines main", r"scores[.]jsonl|results[.]json",
+                       ROOT / "data" / "benchmark-build" / "main" / "systems"),
     "repair_rewrite_v1": (ROOT / "notebooks", "FaithGuard repair rewrite v1", r"train_log[.]json|results[.]json|report[.]md|rows[.]jsonl",
                           ROOT / "runs" / "repair" / "kaggle"),
     "transfer_replays": (ROOT / "notebooks", "FaithGuard transfer replays", r"replay[.]jsonl", ROOT / "runs" / "policy"),
