@@ -115,6 +115,9 @@ export FG_SEC_USER_AGENT="FaithGuard research Your Name you@example.com"
 | `faithguard labelling triage --items F --gold G [--filed REF]` | Code labels the answers it can decide; blinded tasks for a person for the rest plus a hidden audit of 150 code labels (D-100). Test and calibration answers need the filed pre-registration and a second reader for every question |
 | `faithguard labelling audit --items F --gold G [--apply]` | The audit's verdict once every audited answer has a person's label; tasks for any answers that still need a person; `--apply` adds the code labels that stand, once every routed answer has a person's label |
 | `faithguard labelling import --export F --mapping M --gold G` | Convert a Label Studio export into gold labels |
+| `faithguard labelling spans --items F --gold G` | The deciding labels' span offsets for the test answers, for R-H1's gold-span setting (the faithguard-gold-spans Kaggle dataset) |
+| `faithguard repair-check draw\|compare` | The pre-registered repair check: a blind labelled sample of changed repairs against code (D-106) |
+| `faithguard analyse [--rehearse]` | Phase 7: the pre-registered hypotheses with issuer-clustered bootstrap intervals, on the locked test set; report in `runs/main/` |
 | `faithguard extraction compare\|all\|evidence` | The automatic-extraction run: PDF table tools against the hand-corrected tables, and the real-world condition's evidence |
 | `faithguard hashes FILES --out F` | Pin files by SHA-256 (answers, evidence, the locked test set) |
 
@@ -177,22 +180,23 @@ Controlled track on development data, made from the project's own templates (pip
 | Automatic-extraction run on 20 tables | Done (D-070): PyMuPDF, pdfplumber and camelot on 20 Sri Lankan tables, [runs/extraction/report.md](runs/extraction/report.md); PyMuPDF (text) chosen, 94.2% of figures right on all 48 Sri Lankan main tables ([runs/extraction/all/report.md](runs/extraction/all/report.md)). Real-world evidence for the 400 main questions built in `data/benchmark-build/main-auto/` (not in git) |
 | Future-period set held back | The next annual report of each test issuer, listed with expected dates in [manifests/future-period.csv](manifests/future-period.csv) (D-069); none downloaded |
 
-### Phase 5: generate, freeze and pre-register (started)
+### Phase 5: generate, freeze and pre-register (done)
 
 | Exit item | State |
 | --- | --- |
 | All answers generated and stored | Done (D-073): 800 answers (400 questions, Qwen3.5-9B and Gemma-4-12B), no thinking leaks or empty answers, 0.95 GPU hours; files pinned in [manifests/main-answers.json](manifests/main-answers.json); blinded labelling tasks made (`labelling/main-tasks.json`, not in git), with no suggested labels; superseded by D-100, which builds the main tasks with `labelling triage` after filing |
-| Evidence frozen and test set locked | After every table and question has a second reader |
-| Detector, repairer v1 and all variants frozen | After phase 4's GPU runs |
-| Pre-registration filed | Drafted (D-071): [docs/preregistration.md](docs/preregistration.md); filed at lock |
+| Evidence frozen and test set locked | Done (D-104): a second-reader pass by Claude (D-103) re-derived all 400 questions and checked the table rows they use; 6 questions with two readings excluded, so the locked test set is 394 questions and 788 answers ([manifests/locked-test.json](manifests/locked-test.json), [manifests/excluded-questions.json](manifests/excluded-questions.json)) |
+| Detector, repairer v1 and all variants frozen | Done (D-101, D-104): hashes in [manifests/frozen-detector.json](manifests/frozen-detector.json) and [manifests/frozen-repair.json](manifests/frozen-repair.json); the free-rewrite baseline's adapter is added when its Kaggle run ends |
+| Pre-registration filed | Filed on 2026-10-29 as the git tag `prereg-v1` (D-104): [docs/preregistration.md](docs/preregistration.md); later changes are deviations in the decision log (D-105 to D-107) |
 
-### Phase 6: label the benchmark (tooling ready; dry run on the pilot)
+### Phase 6: label the benchmark (labels done; system runs next)
 
 | Step | State |
 | --- | --- |
 | Run every frozen system on the items | `python -m faithguard.train.systems` (GPU) stores Channel A's spans and the trained repairer's outputs; large evidence is focused first (D-084). Dry run on the 120 pilot answers done (D-085) |
 | Code checks on every repair | `faithguard systems` scores the stored outputs against gold, counts only: [runs/pilot/systems/report.md](runs/pilot/systems/report.md). On the pilot, after the gate and parser fixes (D-087, D-092, D-094), stage A corrects 34.8% of the wrong answers with the rule checker's spans and 39.1% with Channel A's, damaging none; the rules correct 43.5%. Without KEEP training the model corrects more with the rule checker's spans but loses more correct answers with Channel A's ([stage A](runs/pilot/systems-repair-sft/report.md), [no KEEP](runs/pilot/systems-repair-sft-nokeep/report.md)) |
-| Label the 800 main answers | Code labels plus a person's labels and audit (D-100): after filing, `faithguard labelling triage` builds the tasks (the older `labelling/main-tasks.json` used a public key salt and is not used). Rehearsed on the pilot: code labels 61 of 120 answers, a person 59 ([runs/pilot/triage/report.md](runs/pilot/triage/report.md)) |
+| Label the 788 locked answers | Done (D-105). Every label, check and adjudication is a separate blind Claude pass, not a person (D-103). The triage gave 311 code labels and sent 477 answers to the labeller; the audit overruled 4 of its 150 code labels, so the code labels fell and the labeller labelled every answer. A second labeller on 80 tasks: status kappa 0.89, usefulness 0.71, wrong-span 1.00; 15 disagreements adjudicated. 177 of 788 answers incorrect (22.5%). Counts: [runs/main/labels/report.md](runs/main/labels/report.md). A first pass made without each table's units note was discarded unused |
+| Check a sample of repairs | `faithguard repair-check draw` once the main systems' outputs are fetched: 50 changed repairs from each R-H1 arm and 50 across the other variants, labelled by a blind Claude pass and compared with code by `repair-check compare` (D-106) |
 
 ### Phase 4: components (built and trained; development-data runs done)
 
