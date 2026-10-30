@@ -10,6 +10,8 @@ It opens http://127.0.0.1:8770/. With `--no-models` it runs without the GPU and 
 
 Close any other demo first: the 6 GB GPU can hold the models for one server only.
 
+Start it well before you present: after a fresh start the models took about 6 minutes to load. The dot under the name turns green when the AI is ready.
+
 ## Using it
 
 1. **Document** (bottom left): the fictional bank or one of the five real reports.
