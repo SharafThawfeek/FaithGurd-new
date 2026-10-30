@@ -23,11 +23,11 @@ Close any other demo first: the 6 GB GPU can hold the models for one server only
 | R | Replay |
 | Esc | Close the detail sheet |
 
-Click a marked number in the answer and the camera flies to its cell in the report. **Why** opens every word of the tested page's explanation. **Plant a mistake** runs a planted mistake through the machine.
+Click a marked number in the answer and the camera flies to its cell in the report. **Why** opens the verdict, every number and the notes. **Plant a mistake** runs a planted mistake through the machine.
 
 ## What is real
 
-Every number, verdict, cell, gauge and check on screen comes from the pipeline's result for that answer. The AI's writing time and repairer v1's run are live. The rule check and decision take milliseconds, so the machine plays their real result slowly, and the page says so.
+Every number, verdict, cell, gauge and check on screen comes from the pipeline's result for that answer. The AI's writing time and repairer v1's run are live. The check and decision take under a second, so the machine plays their real result slowly, and the page says so.
 
 ## The design
 

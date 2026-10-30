@@ -3,9 +3,9 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "./vendor/RoundedBoxGeometry.js";
 
-const HEX = { paper: 0xe9e4d8, bone: 0xf6f2e8, card: 0xe4dfd2, ink: 0x17191b, steel: 0x2b2e31, graphite: 0x5c5f60,
+const HEX = { paper: 0xd9d1bf, bone: 0xfdfbf5, card: 0xe4dfd2, ink: 0x17191b, steel: 0x2b2e31, graphite: 0x5c5f60,
               red: 0xc2301c, green: 0x1e6b4e, ochre: 0xb4760f, blue: 0x2a4bc7 };
-const CSS = { paper: "#e9e4d8", bone: "#f6f2e8", card: "#e4dfd2", ink: "#17191b", graphite: "#5c5f60", rule: "#b9ccc8",
+const CSS = { paper: "#d9d1bf", bone: "#fdfbf5", card: "#e4dfd2", ink: "#17191b", graphite: "#5c5f60", rule: "#b9ccc8",
               margin: "#c98476", red: "#c2301c", green: "#1e6b4e", ochre: "#b4760f", blue: "#2a4bc7" };
 const SANS = 'Bahnschrift, "Segoe UI", Arial, sans-serif';
 const SERIF = '"Sitka Text", Sitka, Cambria, Georgia, serif';
@@ -24,14 +24,14 @@ const LANE = { send: -7.2, hold: 7.2 };
 const BLOCK_DEPTH = 0.62, ROW = 0.74, MAX_ROW = 8.4, MAX_ROWS = 7, PX = 170, FONT_PX = 62;
 
 const VIEWS = {
-  all: { pos: V(0.5, 76, 88), tgt: V(0.5, 0, -2.2) },
+  all: { pos: V(16, 84, 96), tgt: V(1.8, 0, -5.2) },
   source: { pos: V(-19, 30, 31), tgt: V(-19, 0.6, -0.5) },
   catch: { pos: V(-9, 38, 44), tgt: V(-9, 2, -5) },
-  control: { pos: V(-1, 34, 38), tgt: V(-1, 1, -3) },
-  correct: { pos: V(8, 32, 30), tgt: V(8, 0.8, -0.8) },
-  gates: { pos: V(15.5, 27, 29), tgt: V(15, 0.6, 0) },
-  sent: { pos: V(24, 31, 25), tgt: V(24, 0.5, -7.2) },
-  held: { pos: V(24, 31, 40), tgt: V(24, 0.5, 7.2) },
+  control: { pos: V(-3.5, 25, 27), tgt: V(-3.5, 2.8, -3.8) },
+  correct: { pos: V(7.5, 19, 18.5), tgt: V(7.5, 0.4, -0.3) },
+  gates: { pos: V(1, 17, 13), tgt: V(14.4, 0.8, 0) },
+  sent: { pos: V(26, 20, 8.5), tgt: V(26, 0.3, -7.4) },
+  held: { pos: V(26, 21, 24.5), tgt: V(26, 0.3, 7.8) },
 };
 
 // ---------------------------------------------------------------- small makers
@@ -86,7 +86,7 @@ export class Stage {
     this.renderer = new THREE.WebGLRenderer({ canvas: el, antialias: true, powerPreference: "low-power" });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.NoToneMapping;
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(HEX.paper);
@@ -100,7 +100,7 @@ export class Stage {
       card: new THREE.MeshStandardMaterial({ color: HEX.card, roughness: 0.95 }),
       ink: new THREE.MeshStandardMaterial({ color: HEX.ink, roughness: 0.62, metalness: 0.15 }),
       steel: new THREE.MeshStandardMaterial({ color: HEX.steel, roughness: 0.5, metalness: 0.3 }),
-      line: new THREE.LineBasicMaterial({ color: HEX.ink, transparent: true, opacity: 0.55 }),
+      line: new THREE.LineBasicMaterial({ color: HEX.ink, transparent: true, opacity: 0.8 }),
     };
     this.lights(); this.ground(); this.lanes(); this.source(); this.gantryCatch(); this.studied(); this.control(); this.press(); this.gateRow(); this.docks(); this.book();
     this.resize();
@@ -111,13 +111,13 @@ export class Stage {
 
   // ---------------------------------------------------------------- the room
   lights() {
-    this.scene.add(new THREE.HemisphereLight(0xffffff, 0xcfc8b6, 1.95));
-    const sun = new THREE.DirectionalLight(0xfff4e2, 1.35);
+    this.scene.add(new THREE.HemisphereLight(0xffffff, 0xcfc8b6, 1.5));
+    const sun = new THREE.DirectionalLight(0xfff4e2, 2.0);
     sun.position.set(-30, 60, 40);
     sun.castShadow = true;
     sun.shadow.mapSize.set(3072, 3072);
     Object.assign(sun.shadow.camera, { left: -52, right: 52, top: 40, bottom: -40, near: 10, far: 170 });
-    sun.shadow.radius = 5; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
+    sun.shadow.radius = 3.5; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
     this.scene.add(sun);
   }
 
@@ -135,11 +135,6 @@ export class Stage {
     const g = new THREE.Mesh(new THREE.PlaneGeometry(320, 320), new THREE.MeshStandardMaterial({ map: t, roughness: 1 }));
     g.rotation.x = -Math.PI / 2; g.receiveShadow = true;
     this.scene.add(g);
-    for (const dx of [0, 0.34]) {  // the ledger's double red margin
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 320), new THREE.MeshBasicMaterial({ color: CSS.margin }));
-      m.rotation.x = -Math.PI / 2; m.position.set(-37 + dx, 0.012, 0);
-      this.scene.add(m);
-    }
   }
 
   // a flat printed track along a curve
@@ -163,28 +158,41 @@ export class Stage {
     this.paths = {
       toCatch: c([STATION.start, 0], [STATION.catch, 0]),
       toControl: c([STATION.catch, 0], [cx, 0]),
-      send: c([cx, 0], [1.6, s * 0.46], [6, s * 0.92], [10, s], [18, s], [d, s]),
+      send: c([cx, 0], [1.6, s * 0.7], [5, s * 1.04], [10, s * 1.04], [18, s], [d, s]),
       hold: c([cx, 0], [1.6, h * 0.46], [6, h * 0.92], [10, h], [18, h], [d, h]),
       fix: c([cx, 0], [STATION.press, 0]),
       gates: c([STATION.press, 0], [g, 0]),
-      pass: c([g, 0], [g + 2, s * 0.42], [g + 3.8, s * 0.94], [g + 5, s], [d, s]),
-      fail: c([g, 0], [g + 2, h * 0.42], [g + 3.8, h * 0.94], [g + 5, h], [d, h]),
+      pass: c([g, 0], [g + 3, -0.6], [g + 6, -2.2], [d, -4.2], [d, s]),
+      fail: c([g, 0], [g + 3, 0.6], [g + 6, 2.2], [d, 4.2], [d, h]),
     };
-    for (const p of Object.values(this.paths)) { this.ribbon(p, 2.6, 0xdfd9cb, 0.012); this.ribbon(p, 0.08, CSS.ink, 0.02); }
+    const lines = [...Object.values(this.paths), c([-23.8, 0], [STATION.start, 0])];
+    for (const p of lines) this.ribbon(p, 0.12, CSS.ink, 0.02);
+    const [cv, g2] = canvas(64, 64);
+    g2.strokeStyle = CSS.ink; g2.lineWidth = 9; g2.lineCap = "round"; g2.lineJoin = "round";
+    g2.beginPath(); g2.moveTo(20, 12); g2.lineTo(44, 32); g2.lineTo(20, 52); g2.stroke();
+    const chev = new THREE.MeshBasicMaterial({ map: texture(cv), transparent: true, depthWrite: false, toneMapped: false }), plane = new THREE.PlaneGeometry(0.66, 0.66);
+    for (const p of lines) {
+      const n = Math.floor(p.getLength() / 6);
+      for (let i = 1; i <= n; i++) {
+        const at = p.getPointAt(i / (n + 1)), t = p.getTangentAt(i / (n + 1)), m = new THREE.Mesh(plane, chev);
+        m.rotation.x = -Math.PI / 2; m.rotation.z = -Math.atan2(t.z, t.x); m.position.set(at.x, 0.024, at.z);
+        this.scene.add(m);
+      }
+    }
     const t = (text, x, z) => { const m = ink(text, 0.7, { flat: true, color: CSS.graphite, track: 6, size: 54 }); m.position.set(x, 0.03, z); this.scene.add(m); };
-    t("LOOKS SAFE", 12.4, LANE.send + 1.9); t("FIXABLE", 3.2, 1.15); t("NEITHER", 12.2, LANE.hold - 1.9);
+    t("SEND", 13, LANE.send - 1.4); t("FIX", 5.2, 1.6); t("WITHHOLD", 12.2, LANE.hold - 1.9);
     // the three parts, called out on the sheet like a drawing
     const y = 12.3, call = (n, name, sub, x, z) => {
       const big = ink(`${n}  ${name}`, 1.9, { flat: true, size: 110, weight: 700, track: 4, pad: 2 });
       big.position.set(x + big.geometry.parameters.width / 2 - 0.3, 0.03, y); this.scene.add(big);
-      const small = ink(sub, 0.8, { flat: true, size: 56, weight: 400, color: CSS.graphite, pad: 2 });
-      small.position.set(x + small.geometry.parameters.width / 2 - 0.2, 0.03, y + 1.45); this.scene.add(small);
+      const small = ink(sub, 1.1, { flat: true, size: 66, weight: 400, color: CSS.graphite, pad: 2 });
+      small.position.set(x + small.geometry.parameters.width / 2 - 0.2, 0.03, y + 1.6); this.scene.add(small);
       const lead = new THREE.Mesh(new THREE.PlaneGeometry(0.05, y - 1 - z), new THREE.MeshBasicMaterial({ color: CSS.ink }));
       lead.rotation.x = -Math.PI / 2; lead.position.set(x, 0.025, (y - 1 + z) / 2); this.scene.add(lead);
     };
-    call(1, "CATCH", "Traces each number to the report", STATION.catch, 2.2);
+    call(1, "CATCH", "Looks up each number", STATION.catch, 2.2);
     call(2, "CONTROL", "Send, fix or withhold", STATION.control, 5.7);
-    call(3, "CORRECT", "Changes only the wrong block", STATION.press + 1, 2.2);
+    call(3, "CORRECT", "Changes only the blocks it flagged", STATION.press + 1, 2.2);
   }
 
   block(w, h, d, mat = "bone", r = 0.05) {
@@ -204,11 +212,11 @@ export class Stage {
     this.aiBody = this.at(this.block(5.2, 3.6, 7.6), x, 1.8, 0);
     const lab = ink("AI MODEL", 1.05, { flat: true, size: 90, weight: 700, track: 3 });
     lab.position.set(x, 3.62, 0.6); this.scene.add(lab);
-    this.aiLamp = this.lamp(x + 1.5, 3.8, -2.6);
+    this.aiLamp = this.lamp(x + 1.5, 3.66, -2.6);
   }
 
   lamp(x, y, z) {
-    const m = new THREE.Mesh(new THREE.SphereGeometry(0.2, 20, 14), new THREE.MeshStandardMaterial({ color: 0xb5b0a3, roughness: 0.5 }));
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.5), new THREE.MeshStandardMaterial({ color: 0xb5b0a3, roughness: 0.5 }));
     return this.at(m, x, y, z);
   }
 
@@ -245,22 +253,20 @@ export class Stage {
     hollow(3.4, 1.1, 2.2, x, z); hollow(3.4, 1.1, 2.2, x + 4.6, z);
     const lab = (text, px) => { const m = ink(text, 0.56, { flat: true, color: CSS.graphite, size: 50, weight: 600 }); m.position.set(px, 0.03, z + 1.75); this.scene.add(m); };
     lab("Channel A", x); lab("A + B fusion", x + 4.6);
-    const n = ink("Studied. Not in the decision", 0.64, { flat: true, color: CSS.graphite, size: 50, weight: 400 });
+    const n = ink("Studied. Not in the decision", 0.95, { flat: true, color: CSS.graphite, size: 50, weight: 400 });
     n.position.set(x + 2.3, 0.03, z + 2.6); this.scene.add(n);
   }
 
   control() {
-    const x = STATION.control, r = 5.6;
+    const x = STATION.control, r = 4.7;
     const [c, g] = canvas(1024, 1024);
     g.fillStyle = "#1c1e20"; g.fillRect(0, 0, 1024, 1024);
-    g.translate(512, 512); g.strokeStyle = "#8d8c84"; g.lineWidth = 3;
+    g.translate(512, 512); g.strokeStyle = "#8d8c84"; g.lineWidth = 6;
     for (let i = 0; i < 72; i++) { g.rotate(Math.PI / 36); g.beginPath(); g.moveTo(0, 470 + (i % 6 ? 16 : 0)); g.lineTo(0, 500); g.stroke(); }
     const top = new THREE.MeshStandardMaterial({ map: texture(c), roughness: 0.6 });
     this.disk = this.at(new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.18, 96), [this.mats.steel, top, this.mats.steel]), x, 0.09, 0);
     this.disk.castShadow = true; this.disk.receiveShadow = true;
-    this.gaugeA = this.gauge("P(unsafe)", x - 3.8, -7.4); this.gaugeB = this.gauge("P(fix)", x - 0.6, -7.4);
-    const note = ink("Thresholds certified on practice data only", 0.46, { flat: true, color: CSS.graphite, size: 46, weight: 400 });
-    note.position.set(x + 8.3, 0.03, -9.55); this.scene.add(note);
+    this.gaugeA = this.gauge("Risk score", x - 3.8, -7.4); this.gaugeB = this.gauge("Fix score", x - 0.6, -7.4);
   }
 
   gauge(name, x, z) {
@@ -291,19 +297,16 @@ export class Stage {
     this.frameC(x, 5.4);
     this.rail = this.at(this.block(9.8, 0.34, 0.5, "steel", 0.03), x, 5.2, 0);
     this.grip = new THREE.Group();
-    const rod = this.block(0.26, 4.8, 0.26, "steel", 0.03); rod.position.y = 2.4;
+    const rod = this.block(0.26, 4.8, 0.26, "steel", 0.03); rod.position.y = 2.4; this.rod = rod;
     const jaw = this.block(1.2, 0.3, 0.84, "ink", 0.03);
     this.grip.add(rod, jaw); this.grip.position.set(x, 3, 0);
     this.scene.add(this.grip);
-    const p = ink("Fix by the rule repairer. Repairer v1 runs on request", 0.46, { flat: true, color: CSS.graphite, size: 44, weight: 400 });
-    p.position.set(x + 7.1, 0.03, 3);
-    this.scene.add(p);
   }
 
   gateRow() {
-    this.gates = STATION.gates.map((x) => { this.arch(x, 4.9, 2.3, "bone", 0.26, 0.26); return this.lamp(x, 2.98, 0); });
-    const p = ink("FIVE CHECKS", 0.56, { flat: true, color: CSS.graphite, track: 5, size: 46 });
-    p.position.set(STATION.gates[2], 0.03, -3.4); this.scene.add(p);
+    this.gates = STATION.gates.map((x) => { this.arch(x, 4.9, 2.3, "bone", 0.45, 0.45); return this.lamp(x, 2.81, 0); });
+    const p = ink("FIVE CHECKS", 0.7, { flat: true, color: CSS.graphite, track: 5, size: 46 });
+    p.position.set(STATION.gates[2], 0.03, 3.9); this.scene.add(p);
   }
 
   docks() {
@@ -315,7 +318,7 @@ export class Stage {
       t.position.set(x - 5.75 + t.geometry.parameters.width / 2, 0.03, z + dz); this.scene.add(t);
     };
     bay(LANE.send, "SENT", -4.1); bay(LANE.hold, "WITHHELD", 4.1);
-    this.sentLamp = this.lamp(x + 6.6, 0.22, LANE.send - 2.4); this.holdLamp = this.lamp(x + 6.6, 0.22, LANE.hold + 2.4);
+    this.sentLamp = this.lamp(x + 6.6, 0.06, LANE.send - 2.4); this.holdLamp = this.lamp(x + 6.6, 0.06, LANE.hold + 2.4);
     this.lid = this.at(this.block(11, 0.34, 5.4), x, 8.5, LANE.hold);
     const face = ink("WITHHELD", 1.5, { flat: true, size: 90, weight: 700, track: 8 }); face.position.y = 0.18; this.lid.add(face);
     this.lid.visible = false;
@@ -337,6 +340,8 @@ export class Stage {
       return { c, g, face, tableId: null };
     });
     this.scene.add(this.bookGroup);
+    const name = ink("THE REPORT", 1.7, { flat: true, size: 100, weight: 700, track: 6 });
+    name.position.set(-22, 0.03, -11); this.scene.add(name);
   }
 
   // draws the report's tables on the two pages and notes where every cell sits
@@ -425,7 +430,7 @@ export class Stage {
 
   // the changes of the released fix, placed back on the original text
   changesOf(d) {
-    const check = d.output.action === "repair" && d.correct.rule && d.correct.rule.check;
+    const check = d.control.action === "repair" && d.correct.rule && d.correct.rule.check;
     if (!check || !check.changes) return [];
     let shift = 0;
     return check.changes.map((c) => { const from = c.start - shift, to = from + c.old.length; shift += c.new.length - c.old.length; return { ...c, from, to }; });
@@ -434,12 +439,12 @@ export class Stage {
   paintBlock(b, { color, mark, strike } = {}) {
     const { canvas: c, ctx: x, mesh: top } = b.face;
     x.clearRect(0, 0, c.width, c.height);
-    x.fillStyle = color || (b.atom ? CSS.ink : CSS.graphite);
+    x.fillStyle = color || CSS.ink;
     x.font = `${b.atom ? 600 : 400} ${FONT_PX}px ${SERIF}`; x.textBaseline = "middle"; x.textAlign = "center";
     const room = c.width - (mark ? 76 : 20), wide = x.measureText(b.text).width;
     if (wide > room) { x.font = `${b.atom ? 600 : 400} ${Math.floor(FONT_PX * room / wide)}px ${SERIF}`; }
     x.fillText(b.text, (mark ? (c.width - 58) / 2 : c.width / 2), c.height * 0.53);
-    if (strike) { x.strokeStyle = CSS.red; x.lineWidth = 7; x.lineCap = "round"; x.beginPath(); x.moveTo(10, c.height * 0.6); x.lineTo(c.width - 62, c.height * 0.46); x.stroke(); }
+    if (strike) { x.strokeStyle = color || CSS.red; x.lineWidth = 7; x.lineCap = "round"; x.beginPath(); x.moveTo(10, c.height * 0.6); x.lineTo(c.width - 62, c.height * 0.46); x.stroke(); }
     if (mark) tick(x, c.width - 34, c.height / 2, 42, mark, MARK[mark]);
     top.material.map.needsUpdate = true;
   }
@@ -464,15 +469,17 @@ export class Stage {
     let used = 0;
     for (const t of toks) {
       m.font = `${t.atom ? 600 : 400} ${FONT_PX}px ${SERIF}`;
-      const w = Math.min(MAX_ROW, m.measureText(t.text).width / PX + 0.2);
+      const w = Math.min(MAX_ROW, m.measureText(t.text).width / PX + 0.2 + (t.atom ? 0.46 : 0));
       if (used + w > MAX_ROW && rows[rows.length - 1].length) { rows.push([]); used = 0; }
       rows[rows.length - 1].push({ tok: t, w }); used += w + 0.09;
     }
     rows.length = Math.min(rows.length, MAX_ROWS);
-    const n = rows.length, depth = n * ROW + 0.5, inner = Math.max(...rows.map((r) => r.reduce((a, b) => a + b.w + 0.09, -0.09))), width = inner + 0.7;
+    const n = rows.length, depth = n * ROW + 0.5, inner = Math.max(...rows.map((r) => r.reduce((a, b) => a + b.w + 0.09, -0.09)));
+    m.font = `600 ${FONT_PX}px ${SERIF}`;
+    const spare = this.changesOf(d).reduce((sum, ch) => sum + Math.max(0, (m.measureText(ch.new).width - m.measureText(ch.old).width) / PX), 0);  // room for wider new blocks
     const group = new THREE.Group();
-    const plate = this.block(width, 0.14, depth, "ink", 0.03);
-    plate.position.y = 0.2; group.add(plate);
+    const plate = this.block(inner + 0.7 + spare, 0.14, depth, "ink", 0.03);
+    plate.position.set(spare / 2, 0.2, 0); group.add(plate);
     const blocks = [];
     rows.forEach((row, r) => {
       let x = -inner / 2;
@@ -488,11 +495,11 @@ export class Stage {
     return { group, blocks, depth, plate };
   }
 
-  blockFor(start) { return this.tray.blocks.find((b) => b.start <= start && start < b.end); }
+  blockFor(start) { return this.tray.blocks.find((b) => !b.gone && b.start <= start && start < b.end); }
 
   // ---------------------------------------------------------------- motion
   frame() {
-    const dt = Math.min(this.clock.getDelta(), 0.05);
+    const dt = Math.min(this.clock.getDelta(), 0.25);
     this.time += dt;
     for (const t of [...this.tweens]) {
       if (t.run !== this.run) { this.tweens.splice(this.tweens.indexOf(t), 1); t.done(); continue; }
@@ -504,7 +511,9 @@ export class Stage {
     if (this.aiActive) this.aiLamp.material.color.setHex(Math.sin(this.time * 7) > 0 ? HEX.blue : 0xb5b0a3);
     const { pos, tgt } = this.view;
     const drift = Math.sin(this.time * 0.22) * 0.6;
-    this.camera.position.set(pos.x + drift, pos.y, pos.z);
+    this.camera.position.set(tgt.x + (pos.x + drift - tgt.x) * this.fit, tgt.y + (pos.y - tgt.y) * this.fit, tgt.z + (pos.z - tgt.z) * this.fit);
+    const reach = 5.03 - this.grip.position.y;
+    this.rod.scale.y = reach / 4.8; this.rod.position.y = reach / 2;
     this.camera.lookAt(tgt);
     this.renderer.render(this.scene, this.camera);
   }
@@ -512,7 +521,9 @@ export class Stage {
   resize() {
     const w = this.el.clientWidth || window.innerWidth, h = this.el.clientHeight || window.innerHeight;
     this.size = { w, h };
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setSize(w, h, false);
+    this.fit = Math.max(1, 1.37 / (w / h));
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
   }
@@ -527,6 +538,23 @@ export class Stage {
     const v = typeof name === "string" ? VIEWS[name] : name;
     const a = { pos: this.view.pos.clone(), tgt: this.view.tgt.clone() };
     return this.tween(dur, (k) => { this.view.pos.lerpVectors(a.pos, v.pos, k); this.view.tgt.lerpVectors(a.tgt, v.tgt, k); });
+  }
+
+  // the tray in front, with the page holding its cells behind it
+  catchShot(ids) {
+    const xs = ids.map((id) => this.cellPoint(id)).filter(Boolean).map((p) => p.x), r = Math.max(-2, ...xs);
+    const f = THREE.MathUtils.clamp(1.18 + (r + 2) * 0.016, 1.18, 1.45), cx = THREE.MathUtils.clamp(-7.5 + (r + 2) * 0.38, -7.5, -1.5);
+    return { pos: V(cx, 2.4 + 27.6 * f, -7.5 + 38.5 * f), tgt: V(cx, 2.4, -7.5) };
+  }
+
+  // the result, stamped on the bay
+  stamp(text, color, z) {
+    const c = word(text, { size: 150, weight: 700, color, track: 6, pad: 40 }), x = c.getContext("2d");
+    x.strokeStyle = color; x.lineWidth = 12; x.strokeRect(8, 8, c.width - 16, c.height - 16);
+    const w = 4.6, m = printed(c, w, w * c.height / c.width, { flat: true });
+    m.rotation.z = -0.06; m.position.set(STATION.dock + 3, 0.04, z);
+    this.scene.add(m); this.temp.push(m);
+    return m;
   }
 
   // look at one table cell (a number was clicked)
@@ -579,10 +607,10 @@ export class Stage {
   }
 
   // the AI is writing: real wait, ended by the caller
-  thinking(on) { this.aiActive = on; if (!on) this.aiLamp.material.color.setHex(HEX.green); }
+  thinking(on, ok = true) { this.aiActive = on; if (!on) this.aiLamp.material.color.setHex(ok ? HEX.green : 0xb5b0a3); }
 
   // ---------------------------------------------------------------- one answer through the machine
-  async play(d, { marks, on = () => {}, skipIntro = false } = {}) {
+  async play(d, { marks, spots = {}, links = {}, tone, word: result, on = () => {} } = {}) {
     this.clearRun();
     this.pace = 1.2;
     const run = this.run;
@@ -596,8 +624,8 @@ export class Stage {
 
       // the answer is set in type
       on("set");
-      await go(this.fly("source", skipIntro ? 0.6 : 0.9));
       blocks.forEach((b) => { b.group.position.y = 3.2; b.group.visible = false; });
+      await go(this.fly("source", 0.9));
       const each = Math.min(0.08, 1.3 / blocks.length);
       await go(Promise.all(blocks.map((b, i) => (async () => {
         await this.tween(each * i, () => {}, ease.linear); b.group.visible = true;
@@ -607,16 +635,16 @@ export class Stage {
 
       // 1 Catch
       on("catch-start");
-      await go(Promise.all([this.fly("catch", 1.2), this.along("toCatch", 1.2)]));
+      await go(Promise.all([this.fly(this.catchShot(Object.values(links).flat()), 1.2), this.along("toCatch", 1.2)]));
       this.scan.material.opacity = 1;
       const stops = claims.length ? Math.min(0.7, 3.4 / claims.length) : 0.5;
       const threads = [];
       let i = 0;
       for (const c of claims) {
-        const b = this.blockFor(c.start), mark = marks[c.id] || "unsure";
+        const b = this.blockFor(spots[c.id] ?? c.start), mark = marks[c.id] || "unsure";
         if (!b) { on("claim", { claim: c, mark, index: ++i }); continue; }  // past the rows the tray shows
-        const color = { ok: HEX.green, bad: HEX.red, unsure: HEX.ochre }[mark];
-        const ids = mark === "bad" && c.came_from.length ? c.came_from : c.asked.length ? c.asked : c.cells;
+        const ids = links[c.id] || [];
+        const color = mark === "bad" && ids === c.asked ? HEX.blue : { ok: HEX.green, bad: HEX.red, unsure: HEX.ochre }[mark];
         await go(this.tween(stops * 0.3, (k) => { b.group.position.y = b.home.y + Math.sin(k * Math.PI) * 0.32; }));
         const from = group.localToWorld(b.group.position.clone().add(V(0, b.height, 0)));
         const lines = ids.map((id) => { const to = this.cellPoint(id); return to ? this.thread(from, to, color) : null; }).filter(Boolean);
@@ -662,7 +690,9 @@ export class Stage {
         // 3 Correct
         on("correct-start");
         await go(Promise.all([this.fly("correct", 1.2), this.along("fix", 1.2)]));
-        const rule = d.correct.rule, changes = this.changesOf(d);
+        const rule = d.correct.rule, changes = this.changesOf(d), sure = tone === "repair";
+        const [, mm] = canvas(8, 8);
+        mm.font = `600 ${FONT_PX}px ${SERIF}`;
         on("program", { rule });
         await go(pause(0.4));
         let lifted = 0;
@@ -674,32 +704,34 @@ export class Stage {
           // the gripper moves over the block and pulls it out; nothing else on the tray moves
           await go(this.tween(0.4, (k) => { this.grip.position.x = STATION.press + shiftX * k; this.grip.position.z = b.home.z * k; this.rail.position.z = b.home.z * k; }));
           await go(this.tween(0.32, (k) => { this.grip.position.y = 3 + (0.95 - 3) * k; }));
-          this.paintBlock(b, { color: CSS.red, mark: "bad", strike: true });
+          this.paintBlock(b, { color: sure ? CSS.red : CSS.ochre, mark: sure ? "bad" : "unsure", strike: true });
           await go(this.tween(0.42, (k) => { this.grip.position.y = 0.95 + (3 - 0.95) * k; old.position.y = b.home.y + (2.4 - b.home.y) * k; }));
-          this.scene.attach(old); this.temp.push(old);
+          this.scene.attach(old); this.temp.push(old); b.gone = true;
           const p0 = old.position.clone();
           await go(this.tween(0.5, (k) => { old.position.z = p0.z + (3.4 - p0.z) * k; old.position.y = p0.y + (0.02 - p0.y) * k * k; old.rotation.y = 0.4 * k; }, ease.linear));
           lifted++;
           // the new block comes from the table cell it was computed from
           const ids = ch.cells || [];
-          const nb = this.makeBlock({ text: ch.new, atom: true, start: ch.from, end: ch.to }, Math.max(b.width, Math.min(4.2, ch.new.length * 0.17 + 0.2)));
-          nb.home = b.home.clone(); nb.group.position.copy(b.home); nb.group.position.y = 3.0;
+          const nbW = Math.max(b.width, mm.measureText(ch.new).width / PX + 0.66), extra = nbW - b.width;
+          const nb = this.makeBlock({ text: ch.new, atom: true, start: ch.from, end: ch.to }, nbW);
+          nb.home = b.home.clone(); nb.home.x += extra / 2; nb.row = b.row;
+          nb.group.position.copy(nb.home); nb.group.position.y = 3.0;
           group.add(nb.group);
-          this.paintBlock(nb, { color: CSS.green, mark: "ok" });
-          const target = group.localToWorld(nb.group.position.clone());
-          ids.forEach((id) => this.mark(id, HEX.green));
-          const paths = ids.map((id) => { const f = this.cellPoint(id); return f ? this.thread(f, target, HEX.green, 6) : null; }).filter(Boolean);
+          this.paintBlock(nb, { color: sure ? CSS.green : CSS.ochre, mark: sure ? "ok" : "unsure" });
+          const target = group.localToWorld(nb.group.position.clone()), ink2 = sure ? HEX.green : HEX.ochre;
+          ids.forEach((id) => this.mark(id, ink2));
+          const paths = ids.map((id) => { const f = this.cellPoint(id); return f ? this.thread(f, target, ink2, 6) : null; }).filter(Boolean);
           nb.group.visible = false;
           await go(this.tween(0.75, (k) => paths.forEach((l) => l.draw(k)), ease.out));
-          nb.group.visible = true;
-          await go(this.tween(0.42, (k) => { nb.group.position.y = 3.0 + (b.home.y - 3.0) * k; }, ease.back));
-          this.tray.blocks.push(nb);
-          // a wider block pushes its neighbours along the row, and only those
-          const extra = nb.width - b.width;
+          // a wider block moves its neighbours along the row, and only those
           if (extra > 0) {
-            const next = this.tray.blocks.filter((x) => x.row === b.row && x !== b && x !== nb && x.home.x > b.home.x);
-            await go(this.tween(0.2, (k) => next.forEach((x) => { x.group.position.x = x.home.x + extra * k; })));
+            const next = this.tray.blocks.filter((x) => !x.gone && x.row === b.row && x.home.x > b.home.x), from = next.map((x) => x.home.x);
+            next.forEach((x) => { x.home.x += extra; });
+            await go(this.tween(0.2, (k) => next.forEach((x, n) => { x.group.position.x = from[n] + extra * k; })));
           }
+          nb.group.visible = true;
+          await go(this.tween(0.42, (k) => { nb.group.position.y = 3.0 + (nb.home.y - 3.0) * k; }, ease.back));
+          this.tray.blocks.push(nb);
           paths.forEach((l) => { l.mesh.material.opacity = 0.25; });
           await go(this.tween(0.3, (k) => { this.grip.position.x = STATION.press + shiftX * (1 - k); this.grip.position.z = b.home.z * (1 - k); this.rail.position.z = b.home.z * (1 - k); }));
           on("changed", { change: ch, index: lifted });
@@ -728,17 +760,23 @@ export class Stage {
       on("exit-start");
       const shot = sent ? "sent" : "held";
       const leg = route === "fix" ? "hold" : route;
-      await go(Promise.all([this.fly(shot, 1.7), this.along(leg, 1.8)]));
+      await go(Promise.all([this.fly(shot, 1.7), this.along(leg, 1.8, ease.inOut, !["pass", "fail"].includes(leg))]));
       group.rotation.y = 0;
-      if (sent) this.sentLamp.material.color.setHex(HEX.green);
-      else {
-        this.holdLamp.material.color.setHex(HEX.red);
+      if (sent) {
+        const color = { careful: CSS.ochre, missed: CSS.red }[tone] || CSS.green;
+        this.sentLamp.material.color.set(color);
+        const m = this.stamp(result || "Sent", color, LANE.send + 2.3);
+        await go(this.tween(0.25, (k) => m.scale.setScalar(1.4 - 0.4 * k), ease.out));
+      } else {
+        this.holdLamp.material.color.setHex(HEX.ink);
         this.lid.visible = true;
         await go(this.tween(0.7, (k) => { this.lid.position.y = 8.5 + (1.05 - 8.5) * k; }, ease.out));
       }
       on("done");
     } catch (err) {
       if (err !== STOP) throw err;
+    } finally {
+      this.pace = 1.2;
     }
   }
 }

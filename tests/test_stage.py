@@ -48,5 +48,5 @@ def test_the_page_never_promises_more_than_the_results():
     pages = "".join((STATIC / n).read_text(encoding="utf-8") for n in ("main.js", "scene.js", "index.html"))
     for claim in ("Every number checks out", "guaranteed", "production-ready", "All clear"):
         assert claim not in pages
-    assert "Thresholds certified on practice data only" in pages and "Studied. Not in the decision" in pages
+    assert "Limits certified on template answers only" in pages and "Studied. Not in the decision" in pages
     assert "Fix by the rule repairer" in pages

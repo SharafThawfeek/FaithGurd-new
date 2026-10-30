@@ -21,6 +21,8 @@ from faithguard.records import DetectorOutput, Evidence, Item, RepairOutput
 BASE_MODEL = "Qwen/Qwen3.5-2B"
 MAX_FAILURES = 3  # consecutive inference errors before a model is marked failed and stored outputs take over
 ANSWER_TOKENS = 120
+AI_SECONDS = 40  # a stuck answer gives way to the recording or a clear message
+GPU_WAIT_SECONDS = 20
 # The benchmark generators' prompt asks for up to three sentences; the 2B base model fills them with its working
 # ("calculated as (14,212,560 - 13,004,180) / ..."), which the rule checker reads one year per clause. One sentence
 # that names each figure's year is what the benchmark's larger AIs mostly wrote.
@@ -171,14 +173,16 @@ class LiveModels:
         def go() -> tuple[str, bool]:
             ids = gen._ids(user_prompt(question, evidence), ANSWER_SYSTEM)
             with gen.torch.no_grad(), gen.model.disable_adapter():
-                out = gen.model.generate(**ids, max_new_tokens=ANSWER_TOKENS, do_sample=False, pad_token_id=gen.tokenizer.pad_token_id)
+                out = gen.model.generate(**ids, max_new_tokens=ANSWER_TOKENS, do_sample=False, pad_token_id=gen.tokenizer.pad_token_id, max_time=AI_SECONDS)
             new = out[0][ids["input_ids"].shape[1]:]
             # cut off: every token was used and the last one does not end the reply
             cut = len(new) >= ANSWER_TOKENS and int(new[-1]) not in _end_ids(gen)
             return gen.tokenizer.decode(new, skip_special_tokens=True), cut
 
         started = time.perf_counter()
-        with self.repairer.lock:  # the same GPU model: its failures are counted apart from the trained repairer's
+        if not self.repairer.lock.acquire(timeout=GPU_WAIT_SECONDS):  # a stuck run gives way to the recording, not a hang
+            raise TimeoutError("the GPU is busy")
+        try:  # the same GPU model: its failures are counted apart from the trained repairer's
             try:
                 raw, cut = go()
             except Exception:
@@ -189,5 +193,9 @@ class LiveModels:
                 _free_gpu()
                 raise
             self.answer_failures = 0
+        finally:
+            self.repairer.lock.release()
+        if time.perf_counter() - started >= AI_SECONDS:
+            raise TimeoutError("the AI took too long")
         text, _ = strip_thinking(raw)
         return " ".join(text.split()), time.perf_counter() - started, cut

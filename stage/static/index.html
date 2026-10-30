@@ -10,14 +10,13 @@
 </head>
 <body>
   <aside id="col">
-    <div class="brand"><b>FaithGuard</b><span>Research prototype</span></div>
+    <div class="brand"><b>FaithGuard</b><span>Research prototype</span><div id="live"></div></div>
     <section id="readout" aria-live="polite"></section>
   </aside>
 
   <main id="room">
     <canvas id="stage" aria-label="A live 3D model of the FaithGuard pipeline"></canvas>
     <nav id="views" aria-label="Camera"></nav>
-    <div id="live"></div>
     <aside id="sheet" hidden aria-label="Details"></aside>
   </main>
 
@@ -28,7 +27,7 @@
       <label id="q"><small>Question</small><input id="question" placeholder="Ask about one figure" maxlength="300"></label>
       <button type="submit" id="run">Run</button>
     </form>
-    <div id="mine" hidden><label><small>Your answer</small><input id="answer" placeholder="Type an answer, right or wrong" maxlength="4000"></label></div>
+    <div id="mine" hidden><label><small>Your answer</small><input id="answer" form="ask" placeholder="Type an answer, right or wrong" maxlength="4000"></label></div>
     <div id="menu" role="listbox" hidden></div>
   </footer>
   <div id="toast" role="status" hidden></div>
