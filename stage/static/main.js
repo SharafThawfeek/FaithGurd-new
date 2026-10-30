@@ -369,11 +369,12 @@ document.addEventListener("keydown", (e) => {
   if (e.key === " " && ui.playing && stage) { e.preventDefault(); stage.pace = stage.pace > 2 ? 1.2 : 8; }
 });
 renderReadout(); refreshStatus();
-const reports = await api("/api/reports", null, 120);
-if (reports.error) toast(reports.error);
-else {
-  state.reports = reports;
-  const first = reports.find((r) => r.id === "LK:TKYO") || reports.find((r) => r.real) || reports[0];
-  setReport(first.id);
+let reports = await api("/api/reports", null, 120);
+while (reports.error) {  // the page can open before the server is up
+  await new Promise((done) => setTimeout(done, 2000));
+  reports = await api("/api/reports", null, 120);
 }
+state.reports = reports;
+const first = reports.find((r) => r.id === "LK:TKYO") || reports.find((r) => r.real) || reports[0];
+setReport(first.id);
 window.__stage = { ui, state, stage, run, show, L };  // for the browser checks
