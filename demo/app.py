@@ -17,6 +17,7 @@ import socket
 import subprocess
 import sys
 import threading
+import time
 import traceback
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -70,14 +71,26 @@ def bad_answer(answer) -> str | None:
     return None
 
 
-def version() -> str:
-    """The code the server runs: the commit, and whether demo/ or src/ had changes not committed when it started."""
+STARTED = time.time()
+
+
+def edited_since(started: float) -> bool:
+    """A Python file of demo/ or src/ (or the rehearsal recordings) changed after the server started: it still runs the
+    older code. The pages' own files are served fresh, so they do not count."""
+    files = [*(ROOT / "src").rglob("*.py"), *HERE.glob("*.py"), HERE / "rehearsal.json"]
+    return any(p.exists() and p.stat().st_mtime > started for p in files)
+
+
+def version(started: float | None = None) -> str:
+    """The code: the commit, whether demo/ or src/ differ from it, and whether they were edited after the server started.
+    Read again on every status request, so the pill on screen never shows a state older than the working tree."""
     try:
         head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True, timeout=5).stdout.strip()
         dirty = subprocess.run(["git", "status", "--porcelain", "--", "demo", "src"], cwd=ROOT, capture_output=True, text=True, timeout=5).stdout.strip()
     except (OSError, subprocess.SubprocessError):
         return ""
-    return f"{head}{' + local changes' if dirty else ''}"
+    stale = started is not None and edited_since(started)
+    return f"{head}{' + local changes' if dirty else ''}{' (edited since the server started: restart it)' if stale else ''}"
 
 
 class Server(ThreadingHTTPServer):
@@ -123,7 +136,7 @@ class Handler(BaseHTTPRequestHandler):
         if url.path == "/api/examples":
             return self._guarded(self.demo.listing)
         if url.path == "/api/status":
-            return self._guarded(self.demo.status)
+            return self._guarded(lambda: {**self.demo.status(), "version": version(STARTED)})
         if url.path == "/api/case":
             return self._guarded(lambda: self.demo.case(query.get("id", "")))
         if url.path == "/api/results":
@@ -161,7 +174,7 @@ class Handler(BaseHTTPRequestHandler):
             if url.path == "/api/ask/draft":
                 return self._guarded(lambda: self.demo.ask_draft(report, question))
             if answer is None:
-                return self._json({"error": "Type an answer, ask the AI, or write the answer from the table first."})
+                return self._json({"error": "Type an answer, ask the AI, or write a template answer from the table first."})
             return self._guarded(lambda: self.demo.ask(report, question, answer))
         if url.path == "/api/plant":
             return self._guarded(lambda: self.demo.plant_errors(example))
@@ -191,7 +204,6 @@ def main(argv: list[str] | None = None) -> None:
     except OSError:
         sys.exit(f"Port {args.port} is in use: is the demo already running? Close it, or start this one with --port {args.port + 1}.")
     Handler.demo = Demo()
-    Handler.demo.version = version()
     Handler.demo.prepare()
     if not args.no_models:
         from models import LiveModels

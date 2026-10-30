@@ -16,6 +16,7 @@ for the session only.
 from __future__ import annotations
 
 import json
+import re
 import secrets
 import threading
 from collections import OrderedDict
@@ -27,8 +28,9 @@ from faithguard.pipeline import run
 from faithguard.policy import ThresholdPolicy
 from faithguard.records import Item, RepairOutput, read_jsonl
 
-from ask import (Unanswerable, candidate_questions, caveats, contradictions, draft, figures_match, make_item, other_company, plant,
-                 read_question, released_problems, reports_of)
+from ask import (Unanswerable, candidate_questions, caveats, contradictions, draft, figures_match, make_item, missing_year,
+                 other_company, plant, read_question, released_problems, reports_of)
+from models import ANSWER_TOKENS
 from views import catch_view, channel_a_view, control_view, evidence_view, jsonable, output_view, repair_view
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -42,7 +44,10 @@ FICTIONAL_TITLES = {
     "scale": ("Scale error", "Rs. '000 read as millions: the amount is a thousand times too large."),
     "period": ("Period error", "The 2024 figure is given for FY2025."),
     "sign": ("Sign error", "Profit rose, but the answer says it fell."),
-    "missing_operand": ("Missing operand", "Return on equity is not in the evidence, so nothing can confirm or fix it."),
+    "missing_operand": ("Missing operand", "Return on equity is not in the evidence. 15.2% matches no ratio of two cells, so the "
+                        "answer is withheld. A figure that does match one is traced to those cells and sent: 3.8% (net interest "
+                        "income ÷ total assets, what the trained repairer writes here) or 29.5% (profit after tax ÷ net interest "
+                        "income). With no such line in the evidence, the checker cannot tell what a ratio is about (a known limitation)."),
 }
 
 # One-click edits for the try-it box, each checked by demo/precompute.py to give this action. Free typing
@@ -69,9 +74,25 @@ ANSWER_SOURCES = {
     "template": "a template, written from the cells the question names",
     "typed": "typed in the demo",
     "recorded": "Qwen3.5-2B, its answer to this question recorded at rehearsal (the live AI is not loaded)",
+    "recorded-failed": "Qwen3.5-2B, its answer to this question recorded at rehearsal (the live AI did not answer)",
 }
 REHEARSAL = Path(__file__).resolve().parent / "rehearsal.json"  # the live AI's answers to the script's questions
 MAX_SUGGESTIONS = 4
+# The stored Kaggle repair outputs, by the run folder data/demo/examples.json points at. Its own label was written while
+# v1 was a candidate; the run used the adapter later frozen as v1, and the live adapter reproduces its programs.
+KAGGLE_LABELS = {
+    "data/benchmark-build/systems-pilot-v1run/systems-pilot-repair-v1":
+        "trained repairer v1 (frozen, D-101), run on Kaggle in the systems-pilot rerun (runs/pilot/v1run-repair-v1)",
+}
+# Pilot captions from data/demo/examples.json (not in git) corrected here, by example id
+PILOT_CAPTIONS = {
+    "SAMP-2025-06:gemma": "Rs. 1,627,060,300 thousand is about Rs. 1,627 billion, not Rs. 1.63 billion. The checker traces Rs. 1.63 "
+                          "billion to the right cell read at the wrong scale, but it did not read “owe its depositors” as the line "
+                          "“due to depositors”, so it has no fix to copy, and the answer is withheld with the cell.",
+}
+# A cut-off AI answer is checked only up to its last complete sentence: an end mark the next sentence follows
+# ("Rs. 3,692" does not end one), so a trailing partial number never reaches the checker.
+_SENTENCE_END = re.compile(r"[.!?](?=\s+[A-Z(“\"])")
 
 
 class UnknownExample(LookupError):
@@ -125,11 +146,13 @@ def load_examples(config: Path = DEMO_DATA / "examples.json") -> list[Example]:
     items = {i.id: i for i in read_jsonl(items_path, Item) if i.id in wanted}
     runs = safe_path(spec["kaggle_outputs"])
     detector, repairs = _rows(runs / "detector.jsonl"), _rows(runs / "repair-rule-spans.jsonl")
+    run_label = KAGGLE_LABELS.get(spec["kaggle_outputs"].replace("\\", "/").strip("/"), spec.get("kaggle_label", ""))
     for item_id, e in wanted.items():
         if item_id in items and items[item_id].question.split in (None, "dev"):
-            kaggle = {"detector": detector.get(item_id), "repair": repairs.get(item_id), "run": spec.get("kaggle_label", "")}
+            kaggle = {"detector": detector.get(item_id), "repair": repairs.get(item_id), "run": run_label}
             edits = [tuple(x) for x in e.get("edits", [])]
-            out.append(Example(items[item_id], "pilot", e["title"], e.get("caption", ""), e.get("expect"), kaggle, edits))
+            caption = PILOT_CAPTIONS.get(item_id, e.get("caption", ""))
+            out.append(Example(items[item_id], "pilot", e["title"], caption, e.get("expect"), kaggle, edits))
     return out
 
 
@@ -140,13 +163,17 @@ def load_policy():
         results = json.loads(POLICY_RESULTS.read_text(encoding="utf-8"))
         family = next((f for f in results["families"] if f["family"].startswith("outcome_aware")), {})
         mix = results.get("chosen_detail", {}).get("action_mix_test", {})
+        curve = results.get("budget_curve") or []  # one list of points, or (since D-099) one list per outcome model
         certificate = {
             "alpha": results["alpha"], "delta": results["delta"], "setting": family.get("chosen"),
             "certified": f"{family.get('certified')} of {family.get('settings')}", "p_value": family.get("p_chosen"),
             "p_issuer": family.get("cluster_p_calibration"), "fit_items": results["counts"]["fit"]["items"],
-            "calibration_items": results["counts"]["calibration"]["items"], "budget_curve": results["budget_curve"],
+            "calibration_items": results["counts"]["calibration"]["items"],
+            "budget_curve": curve.get("lightgbm", []) if isinstance(curve, dict) else curve,  # the deployed policy's model
             "test": family.get("test", {}), "test_mix": {k: v / max(1, sum(mix.values())) for k, v in mix.items()},
         }
+        if isinstance(curve, dict) and curve.get("neural"):
+            certificate["budget_curve_neural"] = curve["neural"]
     if not POLICY.exists():
         return None, certificate
     from faithguard.policy.deployed import OutcomeAwarePolicy
@@ -198,7 +225,7 @@ class Demo:
         return {**models, "policy": {"state": "ready" if self.policy else "failed",
                                      "detail": "LightGBM outcome models, live on CPU" if self.policy else
                                      f"no {POLICY.relative_to(ROOT)}: run `faithguard policy`; threshold v0 decides meanwhile"},
-                "stored": stored, "examples": len(self.examples), "version": getattr(self, "version", "")}
+                "stored": stored, "examples": len(self.examples), "run_id": self.run_id}
 
     def example(self, example_id: str) -> Example:
         e = self.examples.get(example_id) or self.asked.get(example_id)
@@ -259,15 +286,15 @@ class Demo:
             rule = repair_view(item, det, repair(item, det), "live", "rule repairer v0, live (for comparison: the policy withheld the answer)")
             rule["not_released"] = True
 
-        report = self.reports.get(e.report or "")
+        report = self.reports.get(e.report or e.item.question.issuer)  # its name on screen, for the sidebar examples too
         return jsonable({
             "id": e.item.id, "group": e.group, "title": e.title, "caption": e.caption, "expect": e.expect, "edited": edited,
             "question": e.item.question.model_dump(mode="json"), "answer": item.answer.text, "original_answer": e.item.answer.text,
             "generator": e.item.answer.generator, "evidence": evidence_view(item, det),
             "report": {"id": report.id, "name": report.name, "real": report.real} if report else None, "planted": e.planted,
             "planted_on": e.planted_on, "planted_dropped": e.planted_dropped,
-            "caveats": (caveats(item, det, final.action) + self.released_contradictions(item, final) + released_problems(item, final))
-                       if e.group == "ask" else [],
+            # the known limitations this answer runs into, for the sidebar examples and their edits as for own questions
+            "caveats": caveats(item, det, final.action) + self.released_contradictions(item, final) + released_problems(item, final),
             "edits": [{"label": label, "answer": answer, "expect": expect} for label, answer, expect in e.edits],
             "catch": catch_view(item, det, a_view),
             "control": control_view(item, det, final, self.policy, self.certificate),
@@ -361,28 +388,42 @@ class Demo:
     def ai_ready(self) -> bool:
         return self.models is not None and self.models.repairer.state == "ready"
 
+    def _recorded(self, r, question: str, recorded: dict, source: str) -> dict:
+        self.generated[(r.id, question.strip(), recorded["answer"])] = source
+        return {"answer": recorded["answer"], "source": "recorded", "by": f"{ANSWER_SOURCES[source]} on {recorded['recorded']}"}
+
     def ask_ai(self, report_id: str, question: str) -> dict:
         r = self.report(report_id)
-        if (problem := other_company(r, question)):
-            return {"error": problem}
+        if (problem := other_company(r, question) or missing_year(r, question)):
+            return {"error": problem}  # the same refusal as the table answer's, before the AI is asked
         recorded = self.recorded.get(r.id, {}).get(" ".join(question.split()))
+        stopped = bool(getattr(self.models, "ai_stopped", False))
         if not self.ai_ready():
-            if recorded:  # the AI is off (no GPU, or started with --no-models): the answer it gave this question at rehearsal
-                self.generated[(r.id, question.strip(), recorded["answer"])] = "recorded"
-                return {"answer": recorded["answer"], "source": "recorded", "by": f"{ANSWER_SOURCES['recorded']} on {recorded['recorded']}"}
+            if recorded:  # the AI is off (no GPU, --no-models, or it stopped answering): its answer to this question at rehearsal
+                return self._recorded(r, question, recorded, "recorded-failed" if stopped else "recorded")
+            if stopped:
+                return {"error": "The AI is off: the model on the GPU failed several times in a row. "
+                                 "Write a template answer from the table, or type one."}
             return {"error": "The AI is not loaded on this laptop (it needs the GPU and the model files): "
-                             "write the answer from the table, or type one."}
+                             "write a template answer from the table, or type one."}
         try:
-            text, seconds = self.models.answer(question, r.evidence)
+            text, seconds, cut = self.models.answer(question, r.evidence)
         except Exception as err:
             if recorded:
-                self.generated[(r.id, question.strip(), recorded["answer"])] = "recorded"
-                return {"answer": recorded["answer"], "source": "recorded", "by": f"{ANSWER_SOURCES['recorded']} on {recorded['recorded']}"}
-            return {"error": f"The AI could not answer ({type(err).__name__}). Write the answer from the table, or type one."}
+                return self._recorded(r, question, recorded, "recorded-failed")
+            return {"error": f"The AI could not answer ({type(err).__name__}). Write a template answer from the table, or type one."}
         if not text:
             return {"error": "The AI gave an empty answer. Ask again in other words, or type an answer."}
+        out = {}
+        if cut:  # it ran out of tokens mid-sentence, maybe mid-number: check only the sentences it finished
+            ends = list(_SENTENCE_END.finditer(text))
+            if not ends:
+                return {"error": f"The AI's answer ran past {ANSWER_TOKENS} tokens and was cut off before a sentence clearly "
+                                 "ended, so it is not checked. Ask a shorter question, write a template answer from the table, or type one."}
+            text = text[:ends[-1].end()]
+            out["note"] = f"The AI's answer ran past {ANSWER_TOKENS} tokens and was cut off; only its complete sentences are checked."
         self.generated[(r.id, question.strip(), text)] = "ai"
-        return {"answer": text, "seconds": round(seconds, 1), "source": "ai", "by": ANSWER_SOURCES["ai"]}
+        return {"answer": text, "seconds": round(seconds, 1), "source": "ai", "by": ANSWER_SOURCES["ai"], **out}
 
     def ask_draft(self, report_id: str, question: str) -> dict:
         r = self.report(report_id)

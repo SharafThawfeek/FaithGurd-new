@@ -38,6 +38,9 @@ button:disabled { cursor: default; opacity: 0.55; }
 @keyframes pulse { 50% { opacity: 0.3; } }
 .full { margin-left: auto; font-size: 14px; color: var(--accent-ink); text-decoration: none; }
 .full:hover { text-decoration: underline; }
+.restart { background: var(--warn-soft); border-bottom: 1px solid #e9c46a; color: var(--warn-ink); padding: 8px 22px; font-size: 16px; font-weight: 600;
+  position: sticky; top: 52px; z-index: 4; }
+.restart[hidden] { display: none; }
 
 .main { max-width: 980px; margin: 0 auto; padding: 22px 18px 60px; }
 .hero h1 { font-size: 34px; line-height: 1.2; margin: 6px 0 8px; }
@@ -48,7 +51,7 @@ button:disabled { cursor: default; opacity: 0.55; }
 .card h2 { font-size: 21px; margin: 0 0 12px; }
 .label { font-size: 14px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; margin: 14px 0 6px; }
 .label:first-of-type { margin-top: 0; }
-select { width: 100%; max-width: 620px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+select { width: 100%; max-width: 760px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
 .q { width: 100%; padding: 12px 14px; font-size: 20px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--text); }
 .q:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
@@ -62,6 +65,7 @@ select { width: 100%; max-width: 620px; padding: 8px 10px; border: 1px solid var
 .link { background: none; border: none; color: var(--accent-ink); padding: 0; font-size: 15px; text-decoration: underline; }
 textarea { width: 100%; min-height: 80px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--text); font-size: 17px; resize: vertical; }
 .hint { font-size: 14px; color: var(--text-2); }
+.hint.pre { margin-top: 8px; }
 .err { background: var(--warn-soft); border: 1px solid #e9c46a; color: var(--warn-ink); border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 16px; }
 .spin { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.5); border-top-color: #fff; border-radius: 50%;
   animation: rot 0.8s linear infinite; vertical-align: -2px; margin-right: 6px; }
@@ -126,6 +130,7 @@ textarea { width: 100%; min-height: 80px; padding: 10px 12px; border: 1px solid 
 
 @media (max-width: 700px) {
   .top { position: static; }
+  .restart { top: 0; }
   body { font-size: 16px; }
   .hero h1 { font-size: 26px; }
   .answer { font-size: 18px; }

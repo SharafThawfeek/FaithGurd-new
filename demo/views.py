@@ -7,6 +7,7 @@ were computed live, earlier on this laptop, or on Kaggle, with a label saying wh
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 from decimal import Decimal
 
@@ -26,7 +27,9 @@ GATE_CHECKS = [
     ("closure", "growth rates built on a changed number were recomputed too"),
     ("envelope", "nothing outside the edited numbers changed"),
     ("recheck", "the rule checker supports every number in the repaired answer"),
-    ("relevance", "the repaired answer still answers the question"),
+    # what the frozen check computes (repair/gate.py, detect/rules.py answers_question): the entity and year are not compared
+    ("relevance", "if the original had a supported number on the question's line item, the repair still has one "
+                  "(entity and year not compared)"),
 ]
 
 
@@ -89,6 +92,7 @@ def _refs(expression: str | None) -> list[str]:
 
 
 COMPUTED = ("growth", "diff", "share", "ratio")
+CHANGE = re.compile(r"\s*(growth|diff)\(")  # a fix that computes a change, not a level
 MISREAD = {"scale_currency": "the right cell, read at the wrong scale", "sign": "the right cells, but the wrong direction",
            "unit": "the right cell, in the wrong unit"}
 
@@ -115,8 +119,12 @@ def claim_views(item: Item, det: DetectorOutput) -> list[dict]:
         if check.expected is not None and claim.kind != "ratio":
             try:
                 value = check.expected
-                shown = render(abs(value) if claim.direction is not None else value, mention_of(claim, item.answer.text).style)
-                expected = (f"a {'fall' if value < 0 else 'rise'} of {shown}" if claim.direction is not None else shown)
+                # "a rise of" only when the report's value is a change; a level beside a direction word ("fell from
+                # Rs. 3.46 billion") is shown as the level, sign and all
+                change = (CHANGE.match(check.fix) is not None) if check.fix else check.relation in ("growth", "diff")
+                change = change and claim.direction is not None
+                shown = render(abs(value) if change else value, mention_of(claim, item.answer.text).style)
+                expected = f"a {'fall' if value < 0 else 'rise'} of {shown}" if change else shown
             except Exception:
                 expected = str(check.expected)
         out.append({
@@ -181,7 +189,8 @@ def catch_view(item: Item, det: DetectorOutput, channel_a: dict) -> dict:
 SHOWN_FEATURES = [
     ("risk", "Channel B risk"), ("n_claims", "numbers in the answer"), ("n_supported", "supported"),
     ("n_unsupported", "unsupported"), ("n_unverifiable", "unverifiable"), ("missing_operands", "missing operands"),
-    ("evidence_sufficient", "evidence holds every fix"), ("answers_question", "answers the question"),
+    ("evidence_sufficient", "evidence holds every fix"),
+    ("answers_question", "a supported number is on the question's line item (entity and year not compared)"),
     ("n_percent_claims", "percentages"), ("n_directional_claims", "with a direction word"), ("n_cells", "evidence cells"),
 ]
 
@@ -284,8 +293,16 @@ def repair_view(item: Item, det: DetectorOutput, rep: RepairOutput | None, sourc
         check = det.check(claim.id) if claim else None
         cells = list(check.cells) if check else []
         ctx = check.intended if check else None
+        explain = REASONS.get(stop.reason, "")
+        if stop.reason == "ambiguous_evidence" and ctx is not None and ctx.metric is None and cells:
+            # the checker's fix needs the intended line item; without it the cells are only what the figure matched
+            explain = ("the checker could not name the line item the question asks about, so it has no fix to copy; "
+                       + ("the cells shown are its closest match, which can be a coincidence"
+                          if check.relation in COMPUTED and not set(check.slots) <= {"value", *MISREAD}
+                          else "the cell shown is the one the figure matched" if len(cells) == 1
+                          else "the cells shown are the ones the figure matched"))
         view["cannot_fix"] = {
-            "reason": stop.reason, "explain": REASONS.get(stop.reason, ""), "claim": stop.claim,
+            "reason": stop.reason, "explain": explain, "claim": stop.claim,
             "claim_text": claim.text if claim else None,
             "about": " · ".join(x for x in (ctx.entity, ctx.metric, ctx.period) if x) if ctx else "",
             "note": "" if stop.note.startswith("traced to") else stop.note,

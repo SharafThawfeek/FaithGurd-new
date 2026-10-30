@@ -1,5 +1,7 @@
 # FaithGuard: Phase-by-Phase Plan
 
+> **Superseded in two places (D-114):** the human labelling and checking, listed below as never cut, were replaced by blind Claude passes (D-103), and the test set was locked on 29 October 2026 (D-104), not on the revised plan's 31 January 2027; the exit checklists below are ticked only where the record shows an item met.
+
 This plan sets out every step needed to finish FaithGuard, from setup to the viva, in eight phases. It follows the revised research plan (`FaithGuard-Revised-Plan.md`), which holds the full method details. This plan says what to do, in what order, who does it, and how to tell when each phase is done. It has no dates.
 
 ## How the phases work
@@ -65,10 +67,10 @@ This replaces the five date-based phases described earlier. The old "build" phas
 
 **Exit checklist**
 
-- [ ] Adjudicator asked
-- [ ] Repository and environment install identically for all three members
-- [ ] All three GPU pilots done; GPU-hour budget updated with measured timings
-- [ ] Closest prior work listed for each paper
+- [ ] Adjudicator asked. Not met: no adjudicator was asked; the adjudicator is a Claude pass (D-103)
+- [ ] Repository and environment install identically for all three members. Not shown: the versions are pinned for every account (D-008), but no install by each member is recorded
+- [ ] All three GPU pilots done; GPU-hour budget updated with measured timings. The pilots are done (D-054, D-055, D-058); no updated GPU-hour budget is recorded
+- [ ] Closest prior work listed for each paper. Not met: the tables in `docs/related-work/` list works, but no row records who opened the work, and only one row (in repair.md) says what the work does
 
 **If blocked**
 
@@ -131,12 +133,12 @@ Its job is to prove that the record format and the connections between parts wor
 
 **Exit checklist**
 
-- [ ] Record format v1 and gold store frozen; all three members can read and write them
-- [ ] Calculation API and executor pass their tests
-- [ ] FinQA, TAT-QA, RAGTruth and XBRL facts loaded, with licences logged
-- [ ] Split manifest frozen, with calibration and test issuers as in option B
-- [ ] Label Studio running with guide v1
-- [ ] The thin slice runs end to end on 20–40 items
+- [ ] Record format v1 and gold store frozen; all three members can read and write them. Built (`records.py`, `gold.py`) and frozen with the code at `prereg-v1` (D-104); no record that each member read and wrote them
+- [x] Calculation API and executor pass their tests (`tests/test_calc.py`, `tests/test_phase4.py`)
+- [x] FinQA, TAT-QA, RAGTruth and XBRL facts loaded, with licences logged (`manifests/datasets.json`; XBRL is public SEC data, D-049)
+- [x] Split manifest frozen, with calibration and test issuers as in option B (D-007, D-020, D-038, D-040)
+- [ ] Label Studio running with guide v1. Not shown: the interface, converters and guide v1 exist (D-022, D-066), but no record shows Label Studio started (the README still says to install and start it)
+- [x] The thin slice runs end to end on 20–40 items ([runs/slice/report.md](../runs/slice/report.md): 32 items)
 
 ---
 
@@ -164,11 +166,11 @@ Its job is to prove that the record format and the connections between parts wor
 
 **Exit checklist**
 
-- [ ] Pilot labelled; minutes per item and error rate recorded
-- [ ] Annotation guide v2 frozen
-- [ ] All question groups written, cross-checked and stored, with gold in the gold store
-- [ ] Evidence tables hand-corrected; extraction run done on 20 tables
-- [ ] Future-period set chosen and held back unopened
+- [ ] Pilot labelled; minutes per item and error rate recorded. Not met: the pilot was labelled by Claude, not by hand, and gives an error rate (19.2%) but no minutes per item (D-066)
+- [ ] Annotation guide v2 frozen. Not met as D-068 defines it: no person reviewed the pilot labels; the guide used is the one in the filed commit (D-104, D-114)
+- [ ] All question groups written, cross-checked and stored, with gold in the gold store. Written and stored (D-064, D-067); cross-checked by a Claude pass, not a second member (D-103, D-104)
+- [ ] Evidence tables hand-corrected; extraction run done on 20 tables. The extraction run is done (D-070); the tables were not hand-corrected (D-114)
+- [x] Future-period set chosen and held back unopened (D-069)
 
 ---
 
@@ -238,10 +240,10 @@ Its job is to prove that the record format and the connections between parts wor
 
 **Exit checklist**
 
-- [ ] Each member's core model runs end to end on development data (the policy on the controlled track)
-- [ ] Each main ablation and every baseline has run on development data
-- [ ] Every handover done, or its fallback recorded
-- [ ] GPU hours within budget, or the cut list applied
+- [x] Each member's core model runs end to end on development data (the policy on the controlled track) (D-059, D-074, D-075, D-078, D-099)
+- [x] Each main ablation and every baseline has run on development data (D-076, D-077, D-080, D-081, D-086; the policy baselines in [runs/policy/controlled/report.md](../runs/policy/controlled/report.md); TabICLv2 cut and replaced by the neural outcome model, D-096)
+- [ ] Every handover done, or its fallback recorded. Not shown: no entry records the out-of-fold detector predictions; KEEP items come from planted false flags instead (D-027)
+- [x] GPU hours within budget, or the cut list applied (`logs/gpu-hours.csv`: 70.5 hours in 33 sessions to 29 October, against the revised plan's 75–130 hours)
 
 ---
 
@@ -271,10 +273,10 @@ Its job is to prove that the record format and the connections between parts wor
 
 **Exit checklist**
 
-- [ ] All answers generated and stored
-- [ ] Evidence frozen and test set locked
-- [ ] Detector, repairer v1 and all variants frozen
-- [ ] Pre-registration filed
+- [x] All answers generated and stored (D-073)
+- [x] Evidence frozen and test set locked (D-104)
+- [x] Detector, repairer v1 and all variants frozen (D-101, D-104, D-110; the no-XBRL ablation was hashed three minutes after the tag, D-114)
+- [x] Pre-registration filed (D-104: the git tag `prereg-v1`, pushed to GitHub; no registry, D-114)
 
 ---
 
@@ -295,10 +297,10 @@ With the pilot, labelling comes to about 105 hours, or about 35 per member.
 
 **Exit checklist**
 
-- [ ] All 800 original answers labelled
-- [ ] 400 sampled repairs checked, and more if the 10% rule triggered
-- [ ] Kappa computed for each field
-- [ ] Disagreements adjudicated; gold store frozen
+- [ ] All 800 original answers labelled. Changed: the 788 locked answers are labelled by blind Claude passes, not people; the 12 answers to the 6 excluded questions are outside the locked set (D-103, D-104, D-105)
+- [ ] 400 sampled repairs checked, and more if the 10% rule triggered. Changed: 50 per R-H1 arm and 50 across the other variants (D-100), checked by a Claude pass (D-106); 143 checked, and 459 more when one group passed 10% (D-112)
+- [x] Kappa computed for each field (D-105; agreement between two Claude passes, not people)
+- [ ] Disagreements adjudicated; gold store frozen. The 15 disagreements were adjudicated by a Claude pass (D-105); no record of the gold store frozen with a version number
 
 ---
 
@@ -356,10 +358,10 @@ Run the full pipeline on the test set: frozen detector, certified policy, repair
 
 **Exit checklist**
 
-- [ ] Every pre-registered comparison has run
-- [ ] Every hypothesis has a verdict
-- [ ] Every number traces to a command and a file
-- [ ] Deviations from the pre-registration listed
+- [ ] Every pre-registered comparison has run. Not met: D-113 lists the analyses not run on the main answers (two exploratory detection items, zero-shot and closure-off repair, the extracted-evidence condition) and those that need a certified policy
+- [x] Every hypothesis has a verdict (D-113; [runs/main/report.md](../runs/main/report.md))
+- [ ] Every number traces to a command and a file. Not shown: not checked number by number, and D-113's recomputation has no file in the repository (D-114)
+- [x] Deviations from the pre-registration listed (D-105 to D-112; the no-XBRL ablation's late hash in D-114)
 
 ---
 
@@ -415,11 +417,11 @@ Before submitting each paper:
 
 **Exit checklist**
 
-- [ ] Demo runs on a laptop without a GPU
-- [ ] Release package complete
-- [ ] Four paper drafts complete
-- [ ] Final report complete
-- [ ] Each member has done a practice viva
+- [x] Demo runs on a laptop without a GPU (D-097: stored outputs when the models are not loaded)
+- [ ] Release package complete. Not met: the licence and terms are still open ([papers/benchmark.md](papers/benchmark.md) §6)
+- [ ] Four paper drafts complete. Not met: all four drafts exist, and each lists what is still to do in its draft status
+- [ ] Final report complete. Not recorded
+- [ ] Each member has done a practice viva. Not recorded
 
 ---
 

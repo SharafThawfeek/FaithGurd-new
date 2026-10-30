@@ -6,7 +6,7 @@
   --line: #dddcd6;
   --text: #0b0b0b;
   --text-2: #52514e;
-  --muted: #7a7974;
+  --muted: #5f5e5a; /* 5.5:1 on --accent-soft at 11.5px (projector) */
   --accent: #2a78d6;
   --accent-soft: #e3eefb;
   --series-1: #2a78d6;
@@ -45,6 +45,8 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
 .dot.loading { background: var(--warn); animation: pulse 1s infinite; }
 .dot.failed, .dot.off { background: #b9b8b2; }
 @keyframes pulse { 50% { opacity: 0.3; } }
+.restarted { background: var(--bad-soft); color: var(--bad-ink); border-bottom: 1px solid #eeb4b4; padding: 8px 18px; font-weight: 600;
+  position: sticky; top: 54px; z-index: 4; }
 
 /* layout */
 .layout { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100vh - 54px); }
@@ -52,6 +54,7 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
   position: sticky; top: 54px; height: calc(100vh - 54px); }
 .sidebar h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 14px 8px 6px; }
 .sidebar h3:first-child { margin-top: 2px; }
+.sidebar .note.side { margin: -2px 8px 6px; font-size: 12px; line-height: 1.4; }
 .ex { display: block; width: 100%; text-align: left; border: 1px solid transparent; background: none; border-radius: var(--radius);
   padding: 7px 9px; margin-bottom: 2px; color: var(--text); }
 .ex:hover { background: var(--surface-2); }
@@ -228,6 +231,8 @@ table.ev tr.gap td { color: var(--muted); text-align: left; font-style: italic; 
 /* results */
 .banner { background: var(--warn-soft); border: 1px solid #e9c46a; color: var(--warn-ink); border-radius: var(--radius); padding: 10px 14px; font-weight: 600; margin-bottom: 14px; }
 .tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.readnotes { margin: 0; padding-left: 20px; font-size: 14px; max-width: 980px; }
+.readnotes li { margin: 3px 0; }
 .tab { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 5px 14px; }
 .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 .md table { border-collapse: collapse; font-size: 13.5px; margin: 8px 0 14px; }
@@ -257,7 +262,9 @@ select { font: inherit; padding: 3px 6px; border-radius: 6px; border: 1px solid 
 .askrow select { max-width: 560px; font-size: 15px; padding: 5px 8px; }
 .askq { width: 100%; font: 17px/1.4 "Segoe UI", system-ui, sans-serif; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--text); }
 .askq:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
-.chips.indent { margin-left: 122px; }
+.chips.indent, .note.indent { margin-left: 122px; }
+.note.indent { margin-top: 6px; margin-bottom: 0; max-width: 820px; }
+.warnnote { color: var(--warn-ink); font-weight: 600; }
 .chip.plain { border-color: var(--line); background: var(--surface-2); color: var(--text); font-size: 12.5px; }
 .chip.plain:hover { background: #e4e3de; }
 .chip.plant { border-color: #eeb4b4; background: var(--bad-soft); color: var(--bad-ink); }
@@ -270,6 +277,7 @@ select { font: inherit; padding: 3px 6px; border-radius: 6px; border: 1px solid 
 .tablewrap.preview { max-height: 420px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
 .qa.asked { border-color: #86b6ef; box-shadow: inset 4px 0 0 var(--accent); }
 .caveat { background: var(--warn-soft); border: 1px solid #e9c46a; color: var(--warn-ink); border-radius: 6px; padding: 6px 10px; margin: -2px 0 10px; font-size: 13.5px; }
+.caveat.alarm { background: var(--bad-soft); border-color: #eeb4b4; color: var(--bad-ink); }
 
 .toast { position: fixed; bottom: 18px; right: 18px; background: var(--text); color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 14px; z-index: 20; max-width: 420px; }
 .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%;
@@ -291,5 +299,5 @@ select { font: inherit; padding: 3px 6px; border-radius: 6px; border: 1px solid 
   .detail { grid-template-columns: 1fr; }
   .brand .sub { display: none; }
   .askrow { grid-template-columns: 1fr; gap: 4px; }
-  .chips.indent { margin-left: 0; }
+  .chips.indent, .note.indent { margin-left: 0; }
 }

@@ -36,7 +36,7 @@ An AI model answers a question about a company's annual report. Before the answe
 | **Repair** | The answer is likely wrong, but the evidence holds the right values | A corrected answer, every changed number traced to a table cell |
 | **Abstain** | It cannot be made safe | No answer; the evidence and a reason instead |
 
-The goal is measurable: among answers that are sent, at most 10% may be wrong (α = 0.10), and this is *certified* on held-out data, counting errors that repair itself introduces.
+The goal is measurable: among answers that are sent, at most 10% may be wrong (α = 0.10), counting errors that repair itself introduces, and a setting is used only if held-out calibration data *certify* it. On the controlled track's injected errors the policy certifies; on the benchmark's 396 natural calibration answers no setting certified, so the policy withholds every answer (D-113).
 
 The project has three research components, one per member, plus a shared benchmark:
 
@@ -63,7 +63,7 @@ flowchart LR
     subgraph OFF["Offline side: build, train, certify, evaluate"]
         direction TB
         SRC["Data sources<br/>FinQA, TAT-QA, RAGTruth,<br/>SEC XBRL facts,<br/>US and Sri Lankan annual reports"]
-        BENCH["Benchmark<br/>hand-corrected tables,<br/>400 questions with gold,<br/>800 generated answers"]
+        BENCH["Benchmark<br/>arithmetic-checked tables,<br/>400 questions with gold,<br/>800 generated answers"]
         CTRL["Controlled track<br/>injected errors with<br/>known fixes"]
         TRAIN["Training<br/>Channel A, repairer,<br/>fusion, outcome models"]
         REPLAY["Replay harness<br/>every action on every item"]
@@ -157,7 +157,7 @@ flowchart TD
     end
     subgraph S2["2. Datasets"]
         CT["Controlled track<br/>~27,700 items, planted errors,<br/>fit / tune / calibration / test"]
-        XM["XBRL-mined examples<br/>14,512 wrong-context answers"]
+        XM["XBRL-mined examples<br/>14,512: 8,512 wrong-context,<br/>3,000 scale, 3,000 clean (D-049)"]
         BM["Benchmark<br/>96 tables, 400 questions,<br/>800 answers, Claude labels (D-103)"]
     end
     subgraph S3["3. Training (Kaggle T4)"]
@@ -314,7 +314,7 @@ flowchart LR
     COMP["detect/, policy/, repair/"] -.-x|"forbidden, enforced by a test"| G
 ```
 
-The gold store holds everything that would let a component cheat: gold answers, human labels, and for controlled items the planted error and its fix. It lives in a separate folder and module. Training-data builders (`data/repair_examples.py`, `data/channel_a_examples.py`) may read it because they run offline (D-034); the decision-time packages may not.
+The gold store holds everything that would let a component cheat: gold answers, labels (on the benchmark, separate blind Claude passes, not people; D-103), and for controlled items the planted error and its fix. It lives in a separate folder and module. Training-data builders (`data/repair_examples.py`, `data/channel_a_examples.py`) may read it because they run offline (D-034); the decision-time packages may not.
 
 A rebuild of the benchmark replaces only the gold answers and keeps labels and injections (a lesson from D-067, when a rebuild once emptied the labels).
 
@@ -322,7 +322,7 @@ A rebuild of the benchmark replaces only the gold answers and keeps labels and i
 
 ```mermaid
 flowchart TD
-    C["Candidate issuers per country<br/>33 Sri Lankan (CSE), 32 US (SEC)<br/>sector-stratified, seed 2026"] --> V["Tickers verified against the<br/>CSE and SEC lists; 3 replaced"]
+    C["Hand-written candidate list (D-038)<br/>33 Sri Lankan (CSE), 32 US (SEC)<br/>split sector-stratified, seed 2026"] --> V["Tickers verified against the<br/>CSE and SEC lists; 3 replaced"]
     V --> S["Split manifest (manifests/splits.json)<br/>frozen by SHA-256"]
     S --> T["test: 12 + 12<br/>locked, labelled (D-103)"]
     S --> K["calibration: 12 + 12<br/>thresholds, certificates"]
@@ -584,8 +584,8 @@ flowchart TD
 - **Why the linearised loss?** The target is a ratio, wrong sent ÷ sent ≤ α. Rewriting it as the per-item loss `1{unsafe sent} − α·1{sent}` with expectation ≤ 0 turns it into a mean that a concentration bound can certify. An answer that *repair made wrong* counts exactly like an original that was wrong.
 - **Why order on a separate split?** Because the order does not depend on the calibration data, every certified setting holds its guarantee at the same time, so choosing the best of them is allowed.
 - **Settings:** α = 0.10, δ = 0.05 (so the guarantee holds with 95% probability).
-- **Issuer-level check:** the chosen setting is recertified treating each issuer as one draw, since answers about the same company are related (risk R-14).
-- **Label budget:** with zero errors, 29 sent answers are the exact minimum for α = 0.10; the linearised Hoeffding–Bentkus certificate needs 32 (D-021). The study also reports, for random calibration subsets of growing size, how often a setting certifies.
+- **Issuer-level check:** answers about the same company are related (risk R-14), so the chosen setting's one-sided 95% upper bound of residual risk on calibration is computed from an issuer-clustered bootstrap (2,000 resamples) and passes at or below α (`policy.certify.cluster_upper`, D-102 (4)). The issuer-level Hoeffding–Bentkus p-value it replaces cannot pass with 24 calibration issuers and is reported for reference only.
+- **Label budget:** with zero errors, an exact test on sent answers alone needs 29 for α = 0.10; the linearised Hoeffding–Bentkus certificate needs 32 only when every calibration answer is sent (D-021). It charges each withheld answer exactly at the boundary value, so with no error a setting must send at least 67 of 100, 100 of 200 and 132 of 396 calibration answers (D-114). The study also reports, for random calibration subsets of growing size, how often a setting certifies.
 - **Comparator:** SCoRE (`score-select`), which decides send or abstain with a guarantee on *expected* risk rather than a high-probability bound.
 
 The certified model and thresholds are saved as a bundle and loaded by `policy/deployed.py` for use in `pipeline.run`.
@@ -598,7 +598,7 @@ flowchart TD
     F0 --> P0["v0 policy"]
     V1["Replays of the same items with<br/>repairer v1 (trained)"] --> AS["As-is:<br/>v0 policy on v1 test"]
     P0 --> AS
-    P0 --> RC["Recalibrated:<br/>v0 models, setting recertified on<br/>25 / 50 / 100 / 200 / all v1 labels<br/>(50 random draws each)"]
+    P0 --> RC["Recalibrated:<br/>v0 models, setting recertified on<br/>100 / 200 / all v1 labels, D-102 (6)<br/>(50 random draws each)"]
     V1 --> RC
     V1 --> RF["Refitted:<br/>new models on v1 fit,<br/>certified on v1 calibration"]
     AS --> M["Compare on v1 test:<br/>sent, wrong among sent, useful"]
@@ -775,7 +775,7 @@ flowchart TD
 flowchart TD
     M["Manifests<br/>lk-reports.csv, us-reports.csv"] --> DL["faithguard reports download<br/>CSE PDFs, SEC 10-K HTML;<br/>size and SHA-256 recorded"]
     DL --> DR["Draft tables<br/>LK: data/pdf_tables (words by position)<br/>US: data/html_tables (the filing's own tables)"]
-    DR --> HC["Hand correction, cell by cell<br/>CSV exactly as printed"]
+    DR --> HC["Kept as the reader read it;<br/>header fixes for one report only<br/>(People's Leasing; D-114)"]
     HC --> CK["Totals check<br/>every Total row = rows above it<br/>(rounding allowance)"]
     CK --> Y["Report YAML + table CSVs<br/>data/benchmark/country/ISSUER/year"]
     Y --> QW["Questions: text, type,<br/>gold cell expression, expect, author"]
@@ -787,7 +787,7 @@ flowchart TD
     Y --> AUTO["Automatic extraction<br/>(PyMuPDF text, uncorrected)<br/>real-world condition"]
 ```
 
-- **Two statements per report:** income statement (t1) and statement of financial position or balance sheet (t2): 96 tables for 48 reports. Every one passes the totals check.
+- **Two statements per report:** income statement (t1) and statement of financial position or balance sheet (t2): 96 tables for 48 reports. Every one passes the totals check, which cannot see a misread figure that breaks no total. No person has checked a table; a Claude pass checked the rows the questions use against the source pages (D-103, D-104, D-114).
 - **Questions:** 400 groups, 250 Sri Lankan and 150 US, each with a gold answer as a cell expression (`growth(t1r3c1, t1r3c2)`) and the value as the author read it (`expect`). Code recomputes and compares the two, so a wrong cell or a misread figure is caught before labelling (D-035).
 - **Traps:** questions are written to invite wrong-context errors: Group versus Company or Bank, prior-year columns, repeated line items, scale mismatches, falls stated as changes, January fiscal years.
 - **Privacy:** benchmark content stays out of the public repository until the test set is locked (D-036).
@@ -821,7 +821,7 @@ flowchart TD
     SP --> RP["Replay (section 11), cached in<br/>runs/controlled/source-split/"]
 ```
 
-The controlled track exists so that every component can be developed and every outcome scored automatically, long before people label the benchmark. Errors propagate the way real ones do: a wrong amount changes the growth rate computed from it. Every item records the action it should receive (send, repair or abstain). Its limitation is that answers are written from templates; the papers' claims therefore rest on the natural benchmark, and the controlled track is a rehearsal (risk R-20).
+The controlled track exists so that every component can be developed and every outcome scored automatically, long before the benchmark is labelled. Errors propagate the way real ones do: a wrong amount changes the growth rate computed from it. Every item records the action it should receive (send, repair or abstain). Its limitation is that answers are written from templates; the papers' claims therefore rest on the natural benchmark, and the controlled track is a rehearsal (risk R-20).
 
 ---
 
@@ -876,7 +876,7 @@ flowchart LR
     TR --> TK["blinded tasks: answers code<br/>cannot decide + hidden audit of 150<br/>random keys and order"]
     TK --> KEY[("key -> item mapping<br/>kept on the gold side")]
     TK --> LS["Label Studio 1.23.2<br/>(own environment)"]
-    LS --> AN["Annotators, blind to the model:<br/>spans + slot, status,<br/>usefulness, note"]
+    LS --> AN["Annotators: blind Claude passes, D-103<br/>spans + slot, status,<br/>usefulness, note"]
     AN --> EXP["JSON export"]
     EXP --> IMP["faithguard labelling import"]
     KEY --> IMP
@@ -884,10 +884,10 @@ flowchart LR
     GL --> AUD["faithguard labelling audit<br/>code labels stand if at most 1<br/>of 150 is overruled"]
     CL --> AUD
     GL --> AGR["Agreement: Cohen's kappa<br/>on 80 double-labelled tasks"]
-    GL --> ADJ["Disagreements -> accounting<br/>adjudicator (final)"]
+    GL --> ADJ["Disagreements -> adjudicator<br/>pass by Claude (final)"]
 ```
 
-Code labels an answer only when nothing in it could still be wrong: a numeric question (not narrative or comparison, nor a difference between two entities), every number matching a gold value read with the evidence (one of them the answer), every year, entity word, metric name and unit word belonging to its figure's cells, "from" and "to" in the right order, every direction word saying how the cells moved, and no hedge, explanation, figure in words, part-year, percentage points, foreign currency or thinking leak (`evaluate/triage.py`, D-100). A person labels the rest and a stratified audit of 150 code labels; any person's overrule counts unless the adjudicator reverses it, and if more than one of the 150 is overruled, a person labels every answer. An overruled audit answer or an ambiguous label sends the other code-labelled answers to that question to a person. Annotators follow [annotation-guide.md](annotation-guide.md) (v2). They never see which generator or system produced an answer. Main-benchmark tasks carry no suggested labels, so nothing can anchor them. Time per sitting is logged in `logs/labelling-hours.csv`. When labels disagree on the same item, a person's label wins over a code or AI annotator's, and an adjudicated label over all (`label_of`).
+Code labels an answer only when nothing in it could still be wrong: a numeric question (not narrative or comparison, nor a difference between two entities), every number matching a gold value read with the evidence (one of them the answer), every year, entity word, metric name and unit word belonging to its figure's cells, "from" and "to" in the right order, every direction word saying how the cells moved, and no hedge, explanation, figure in words, part-year, percentage points, foreign currency or thinking leak (`evaluate/triage.py`, D-100). The labeller labels the rest and a stratified audit of 150 code labels; any overrule by the labeller counts unless the adjudicator reverses it, and if more than one of the 150 is overruled, the labeller labels every answer. An overruled audit answer or an ambiguous label sends the other code-labelled answers to that question to the labeller. D-100 gave these roles to people; on the benchmark the labeller, the second labeller and the adjudicator are separate, blind Claude passes, not people (D-103). The audit overruled 4 of 150, so the code labels fell and the labeller labelled every answer (D-105). Annotators follow [annotation-guide.md](annotation-guide.md) (v2). They never see which generator or system produced an answer. Main-benchmark tasks carry no suggested labels, so nothing can anchor them. `logs/labelling-hours.csv` was meant for each person's sittings; it is empty by design, because no person labelled (D-103). When labels disagree on the same item, an adjudicated label wins over all, then a label from an annotator outside `AI_ANNOTATORS` (`claude`, the pilot's annotator, and `code-scorer-v1`), then any other (`label_of`). The D-103 passes are named `claude-labeller@d103` and `claude-adjudicator@d103`, so they take the place this rule gives a person's label.
 
 ---
 
@@ -907,7 +907,7 @@ flowchart TD
     BS --> REP["Reports with 95% intervals;<br/>issuers, questions and answers<br/>counted separately"]
 ```
 
-- **Scoring** (`evaluate/score.py`) compares every number in a text with the gold values, using the same number reader as everything else. An unchanged answer keeps its human label's state.
+- **Scoring** (`evaluate/score.py`) compares every number in a text with the gold values, using the same number reader as everything else. An unchanged answer keeps its label's state (on the benchmark, a blind Claude pass's label; D-103).
 - **Repair metrics:** correction rate (wrong originals made fully correct), new-error rate (sent answers with a wrong number the original did not have), damage rate (correct originals made wrong), withheld when needed, still wrong when sent.
 - **Intervals:** answers about the same company are related, so whole issuers are resampled (`stats/bootstrap.py`).
 - **Phase 6 split of work:** GPU systems run on the benchmark items and store their raw outputs (`train/systems.py`, `train/baseline_eval.py --items`); scoring against gold then runs on a laptop. Nothing on the GPU side reads gold.

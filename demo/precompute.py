@@ -83,6 +83,14 @@ def precheck(demo: Demo, gold: dict[str, GoldQuestion]) -> tuple[list[str], int]
             ok = action == expect and state in ("supported_useful", "abstained")
             problems += not ok
             lines.append(f"| {e.item.id} | {label} | {expect} | {action} | {state} | {'yes' if ok else 'NO'} |")
+    # the Control step draws the certificate's budget curve: a non-empty list of points (runs/policy/controlled/results.json)
+    curve = demo.certificate.get("budget_curve")
+    ok = isinstance(curve, list) and bool(curve) and all({"calibration_items", "certified_share"} <= set(p) for p in curve)
+    problems += not ok
+    neural = demo.certificate.get("budget_curve_neural")
+    lines += ["", "## Control step", "",
+              f"Certification budget curve (LightGBM): {f'{len(curve)} points' if isinstance(curve, list) else 'not a list'}"
+              f"{f'; neural: {len(neural)} points' if isinstance(neural, list) else ''}. {'OK' if ok else 'NO: the chart would not draw'}."]
     return lines, problems
 
 

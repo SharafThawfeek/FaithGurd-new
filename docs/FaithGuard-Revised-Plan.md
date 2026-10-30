@@ -1,5 +1,7 @@
 # FaithGuard: Revised Research Plan
 
+> **Superseded in two places (D-114):** the human labelling and checking, listed below as never cut, were replaced by blind Claude passes (D-103), and the test set was locked on 29 October 2026, not 31 January 2027 (D-104); the decision log records what was done instead.
+
 8 October 2026 (updated the same day: no university GPU)
 
 ## Update: no university GPU

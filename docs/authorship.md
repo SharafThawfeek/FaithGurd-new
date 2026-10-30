@@ -10,5 +10,5 @@ Decision D-013. Each paper's lead author goes first.
 | Sri Lankan and US benchmark (joint) | All three, ordered by contribution when the paper is drafted |
 
 - **Why teammates appear on each other's papers:** every paper uses the shared benchmark, the shared code and the other members' components or fallbacks.
-- **The adjudicator** is acknowledged in every paper that uses the benchmark.
+- **The adjudicator:** no external adjudicator took part. The adjudicator is a blind Claude pass (D-103), which every paper states in its method and AI assistance statement, so there is no adjudicator to acknowledge.
 - **If someone stops contributing,** authorship follows the work actually done, and the decision log records the change.

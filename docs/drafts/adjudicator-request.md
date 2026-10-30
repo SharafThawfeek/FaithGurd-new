@@ -1,5 +1,7 @@
 # Draft: request to an adjudicator
 
+> **Superseded by D-103; not used.** The adjudicator is a separate, blind Claude pass, and no external adjudicator took part (D-103, D-105). The draft below is kept as it was written; its "labelled by hand" and "When two of us label" no longer describe the benchmark.
+
 Send this to an accounting lecturer or a senior accounting student. Edit the greeting and sign-off before sending.
 
 ---

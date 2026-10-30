@@ -1,0 +1,44 @@
+{
+  "voice": "en-US-AndrewNeural",
+  "rate": "+0%",
+  "scenes": [
+    {"id": "title", "lead": 1.0, "tail": 0.9, "sentences": [
+      "This is FaithGuard.",
+      "It checks AI answers about company annual reports, before they reach the reader."
+    ]},
+    {"id": "problem", "lead": 0.6, "tail": 0.8, "sentences": [
+      "More and more people ask AI assistants about financial reports.",
+      "The answers sound confident, but the numbers are not always right.",
+      "A figure can look right and still be wrong: miscalculated, read at the wrong scale, or taken from the wrong part of the report.",
+      "In our benchmark, most errors were simply wrong numbers; wrong-context ones were rare."
+    ]},
+    {"id": "why", "lead": 0.5, "tail": 0.8, "sentences": [
+      "One wrong figure can mislead an investment or an audit decision.",
+      "These mistakes are hard to catch: you must find the right line, and often redo the arithmetic.",
+      "And for Sri Lankan companies, we found no comparable public dataset to test this."
+    ]},
+    {"id": "flow", "lead": 0.5, "tail": 0.9, "sentences": [
+      "FaithGuard works in three steps.",
+      "First, it detects. Every number in the answer is checked against the report's own tables, and anything that does not fit is flagged, with the reason.",
+      "Second, it decides: should the answer be sent as it is, repaired, or held back?",
+      "Third, it repairs. Wrong numbers are replaced with the report's own figures, so every corrected number can be traced to its source.",
+      "And if an answer cannot be made safe, the reader gets the evidence and an honest explanation instead."
+    ]},
+    {"id": "example", "lead": 0.5, "tail": 1.0, "sentences": [
+      "Here, FaithGuard sees that the profit figure belongs to the Bank.",
+      "It swaps in the Group's figure, recalculates the growth, and shows exactly where each number came from."
+    ]},
+    {"id": "different", "lead": 0.5, "tail": 0.8, "sentences": [
+      "What makes FaithGuard different?",
+      "It learns these context mistakes from real company filings.",
+      "It fixes numbers precisely, instead of rewriting whole answers.",
+      "It tests a limit on how many wrong answers get through, and says so when the limit cannot be met.",
+      "It runs on small, open models and free hardware.",
+      "And it comes with a new benchmark of Sri Lankan and US annual reports."
+    ]},
+    {"id": "close", "lead": 0.5, "tail": 2.2, "sentences": [
+      "Three parts, one goal: detection, decision and repair.",
+      "FaithGuard: the right number, in the right context."
+    ]}
+  ]
+}

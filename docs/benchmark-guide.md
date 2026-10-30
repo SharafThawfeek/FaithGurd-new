@@ -109,10 +109,10 @@ Each question has:
 | `type` | lookup, growth, difference, share, ratio, sum, average, comparison or narrative |
 | `answer` | The gold answer as a cell expression: `t1r3c1`, `growth(t1r3c1, t1r3c2)`, `t1r2c1 - t1r2c3`, `share(t2r4c3, t2r4c1)` |
 | `expect` | The answer as you read it in the report, with units: `Rs. 14,212,560 thousand`, `9.3%` |
-| `author` / `checked_by` | Your name; then a different member's name once they have checked it |
+| `author` / `checked_by` | Your name; then a different member's name once they have checked it. On the main benchmark every question records `checked_by: claude-check`, which marks the Claude second-reader pass, not a person (D-103) |
 | `pilot` | `true` for pilot questions (development issuers only) |
 
-Narrative questions (type `narrative`) need no `answer`; put a reference answer in `expect`. They are labelled by people only.
+Narrative questions (type `narrative`) need no `answer`; put a reference answer in `expect`. Code never labels them; the labeller does. On the main benchmark the labeller is a blind Claude pass, not a person (D-103).
 
 **Aim for questions that invite wrong-context mistakes**, because those are what the project studies:
 

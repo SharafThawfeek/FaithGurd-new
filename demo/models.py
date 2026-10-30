@@ -57,6 +57,14 @@ class Slot:
             return out
 
 
+def _end_ids(gen) -> set[int]:
+    """The token ids that end a reply (the chat template's end of turn, end of text)."""
+    ids: set[int] = set()
+    for x in (getattr(getattr(gen.model, "generation_config", None), "eos_token_id", None), gen.tokenizer.eos_token_id):
+        ids |= {int(i) for i in x} if isinstance(x, (list, tuple)) else {int(x)} if x is not None else set()
+    return ids
+
+
 def _free_gpu() -> None:
     try:
         import torch
@@ -73,6 +81,12 @@ class LiveModels:
         self.channel_a_dir, self.adapter_dir, self.base_model = channel_a_dir, adapter_dir, base_model
         self.channel_a_device, self.warm_up_item = channel_a_device, warm_up
         self.channel_a, self.repairer = Slot("channel_a"), Slot("repairer")
+        self.answer_failures = 0  # the base model's own answers, in a row (it is the repairer's model, adapter off)
+
+    @property
+    def ai_stopped(self) -> bool:
+        """The GPU model failed MAX_FAILURES times in a row, answering or repairing, after it had loaded: it is off."""
+        return self.answer_failures >= MAX_FAILURES or self.repairer.failures >= MAX_FAILURES
 
     def status(self) -> dict:
         return {"channel_a": self.channel_a.view(), "repairer": self.repairer.view()}
@@ -142,27 +156,36 @@ class LiveModels:
         out = self.repairer.run(lambda: self.repairer.model(item, det))
         return out, time.perf_counter() - started
 
-    def answer(self, question: str, evidence: Evidence) -> tuple[str | None, float]:
-        """The base model's own answer, the repair adapter switched off: the evidence and question rendered as
-        for the benchmark's generators (faithguard.generation.answers), with a one-sentence instruction."""
+    def answer(self, question: str, evidence: Evidence) -> tuple[str | None, float, bool]:
+        """(the base model's own answer, seconds, whether it was cut off at ANSWER_TOKENS), the repair adapter switched
+        off: the evidence and question rendered as for the benchmark's generators (faithguard.generation.answers), with a
+        one-sentence instruction."""
         if self.repairer.state != "ready":
-            return None, 0.0
+            return None, 0.0, False
         from faithguard.generation.answers import strip_thinking, user_prompt
 
         gen = self.repairer.model.generate  # the Generator inside the ModelRepairer
 
-        def go() -> str:
+        def go() -> tuple[str, bool]:
             ids = gen._ids(user_prompt(question, evidence), ANSWER_SYSTEM)
             with gen.torch.no_grad(), gen.model.disable_adapter():
                 out = gen.model.generate(**ids, max_new_tokens=ANSWER_TOKENS, do_sample=False, pad_token_id=gen.tokenizer.pad_token_id)
-            return gen.tokenizer.decode(out[0][ids["input_ids"].shape[1]:], skip_special_tokens=True)
+            new = out[0][ids["input_ids"].shape[1]:]
+            # cut off: every token was used and the last one does not end the reply
+            cut = len(new) >= ANSWER_TOKENS and int(new[-1]) not in _end_ids(gen)
+            return gen.tokenizer.decode(new, skip_special_tokens=True), cut
 
         started = time.perf_counter()
-        with self.repairer.lock:  # the same GPU model, but its failures do not count against the trained repairer
+        with self.repairer.lock:  # the same GPU model: its failures are counted apart from the trained repairer's
             try:
-                raw = go()
+                raw, cut = go()
             except Exception:
+                self.answer_failures += 1
+                if self.answer_failures >= MAX_FAILURES and self.repairer.state == "ready":  # status stops saying ready
+                    self.repairer.state = "failed"
+                    self.repairer.detail = f"the AI stopped answering ({self.answer_failures} errors in a row); showing stored outputs"
                 _free_gpu()
                 raise
+            self.answer_failures = 0
         text, _ = strip_thinking(raw)
-        return " ".join(text.split()), time.perf_counter() - started
+        return " ".join(text.split()), time.perf_counter() - started, cut
