@@ -26,7 +26,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 #live { flex-basis: 100%; display: flex; align-items: center; gap: 0.5rem; font: 500 0.9375rem/1.2 var(--sans); color: var(--graphite); margin-top: 0.35rem; }
 #live i { width: 0.56rem; height: 0.56rem; background: var(--line); }
 #live.ready i { background: var(--green); } #live.wait i { background: var(--ochre); } #live.rec i { background: var(--graphite); } #live.off i { background: var(--red); }
-#readout { flex: 1; min-height: 0; display: flex; flex-direction: column; margin-top: 1.4rem; overflow-y: auto; scrollbar-width: thin; }
+#readout { flex: 1; min-height: 0; display: flex; flex-direction: column; margin-top: 1.4rem; overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; }
 
 .intro { flex: 1; display: flex; flex-direction: column; }
 .intro h1 { font: 400 2.5rem/1.14 var(--serif); margin: 0; letter-spacing: -.005em; }
@@ -50,7 +50,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 .result { margin-top: auto; padding-top: 0.8rem; }
 .over { font: 600 0.9375rem/1 var(--sans); color: var(--graphite); }
-.word { font: 700 5.75rem/.95 var(--sans); font-stretch: 75%; letter-spacing: -.012em; margin: 0.4rem 0 0.4rem -0.2rem; }
+.word { font: 700 min(5.75rem, calc((var(--col) - 5rem) / 4.4))/.95 var(--sans); font-stretch: 75%; letter-spacing: -.012em; margin: 0.4rem 0 0.4rem -0.2rem; }
 .word.send, .word.repair { color: var(--green); } .word.abstain, .word.now { color: var(--ink); } .word.missed { color: var(--red); } .word.careful { color: var(--ochre); }
 .line { font: 500 1.25rem/1.28 var(--sans); }
 .final { font: 400 1.625rem/1.34 var(--serif); margin: 0.8rem 0 0; }

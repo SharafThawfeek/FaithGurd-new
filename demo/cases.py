@@ -233,6 +233,8 @@ class Demo:
     def cache(self, value: dict) -> None:
         self._cache = value
 
+    refuse_missing_year = True  # stage/serve.py turns this off: the AI answers, and the pipeline deals with the result
+
     def listing(self) -> list[dict]:
         return [{"id": e.item.id, "group": e.group, "title": e.title, "caption": e.caption, "expect": e.expect,
                  "issuer": e.item.question.issuer, "country": e.item.question.country} for e in self.examples.values()]
@@ -443,7 +445,7 @@ class Demo:
 
     def ask_ai(self, report_id: str, question: str) -> dict:
         r = self.report(report_id)
-        if (problem := other_company(r, question) or missing_year(r, question)):
+        if (problem := other_company(r, question) or (self.refuse_missing_year and missing_year(r, question))):
             return {"error": problem}  # the same refusal as the table answer's, before the AI is asked
         recorded = self._recording(r, question)
         stopped = bool(getattr(self.models, "ai_stopped", False))

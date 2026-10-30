@@ -40,6 +40,8 @@ function called(d) {
   const head = v.querySelector(".head").textContent, claims = d.catch.claims;
   if (a === "repair" && !d.output.changed) return { word: "Sent", cls: "send", over: "Unchanged", line: "Control asked for a fix, but every number traced, so nothing changed" };
   if (state.planted && a === "send") return { word: "Missed", cls: "missed", over: "Sent with your planted mistake", line: head };
+  const noYear = (d.caveats || []).find((n) => n.startsWith("The report covers"));
+  if (noYear && a !== "abstain") return { word: a === "send" ? "Sent" : "Changed", cls: "careful", over: "With a warning", line: noYear };
   if (careful) return { word: a === "send" ? "Sent" : "Changed", cls: "careful", over: "With a warning", line: L.unknownLine(d) ? `${head} So it could not really check the answer.` : head };
   if (a === "send") {
     const n = claims.length;
@@ -50,7 +52,7 @@ function called(d) {
     return { word: "Fixed", cls: "repair", over: "Changed and re-checked", line: check && check.checks ? `${head} ${passed} of ${check.checks.length} own checks passed.` : head };
   }
   const why = L.whyHeld(d), raw = (/^.*?[.](?:\s|$)/.exec(why) || [why])[0].trim(), first = raw.replace(" (step 1 says which)", "");
-  return { word: "Withheld", cls: "abstain", over: "Not sent", line: raw.includes("(step 1 says which)") ? `${first} The checker missed this; the safety rule held it back for its own reasons.` : first };
+  return { word: "Withheld", cls: "abstain", over: "Not sent", line: noYear || (raw.includes("(step 1 says which)") ? `${first} The checker missed this; the safety rule held it back for its own reasons.` : first) };
 }
 const cellsOf = (c) => c.asked;
 const named = (c, ids, labels = c.cell_labels) => ids.map((id) => L.cellText(id, labels[id])).join(" · ");

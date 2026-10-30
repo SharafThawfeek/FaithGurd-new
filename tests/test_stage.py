@@ -44,6 +44,14 @@ def test_the_server_serves_these_pages_on_the_demos_api():
         assert (STATIC / name).is_file(), name
 
 
+def test_a_missing_year_reaches_the_ai_and_is_warned_about_after():
+    assert "Demo.refuse_missing_year = False" in (ROOT / "stage" / "serve.py").read_text(encoding="utf-8")
+    cases = (ROOT / "demo" / "cases.py").read_text(encoding="utf-8")
+    assert "refuse_missing_year = True" in cases and "self.refuse_missing_year and missing_year(r, question)" in cases
+    main = (STATIC / "main.js").read_text(encoding="utf-8")
+    assert 'n.startsWith("The report covers")' in main and 'noYear && a !== "abstain"' in main
+
+
 def test_the_page_never_promises_more_than_the_results():
     pages = "".join((STATIC / n).read_text(encoding="utf-8") for n in ("main.js", "scene.js", "index.html"))
     for claim in ("Every number checks out", "guaranteed", "production-ready", "All clear"):

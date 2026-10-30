@@ -16,6 +16,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "demo"))
 
 import app  # noqa: E402
+from cases import Demo  # noqa: E402
 
 PORT = 8770
 
@@ -25,6 +26,7 @@ def main(argv: list[str] | None = None) -> None:
     if "--port" not in args:
         args = ["--port", str(PORT), *args]
     app.STATIC = HERE / "static"
+    Demo.refuse_missing_year = False  # a year the report lacks is caught after the answer, on screen
     app.main(args)
 
 
