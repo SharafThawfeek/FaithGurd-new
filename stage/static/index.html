@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>FaithGuard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
+</head>
+<body>
+  <aside id="col">
+    <div class="brand"><b>FaithGuard</b><span>Research prototype</span></div>
+    <section id="readout" aria-live="polite"></section>
+  </aside>
+
+  <main id="room">
+    <canvas id="stage" aria-label="A live 3D model of the FaithGuard pipeline"></canvas>
+    <nav id="views" aria-label="Camera"></nav>
+    <div id="live"></div>
+    <aside id="sheet" hidden aria-label="Details"></aside>
+  </main>
+
+  <footer id="desk">
+    <form id="ask" autocomplete="off">
+      <button type="button" id="doc" aria-haspopup="listbox" aria-expanded="false"><small>Document</small><span id="docname">Loading</span></button>
+      <div id="by" role="radiogroup" aria-label="Who writes the answer"></div>
+      <label id="q"><small>Question</small><input id="question" placeholder="Ask about one figure" maxlength="300"></label>
+      <button type="submit" id="run">Run</button>
+    </form>
+    <div id="mine" hidden><label><small>Your answer</small><input id="answer" placeholder="Type an answer, right or wrong" maxlength="4000"></label></div>
+    <div id="menu" role="listbox" hidden></div>
+  </footer>
+  <div id="toast" role="status" hidden></div>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
