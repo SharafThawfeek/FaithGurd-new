@@ -57,7 +57,30 @@ function srcTag(source, text) {
 }
 function cellTag(id, label, kind) {
   const mark = kind === "asked" ? "✓ " : kind === "from" ? "✗ " : "";
-  return h("span", { class: `celltag ${kind}`, title: id }, mark, label || id);
+  return h("span", { class: `celltag ${kind}`, title: label ? `${id}: ${label}` : id }, mark, label ? cellText(id, label) : id);
+}
+
+// The cell's label as the simple page writes it (simple.js cellText); the raw label stays in the tooltip.
+// "- due to depositors, BANK 2025 Rs 000: 1,627,060,300" -> "due to depositors, Bank 2025: Rs. 1,627,060,300 thousand"
+function cellText(cellId, label) {
+  const m = /^(.*):\s*([^:]*)$/.exec(label || "");
+  if (!m) return label || "";
+  let where = m[1], value = m[2].trim();
+  const tid = (/^(t\d+)r/.exec(cellId || "") || [])[1];
+  const t = state.data && state.data.evidence ? state.data.evidence.tables.find((x) => x.id === tid) : null;
+  const headerThousand = /'\s*000|\b000\b|thousand/i.test(where);
+  const headerCurrency = /US\$|\$|USD/.test(where) ? "US$ " : /\bRs\b|Rs\.|LKR/.test(where) ? "Rs. " : "";
+  where = where.replace(/\s*(Rs\.?\s*'?\s*000|Rs\.?|US\$\s*'?\s*000|US\$|\$\s*'?\s*000|LKR|USD|\(\s*'?000\s*\))\s*$/i, "")
+    .replace(/^less\s*:\s*/i, "").replace(/(^|,\s*)-\s+/g, "$1")
+    .replace(/\b(GROUP|BANK|COMPANY)\b/g, (w) => w[0] + w.slice(1).toLowerCase()).trim();
+  const plainNumber = /^\(?-?[\d.,]+\)?$/.test(value);
+  if (/change\s*%/i.test(where) && plainNumber) return `${where.replace(/\s*change\s*%/i, " change")}: ${value}%`;
+  const noUnit = /per share|\(rs\.?\)|number of|employees|branches|%|ratio/i.test(where);
+  where = where.replace(/\s*\(rs\.?\)/ig, "");
+  if (!plainNumber || noUnit) return `${where}: ${value}`;
+  const currency = headerCurrency || (t && t.currency === "USD" ? "US$ " : t && t.currency === "LKR" ? "Rs. " : "");
+  const thousand = headerThousand || (!headerCurrency && t && t.scale === 3) ? " thousand" : t && !headerCurrency && t.scale === 6 ? " million" : "";
+  return `${where}: ${currency}${value}${thousand}`;
 }
 
 // ---------------------------------------------------------------- status bar
@@ -66,7 +89,15 @@ async function refreshStatus() {
   clearTimeout(refreshStatus.timer);
   const again = (ms) => { clearTimeout(refreshStatus.timer); refreshStatus.timer = setTimeout(refreshStatus, ms); };
   const s = await api("/api/status");
-  if (s.error) { again(10000); return; }
+  if (s.error) {  // no live pill stays green while nothing answers; the last code version seen stays, greyed
+    const last = state.status && state.status.version;
+    // replaceChildren, unlike h(), writes a null as the text "null": pass only real nodes
+    document.getElementById("status").replaceChildren(...[
+      last ? h("span", { class: "pill off", title: "the code the server ran when it last answered" }, h("b", {}, "code"), last) : null,
+      h("span", { class: "pill" }, h("span", { class: "dot failed" }), h("b", {}, "Server"), "not answering: is it still running?")].filter(Boolean));
+    again(10000);
+    return;
+  }
   if (s.run_id) {
     if (state.runId === undefined) state.runId = s.run_id;
     else if (s.run_id !== state.runId) restarted();
@@ -79,14 +110,14 @@ async function refreshStatus() {
     else text = `${st.state === "failed" ? (stoppedAnswering(st) ? "not answering: " : "failed to load: ") : ""}stored outputs for ${stored} of ${n}`;
     return h("span", { class: "pill", title: st.detail || "" }, h("span", { class: `dot ${st.state}` }), h("b", {}, name), text);
   };
-  document.getElementById("status").replaceChildren(
+  document.getElementById("status").replaceChildren(...[
     s.version ? h("span", { class: "pill", title: "the code this server runs" }, h("b", {}, "code"), s.version) : null,
     h("span", { class: "pill" }, h("span", { class: "dot ready" }), h("b", {}, "Channel B"), "rules, live"),
     pill("Channel A", s.channel_a, s.stored.channel_a),
     h("span", { class: "pill", title: s.policy.detail }, h("span", { class: `dot ${s.policy.state}` }), h("b", {}, "Policy"),
       s.policy.state === "ready" ? "LightGBM, live" : "trained policy missing: threshold v0"),
     pill("Trained repairer", s.repairer, s.stored.repairer),
-  );
+  ].filter(Boolean));
   const before = state.modelStates;
   state.status = s;
   state.modelStates = { a: s.channel_a.state, r: s.repairer.state };
@@ -219,7 +250,7 @@ async function openLinked(id) {
 }
 
 function firstClaim(data) {
-  const bad = data.catch.claims.find((c) => c.verdict !== "supported");
+  const bad = data.catch.claims.find((c) => c.verdict !== "supported") || data.catch.claims.find((c) => doubtOn(data, c));
   return (bad || data.catch.claims[0] || {}).id || null;
 }
 
@@ -334,7 +365,8 @@ function renderQA(d) {
           d.edits.map((e) => h("button", { class: "chip", title: e.answer, onclick: () => useEdit(e.answer) }, e.label, " → ", badge(e.expect)))) : null,
       h("div", { class: "row", id: "tryrow" }, ...tryRowKids(d)),
       asked ? null : h("div", { class: "note" }, "The checker reads one year per clause: when you type a change, name both years "
-        + "(“from Rs. 13,004 million in FY2024 to Rs. 14,213 million in FY2025”), or a figure with no year is read as the clause's year."),
+        + (q.country === "US" ? "(“from $414.8 million in 2024 to $503.6 million in 2025”)" : "(“from Rs. 13,004 million in FY2024 to Rs. 14,213 million in FY2025”)")
+        + ", or a figure with no year is read as the clause's year."),
       h("div", { class: "err", id: "tryerr", hidden: true })));
 }
 
@@ -349,8 +381,22 @@ function generatorName(g) {
 
 // Notes the server adds (demo/ask.py). One with its own head ("Unknown line item:", "Careful, this fix is not trustworthy:")
 // shows that head; the released-text problems are marked as alarms.
-const CAVEAT_HEAD = /^(Unknown line item|Careful, this fix is not trustworthy|Rounded|The sentence contradicts itself|One year per clause|Not checkable|Wording):\s*/;
-const ALARM = /^(Careful, this fix is not trustworthy|The sentence contradicts itself):/;
+const CAVEAT_HEAD = /^(Unknown line item|Careful, this fix is not trustworthy|Rounded|The sentence contradicts itself|One year per clause|Not checkable|Wording|A total given as a change|No unit|Accounting brackets|Direction not checked|Rate read as a rise):\s*/;
+const ALARM = /^(Careful, this fix is not trustworthy|The sentence contradicts itself|A total given as a change|No unit|Direction not checked):/;
+// Notes on a figure the checker supports but that is wrong as written (or whose up/down word is); each quotes that figure first (“1,284,560,210”)
+const DOUBT = /^(A total given as a change|No unit|Direction not checked):/;
+// what such a note says is wrong, beside the checker's ✓
+const doubtWhy = (n) => /^Direction not checked/.test(n) ? "the up/down word beside the figure is wrong, and the checker did not check it"
+  : "as written the figure is wrong, and the checker's ✓ does not show it";
+
+function doubtOn(d, c) {
+  if (c.verdict !== "supported") return null;
+  const digits = (s) => s.replace(/[^0-9.]/g, "").replace(/^\.+|\.+$/g, "");
+  return (d.caveats || []).find((n) => {
+    const quote = DOUBT.test(n) && (/“([^”]+)”/.exec(n) || [])[1];
+    return quote && (quote === c.text || digits(quote) === digits(c.text));
+  }) || null;
+}
 
 function caveatList(d) {
   return (d.caveats || []).map((c) => {
@@ -365,10 +411,18 @@ function plantedChips(d) {
   if (!d.planted) return h("div", { class: "chips", id: "planted" }, label, h("span", { class: "spin" }), h("span", { class: "note" }, " finding errors to plant…"));
   if (d.plantError) return h("div", { class: "chips", id: "planted" }, label, h("span", { class: "note" }, d.plantError));
   const n = d.planted_dropped || 0;
-  const dropped = `${n} planted error${n > 1 ? "s" : ""} left out: ${n > 1 ? "their" : "its"} repair does not give the right figures back (a known limitation)`;
+  // on_wrong: they were judged against an answer with a number the checker reads as wrong (rightly, or by a known limitation),
+  // which every repair changes as well
+  const dropped = d.planted_on_wrong
+    ? `${n} planted error${n > 1 ? "s" : ""} left out: FaithGuard reads a number in this answer as wrong, and ${n > 1 ? "their repairs change" : "its repair changes"} that one too, so ${n > 1 ? "they" : "it"} would not show on ${n > 1 ? "their" : "its"} own`
+    : `${n} planted error${n > 1 ? "s" : ""} left out: ${n > 1 ? "their" : "its"} repair does not give the right figures back (a known limitation)`;
+  // a fix the notes above say not to trust is no base to plant in (the server plants none there)
+  const untrusted = d.output.action === "repair" && (d.caveats || []).some((c) => c.startsWith("Careful, this fix is not trustworthy:"));
   if (!d.edits.length) return h("div", { class: "chips", id: "planted" }, label,
     h("span", { class: "note" }, n ? `none offered: ${dropped}.`
-      : "none: no number in the original answer is supported by a cell (it is already wrong, or has no number)."));
+      : untrusted && !d.catch.claims.some((c) => c.verdict === "supported")
+        ? "none: no number in the original answer is supported by a cell, and FaithGuard's fix of it is not trustworthy (see the note above), so no error is planted in the fix."
+        : "none: no number in the original answer is supported by a cell (the checker reads it as wrong, or it has no number)."));
   return h("div", { id: "planted" },
     h("div", { class: "chips" }, label,
       d.edits.map((e) => h("button", { class: "chip plant", title: e.answer, onclick: () => useEdit(e.answer) }, e.label, " → ", badge(e.expect))),
@@ -385,6 +439,7 @@ async function fetchPlanted(id) {
   state.data.plantError = r.error || null;
   state.data.planted_on = r.on || "original";
   state.data.planted_dropped = r.dropped || 0;
+  state.data.planted_on_wrong = !!r.on_wrong;
   state.data.planted = true;
   const old = document.getElementById("planted");
   if (old) old.replaceWith(plantedChips(state.data));
@@ -422,13 +477,15 @@ function renderSteps(d) {
 }
 
 // ---------------------------------------------------------------- step 1: Catch
-function annotated(text, claims, onClick) {
+function annotated(text, claims, onClick, doubt = () => null) {
   const parts = [];
   let pos = 0;
   for (const c of [...claims].sort((a, b) => a.start - b.start)) {
     parts.push(text.slice(pos, c.start));
-    parts.push(h("span", { class: `claim ${c.verdict}${c.id === state.claim ? " sel" : ""}`, title: `${c.id}: ${c.verdict}`,
-      onclick: () => onClick(c.id) }, text.slice(c.start, c.end), h("span", { class: "ic" }, VERDICT_ICON[c.verdict])));
+    const why = doubt(c);  // the checker supports it, but a note above says it is wrong as written
+    parts.push(h("span", { class: `claim ${c.verdict}${why ? " doubt" : ""}${c.id === state.claim ? " sel" : ""}`,
+      title: why ? `${c.id}: supported by the checker, but see the note above (${DOUBT.exec(why)[1]})` : `${c.id}: ${c.verdict}`,
+      onclick: () => onClick(c.id) }, text.slice(c.start, c.end), h("span", { class: "ic" }, why ? "✓ ?" : VERDICT_ICON[c.verdict])));
     pos = c.end;
   }
   parts.push(text.slice(pos));
@@ -441,23 +498,26 @@ function renderCatch(d) {
   const pick = (id) => { state.claim = id; render({ keepTextarea: true }); };
   const left = h("section", { class: "card" },
     h("h2", {}, "Channel B · rule checker ", srcTag("live", "live")),
-    claims.length ? annotated(d.answer, claims, pick) : h("p", { class: "note" }, "No number in this answer, so nothing can be traced."),
+    claims.length ? annotated(d.answer, claims, pick, (c) => doubtOn(d, c)) : h("p", { class: "note" }, "No number in this answer, so nothing can be traced."),
     h("div", { class: "legend" },
       h("span", {}, h("span", { class: "sw", style: "background:var(--good-soft)" }), "✓ supported"),
       h("span", {}, h("span", { class: "sw", style: "background:var(--bad-soft)" }), "✗ unsupported"),
       h("span", {}, h("span", { class: "sw", style: "background:var(--warn-soft)" }), "? unverifiable"),
+      claims.some((c) => doubtOn(d, c)) ? h("span", {}, h("span", { class: "sw", style: "background:var(--warn-soft);border:2px solid var(--good)" }),
+        "✓ ? supported, but wrong as written or beside a wrong up/down word (note above)") : null,
       h("span", {}, `risk = ${fmt(d.catch.risk, 2)}`), claims.length ? h("span", {}, "click a number for its trace") : null),
-    sel ? claimDetail(sel) : null);
+    sel ? claimDetail(sel, doubtOn(d, sel)) : null);
   const right = h("section", { class: "card" }, channelA(d));
   return h("div", {}, h("div", { class: "grid2" }, left, right), evidence(d, sel), passages(d));
 }
 
-function claimDetail(c) {
+function claimDetail(c, doubt = null) {
   const ctx = c.intended || {};
   const about = [ctx.entity, ctx.metric, ctx.period && (ctx.base_period ? `${ctx.base_period} → ${ctx.period}` : ctx.period)].filter(Boolean).join(" · ") || "(not recognised)";
   // a loose match's slots describe how the coincidental cells differ from the asked ones, not what went wrong
   const rows = [
-    ["Verdict", h("span", { class: `verdict ${c.verdict}` }, `${VERDICT_ICON[c.verdict]} ${c.verdict}`)],
+    ["Verdict", h("span", { class: `verdict ${c.verdict}` }, `${VERDICT_ICON[c.verdict]} ${c.verdict}`),
+      doubt ? h("div", { class: "warnnote" }, `but see “${DOUBT.exec(doubt)[1]}” above: ${doubtWhy(doubt)} (a known limitation)`) : null],
     c.loose_match ? ["Failing slot", c.slots.map((s) => h("span", { class: "slot" }, s)),
       h("div", { class: "note" }, "from the closest match below, which can be a coincidence: not a diagnosis of the error")]
       : ["Failing slot", c.slots.length ? c.slots.map((s) => h("span", { class: "slot bad" }, s)) : "none"],
@@ -574,7 +634,16 @@ function passages(d) {
 const YES_NO = new Set(["evidence_sufficient", "answers_question"]);
 // What the frozen feature computes (faithguard.detect.rules): some supported number is on the question's line item, or the
 // question names none. It compares neither the entity nor the year with the question's.
-const FEATURE_LABEL = { answers_question: "a supported number is on the question's line item (entity and year not compared)" };
+const FEATURE_LABEL = { answers_question: "a supported number is on the question's line item, or the question names no line the checker reads (entity and year not compared)" };
+// The question names no line the checker reads (the server says so, or its "Unknown line item" note, written exactly then):
+// any supported number makes answers_question "yes"
+const noLineNamed = (d) => d.control.question_line_named === false || (d.caveats || []).some((n) => n.startsWith("Unknown line item:"));
+
+function featureValue(d, f) {
+  if (f.name === "answers_question" && f.value && noLineNamed(d)) return "yes, only because the question names no line the checker reads (see “Unknown line item” above)";
+  if (YES_NO.has(f.name)) return f.value ? "yes" : "no";
+  return typeof f.value === "number" ? (Number.isInteger(f.value) ? f.value : f.value.toFixed(2)) : f.value;
+}
 
 function renderControl(d) {
   const c = d.control;
@@ -583,8 +652,8 @@ function renderControl(d) {
   const looseSlots = d.catch.claims.some((x) => x.loose_match && x.slots.length);
   const feats = h("section", { class: "card" }, h("h2", {}, "Pre-action features"),
     h("p", { class: "note" }, "Only what is known before acting: the detector's output and the evidence. No gold, nothing from a repair attempt."),
-    h("table", { class: "feat" }, c.features.map((f) => h("tr", {}, h("td", {}, FEATURE_LABEL[f.name] || f.label),
-      h("td", {}, YES_NO.has(f.name) ? (f.value ? "yes" : "no") : typeof f.value === "number" ? (Number.isInteger(f.value) ? f.value : f.value.toFixed(2)) : f.value)))),
+    h("table", { class: "feat" }, c.features.map((f) => { const v = featureValue(d, f);
+      return h("tr", {}, h("td", {}, FEATURE_LABEL[f.name] || f.label), h("td", { class: String(v).length > 16 ? "words" : null }, v)); })),
     looseSlots ? h("p", { class: "note" }, "The failing-slot counts include the slots of a closest match that can be a coincidence (step 1): "
       + "they are what the frozen policy reads, not a diagnosis of the error.") : null);
   let decide;
@@ -625,7 +694,10 @@ function renderControl(d) {
       + "and all 396 answers, the neural model in 2% at 200 and 0% otherwise (runs/main/report.md, D-113)."),
     d.group === "ask" || d.group === "pilot" ? h("div", { class: "verdictbox warn" },
       "Not certified for this answer: the guarantee covers answers like the controlled-track calibration set (template answers with planted errors). "
-      + "Real reports and own questions are outside it, and on natural answers nothing certified (above), so no guarantee covers this answer.") : null,
+      + "Real reports and own questions are outside it, and on natural answers nothing certified (above), so no guarantee covers this answer.")
+      : d.group === "fictional" ? h("div", { class: "verdictbox info" },
+        "Hand-written example on a made-up bank: it is not drawn from the calibration set, so the guarantee (a share over many answers "
+        + "like the controlled-track calibration set) says nothing about this answer.") : null,
     h("p", { class: "note" }, "Controlled track (injected errors on FinQA and TAT-QA): development results. The locked benchmark is labelled by separate blind Claude passes, not by people (D-103, D-105)."));
   return h("div", {}, h("div", { class: "grid2" }, decide, feats), h("div", { style: "height:14px" }), certCard);
 }
@@ -918,17 +990,26 @@ const REPAIR_COLS = [["Repairer", (x) => x.label], ["Corrected", (x) => pct(x.co
   ["New errors", (x) => pct(x.new_error_rate), 1], ["Damage", (x) => pct(x.damage_rate), 1],
   ["Gate pass", (x) => (x.gate_pass_rate === null || x.gate_pass_rate === undefined ? "– (no gate)" : pct(x.gate_pass_rate)), 1]];
 
-// How to read runs/main/report.md, which is shown as generated (numbers from it and from docs/papers/detection.md §6.2)
+// How to read runs/main/report.md, which is shown as generated (numbers from it, runs/main/results.json and the decision log;
+// the tie counts of docs/papers/detection.md §6.2 have no run file, and the note says so)
 const LOCKED_NOTES = [
-  "Labels: the report's first line, “code labels with an audit (D-100)”, names the filed protocol. The audit overruled 4 of 150 code labels, "
-    + "so the code labels fell and decide no answer: every answer carries a label from separate blind Claude passes, not people (D-103, D-105).",
+  "Labels: the report's Labels line, “code labels with an audit (D-100) and Claude's labelling passes (D-103)”, names the filed protocol. "
+    + "The audit overruled 4 of 150 code labels, so the code labels fell and decide no answer: every answer carries a label from separate "
+    + "blind Claude passes, not people (D-103, D-105).",
   "Detector table: each threshold is set to flag 10% of the clean calibration answers. channel-b and granite read 0.0% because their scores tie: "
-    + "the rule checker's risk takes three values, and 59 of the 304 clean calibration answers (19.4%) already score its top value, 1 "
-    + "(Granite Guardian gives 0 or 1, and 12.5% score 1), so the filed threshold lands on the top score and flags nothing. That is a property of "
-    + "tied scores under the filed rule, not of the checker (detection paper §6.2). Compare the detectors by AUROC (channel-b 0.803). Exploratory, "
-    + "not the filed threshold: flagging every answer at the top score gives channel-b 18.8% test false alarms and 70.9% recall.",
+    + "the rule checker's risk takes three values (0, 0.5 and 1; src/faithguard/detect/rules.py) and Granite Guardian's two (0 or 1, D-109), "
+    + "so the filed threshold lands on the top score, 1.0, and flags nothing (runs/main/results.json). That is a property of tied scores under "
+    + "the filed rule, not of the checker. Compare the detectors by AUROC (channel-b 0.803). The detection paper (§6.2) adds figures computed "
+    + "outside the filed analysis, which no file in the repository holds (D-115, as D-114 (9) says of D-113's recomputation): 59 of the 304 clean "
+    + "calibration answers (19.4%) score the rule checker's top value and 12.5% score Granite's; flagging every answer at the top score gives "
+    + "channel-b 18.8% test false alarms and 70.9% recall.",
   "R-H1 “correction 28.9% [16.5%, 43.7%]” is a difference: repairer v1 corrects 49.4% with gold spans against free rewriting's 20.5% (D-113), "
     + "not v1's correction rate.",
+  "R-H2 was filed as confirmed only if self-training gains on both arms (pre-registration §2). The Gemma arm gains 18.2 points [4.7, 31.0], "
+    + "but the held-out basis arm has only 2 test answers and shows 0.0%, so it is not confirmed (D-107, D-114 (6)).",
+  "Repair check: “Every changed repair labelled: no” means code and labels disagreed on at most 10% of the checked repairs (7.0%, 6.0%), so "
+    + "full labelling was not triggered (D-106). For repair-v1 all 43 changed repairs were checked. “other variants” disagreed on 16.0%, so all "
+    + "509 of their changed repairs were labelled (D-112).",
   "“the policy is certified on calibration answers” and “certified on Qwen calibration answers” say where certification was tried; "
     + "no setting certified (the policy tables show 0 certified).",
   "runs/main/labels/report.md, the source of the rule checker's 144 of 170, is written by the pilot report tool, hence its heading "
@@ -948,7 +1029,11 @@ function renderResults() {
     put(body, h("section", { class: "card" }, h("h2", {}, "Detectors on controlled-track development answers (Kaggle)"),
       resTable([["Detector", (x) => x.label], ["Answers", (x) => (x.items || 0).toLocaleString(), 1], ["AUROC", (x) => fmt(x.auroc), 1],
         ["False alarms on clean answers", (x) => pct(x.false_alarm_clean), 1], ["Recall on wrong-context errors", (x) => pct(x.wrong_context_recall), 1]], r.detectors),
-      h("p", { class: "note" }, "From runs/detector/kaggle/*/results.json. Bold rows are FaithGuard's own detectors.")),
+      h("p", { class: "note" }, "From runs/detector/kaggle/*/results.json. Bold rows are FaithGuard's own detectors."),
+      h("p", { class: "note" }, h("b", {}, "On the locked test the order changes "), "(natural answers, D-113): Channel A ranks answers at AUROC 0.579 "
+        + "(without XBRL data 0.592, without the slot head 0.614), below every off-the-shelf detector (LettuceDetect v2 0.688, v1 0.641, "
+        + "Granite Guardian 0.610, HHEM 0.609). The rule checker scores 0.803 there and the A+B fusion 0.849. The numbers above come from "
+        + "development answers with injected errors (Locked test tab, “Detectors on the test split”; runs/main/report.md).")),
       h("section", { class: "card" }, md(r.reports.fusion)));
   } else if (state.resultsTab === "repair") {
     const name = state.repairReport || "eval-v1";
@@ -961,10 +1046,17 @@ function renderResults() {
         resTable(REPAIR_COLS, r.pilot_repair),
         h("p", { class: "note" }, "Counts only, from runs/pilot/v1run-repair-v1 (development: the checker's rules were tuned on the pilot answers, D-057). "
           + "With the rule checker's flags the rules corrected 10 of these 23 and v1 9; with Channel A's flags v1 corrected more (9 against 5). "
-          + "On the locked test (83 wrong answers) both corrected 50.6% with the rule checker's flags, but the rule repairer put a new wrong number into 6.2% "
-          + "of the answers it sent and damaged 6.3% of the right ones, against v1's 0.4% and 0.0% (Locked test tab; the rule repairer is scored by the "
-          + "gold scorer only, D-112).")) : null,
-      h("section", { class: "card" }, h("div", {}, "Full report: ", sel), md(r.repair_reports[name])));
+          + "On the locked test (83 wrong answers, the rule checker's flags) both corrected about half: the rule repairer 50.6% and v1 49.4% "
+          + "by the same gold scorer (v1 50.6% with labels for its changed repairs, D-112). But the rule repairer put a new wrong number into 6.2% "
+          + "of the answers it sent and damaged 6.3% of the right ones, against v1's 0.4% and 0.0% (Locked test tab).")) : null,
+      h("section", { class: "card" }, h("div", {}, "Full report: ", sel),
+        h("p", { class: "note" }, "Reports are shown as the evaluator wrote them. A rewrite has no program and no gate (src/faithguard/repair/rewrite.py), "
+          + "so in a rewrite report “Valid programs” is the share it declined and “Gate pass rate” is 100% by construction; the table above shows "
+          + "“– (no gate)”. Superseded runs are kept as run: eval-rewrite-sft was evaluated with the edit-program prompt (D-077, D-101; rerun with its own "
+          + "prompt as eval-rewrite-sft-fixed, D-110); eval-zero-shot-9b used constrained decoding and every program failed the gate (D-083; "
+          + "eval-zero-shot-9b-free is the like-for-like run, D-086); eval-repair-sft is stage A's first evaluation, before the gate and "
+          + "executor changes (D-074; eval-sft-current is stage A under the current gate, D-095)."),
+        md(r.repair_reports[name])));
   } else {
     put(body, h("section", { class: "card" }, md(r.reports.policy)));
   }
@@ -1002,8 +1094,9 @@ function askReport() { return (state.reports || []).find((r) => r.id === state.a
 function aiReady() { return state.status && state.status.repairer && state.status.repairer.state === "ready"; }
 function aiNote() {
   const st = state.status && state.status.repairer;
-  if (aiReady()) return "Qwen3.5-2B, live on this laptop's GPU (3-15 s): the trained repairer's base model with the repair training switched off, "
-    + "asked for a one-sentence answer. The benchmark's answers came from larger models.";
+  if (aiReady()) return "Qwen3.5-2B, live on this laptop's GPU (an answer and its check took 2-25 s in the stress test, 6.9 s on average): "
+    + "the trained repairer's base model with the repair training switched off, asked for a one-sentence answer. "
+    + "Ask about one figure per question: a longer answer can be cut off, and a cut sentence is not checked. The benchmark's answers came from larger models.";
   if (st && st.state === "loading") return "The AI is loading on the GPU (about a minute after the demo starts)…";
   const why = st && st.state === "failed" ? `The live AI ${stoppedAnswering(st) ? "is not answering" : "did not load"}${st.detail ? ` (${st.detail})` : ""}`
     : "The live AI is not loaded on this laptop";
@@ -1022,9 +1115,13 @@ function setQuestion(text) {
   updateAskButtons();
 }
 
-function askError(msg) {
+// cutText: the AI's answer when it was cut off before any sentence ended; shown greyed, never checked or sent to /api/ask
+function askError(msg, cutText = null) {
   const el = document.getElementById("askerr");
-  if (el) { el.textContent = msg || ""; el.hidden = !msg; }
+  if (!el) return;
+  el.replaceChildren();
+  put(el, msg || "", msg && cutText ? h("div", { class: "cuttext" }, h("b", {}, "The AI's text, not checked (it was cut off): "), cutText) : null);
+  el.hidden = !msg;
 }
 
 const ASK_INPUTS = ["askreport", "askq", "askanswer", "asktables", "askall"];
@@ -1064,7 +1161,7 @@ async function askFor(kind) {
   done();
   if (kind === "ai" && (out.error || /^recorded/.test(out.source || ""))) refreshStatus();  // the AI may have stopped answering
   if (state.view !== "ask" || state.ask.report !== r.id || state.ask.question !== question) { if (state.view === "ask") renderAsk(); return; }
-  if (out.error) { renderAsk(); askError(out.error); return; }
+  if (out.error) { renderAsk(); askError(out.error, kind === "ai" ? out.cut_text : null); return; }
   state.ask.answer = out.answer;
   state.ask.by = out.by;
   state.ask.seconds = out.seconds;

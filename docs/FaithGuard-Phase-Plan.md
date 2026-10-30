@@ -1,6 +1,6 @@
 # FaithGuard: Phase-by-Phase Plan
 
-> **Superseded in two places (D-114):** the human labelling and checking, listed below as never cut, were replaced by blind Claude passes (D-103), and the test set was locked on 29 October 2026 (D-104), not on the revised plan's 31 January 2027; the exit checklists below are ticked only where the record shows an item met.
+> **Superseded where the decision log says so (D-114), notably:** the human labelling and checking, listed below as never cut, were replaced by blind Claude passes (D-103), so an LLM labelled the test set, which the plan below rules out; the test set was locked on 29 October 2026 (D-104), not on the revised plan's 31 January 2027; no table was hand-corrected, so the main-test tables are the project's readers' output, kept when every total adds up (D-114 (3)); the neural outcome model (mmBERT) replaced TabICLv2 as the policy's one challenger (D-096); recalibration uses 100 and 200 labels and all available, not 25 or 50 (D-102 (6)); and the extracted-evidence condition was not run on the main answers (D-113). The exit checklists below are ticked only where the record shows an item met.
 
 This plan sets out every step needed to finish FaithGuard, from setup to the viva, in eight phases. It follows the revised research plan (`FaithGuard-Revised-Plan.md`), which holds the full method details. This plan says what to do, in what order, who does it, and how to tell when each phase is done. It has no dates.
 
@@ -137,7 +137,7 @@ Its job is to prove that the record format and the connections between parts wor
 - [x] Calculation API and executor pass their tests (`tests/test_calc.py`, `tests/test_phase4.py`)
 - [x] FinQA, TAT-QA, RAGTruth and XBRL facts loaded, with licences logged (`manifests/datasets.json`; XBRL is public SEC data, D-049)
 - [x] Split manifest frozen, with calibration and test issuers as in option B (D-007, D-020, D-038, D-040)
-- [ ] Label Studio running with guide v1. Not shown: the interface, converters and guide v1 exist (D-022, D-066), but no record shows Label Studio started (the README still says to install and start it)
+- [ ] Label Studio running with guide v1. Not shown: the interface, converters and guide v1 exist (D-022, D-066), but no record shows Label Studio started
 - [x] The thin slice runs end to end on 20–40 items ([runs/slice/report.md](../runs/slice/report.md): 32 items)
 
 ---

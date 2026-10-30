@@ -17,14 +17,15 @@ from __future__ import annotations
 import csv
 import difflib
 import re
+import unicodedata
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 
 from faithguard.calc import expr, ops
 from faithguard.calc.numbers import NumberStyle, default_style, render
-from faithguard.claims import (_ASIDE_AFTER, _PERIOD_AFTER, _PREVIOUS_AFTER, _PREVIOUS_YEAR, DIRECTION_WORDS, Vocabulary,
-                               mention_of, question_context, sentence_bounds, years_in)
+from faithguard.claims import (_ASIDE_AFTER, _HOLDERS_OF, _PERIOD_AFTER, _PREVIOUS_AFTER, _PREVIOUS_YEAR, DIRECTION_WORDS,
+                               Vocabulary, is_change_claim, mention_of, question_context, sentence_bounds, years_in)
 from faithguard.executor import ExecError, apply, execute
 from faithguard.inject import _label, _style
 from faithguard.records import Answer, Calculate, Cell, Copy, DetectorOutput, EditProgram, Evidence, Item, Question
@@ -81,7 +82,8 @@ def question_type(text: str, vocab: Vocabulary | None = None) -> str:
 
 
 # a figure the template does not compute: matched on the masked question, so a line called "Net interest margin" is a lookup
-_RATIO_WORDS = re.compile(r"\b(margins?|ratios?|return on|roe|roa|yields?|cover|coverage)\b", re.I)
+_RATIO_WORDS = re.compile(r"\b(margins?|ratios?|return on|roe|roa|yields?\s+(?:on|of)|cover|coverage)\b", re.I)  # not the
+# verb: "How much net investment income did the portfolio yield"
 _COMPARE = re.compile(r"\bcompared?\b", re.I)
 
 
@@ -91,43 +93,81 @@ _NAMED_AFTER = re.compile(rf"\b(?:of|for|at|from|did|does|do|has|have|is|was|wer
 # Cement", "How did Commercial Bank of Ceylon perform"
 _SUBJECT = re.compile(rf"\b(?:did|does|do|has|have|had)\s+({_NAME})\s+(?:report|make|made|earn|post|record|generate|pay|paid|"
                       r"declare|achieve|perform|announce)\w*\b")  # "What revenue did John Keells report"
+_ACRONYM_AFTER = re.compile(r"\b(?:of|for|at|from)\s+([A-Z]{2,5})\b(?!['’]s)")  # "the net interest income of HNB"
 # capitalised words that name no other company: the report's parts, question words, people and bodies inside the company,
 # months, currencies and accounting terms ("the CEO's salary", "as of December 31", "for FY2025/26")
 NOT_A_COMPANY = set(
     "group groups bank banks company companies parent subsidiary subsidiaries consolidated standalone the a an fy q h "
     "what whats who how why when which where did does do was were is are has had have will would can could should "
-    "in for by of on at from to and or it its that this these those year years sri lanka plc holdings ltd limited inc "
-    "ceo cfo coo cto md chairman chairperson chair board director directors management auditor auditors shareholder "
+    "in for by of on at from to and or it its that this these those year years sri lanka plc holding holdings ltd limited "
+    "inc co ceo cfo coo cto md chairman chairperson chair board director directors management auditor auditors shareholder "
     "shareholders stockholder stockholders employee employees staff secretary they we you it ebitda ebit "
     "january february march april may june july august september october november december "
-    "jan feb mar apr jun jul aug sep sept oct nov dec rs lkr usd us ifrs slfrs gaap note eps roe roa nii pat pbt nav dps".split())
+    "jan feb mar apr jun jul aug sep sept oct nov dec rs lkr usd us ifrs slfrs gaap note eps roe roa nii pat pbt nav dps "
+    "oci nci vat sscl fvtpl fvoci ppe nim car npl npa casa cagr yoy capex opex ecl sme lkas sfrs cbsl sec rwa lcr nsfr gwp nwp "
+    "nep".split())
 # a word that makes a capitalised name after "of" or "from" a company's: "the profit of Insee Cement"
 COMPANY_WORDS = set("plc ltd limited holdings group bank company co cement capital finance inc corporation corp lanka ceylon "
                     "industries insurance telecom hotels plantations motors mills brewery breweries enterprises".split())
+# words a line item is called by on any report: "How did Revenue perform" names no company even where no line is "revenue"
+FINANCE_WORDS = set("revenue revenues profit profits income sales turnover earnings assets liabilities equity deposits loans "
+                    "expenses costs cash dividend dividends interest tax margin premiums".split())
+
+
+def _own_name(report: "Report", plurals: bool = True) -> set[str]:
+    """The words a question may call the report's own company by: its name's words, with or without a plural "s"
+    ("Sunshine Holding's"), its ticker ("KNSL") and its initials ("TCCL")."""
+    words = [w.lower() for w in re.findall(r"[A-Za-z]+", report.name)]
+    own = set(words) | ({w[:-1] for w in words if w.endswith("s")} | {w + "s" for w in words} if plurals else set())
+    own.add(report.id.split(":")[-1].lower())
+    initials = "".join(w[0] for w in words)
+    return own | {initials[:n] for n in range(2, len(initials) + 1)}
+
+
+def _is_own(word: str, own: set[str]) -> bool:
+    """A word of the company's own name, or a misspelling of a long one ("Sunshne")."""
+    return word in own or (len(word) >= 5 and any(len(o) >= 5 and difflib.SequenceMatcher(None, word, o).ratio() >= 0.85
+                                                  for o in own))
 
 
 def other_company(report: "Report", text: str) -> str | None:
     """Why a question about another company cannot be checked against this report, or None. A capitalised name is
-    another company's when it holds a word that is neither in the report's own name nor in NOT_A_COMPANY: "Commercial
-    Bank's" on Sampath Bank's report, "Insee Cement's" on Tokyo Cement's (a shared word is not enough). After "of", "for",
-    "at", "from" or a verb ("the profit of Insee Cement", "How did Commercial Bank of Ceylon perform"), a COMPANY_WORDS word
-    after its first word is needed too, and words of the report's line items do not count: "Revenue from Contracts with
-    Customers", "Group Revenue". A name between "did" and a verb a company does needs no company word ("What revenue did
-    John Keells report"), but line-item words still do not count."""
-    own = {w.lower() for w in re.findall(r"[A-Za-z]+", report.name)}
-    lines = {w for s in report.vocab().surfaces for w in s.text.split()}
+    another company's when it holds a word that is neither in the report's own name (_own_name: also its ticker, its
+    initials and a misspelling of it) nor in NOT_A_COMPANY: "Commercial Bank's" on Sampath Bank's report, "Insee
+    Cement's" on Tokyo Cement's (a shared word is not enough). Words of the report's line items and FINANCE_WORDS do not
+    count either ("Net Interest Income's growth", "How did Revenue perform"). After "of", "for", "at", "from" or a verb
+    ("the profit of Insee Cement", "How did Commercial Bank of Ceylon perform"), a COMPANY_WORDS word after its first
+    word is needed too ("Revenue from Contracts with Customers", "Group Revenue" are lines), or the name is a lone
+    acronym ("the net interest income of HNB"). A name between "did" and a verb a company does needs no company word
+    ("What revenue did John Keells report")."""
+    own, vocab = _own_name(report), report.vocab()
+    lines = {w for s in vocab.surfaces for w in s.text.split()} | FINANCE_WORDS
     names = ([(n, False, False) for n in _POSSESSIVE.findall(text or "")]
              + [(n, True, False) for n in _NAMED_AFTER.findall(text or "")] + [(n, True, True) for n in _SUBJECT.findall(text or "")])
     for name, after, subject in names:
         words = name.split()
         while words and {w.lower() for w in re.findall(r"[A-Za-z]+", words[0])} <= NOT_A_COMPANY:
             words = words[1:]  # "Did Commercial Bank's" names Commercial Bank
-        if not {w.lower() for w in re.findall(r"[A-Za-z]+", " ".join(words))} - NOT_A_COMPANY - own - (lines if after else set()):
+        named = " ".join(words).rstrip(".")
+        rest = {w for w in {w.lower() for w in re.findall(r"[A-Za-z]+", named)} - NOT_A_COMPANY if not _is_own(w, own)}
+        if after:
+            rest -= lines
+        elif rest <= lines and (rest <= FINANCE_WORDS or vocab.metric_in(named) is not None):
+            continue  # a possessive line name, "Net Interest Income's growth"; not "Central Finance's", whose words lines share
+        if not rest:
             continue
-        if after and not subject and not {w.lower() for w in words[1:]} & COMPANY_WORDS:
+        if after and not subject and not {w.lower().rstrip(".") for w in words[1:]} & COMPANY_WORDS:
             continue  # capitals are more often a line's ("Amounts Due from Related Parties", "Group Revenue") than a company's
-        return (f"This is {report.name}'s report, and the question asks about {' '.join(words)}. FaithGuard checks answers "
+        if len(words) == 1 and not re.fullmatch(r"[A-Z]{2,5}", named):  # "Healthcare's revenue": a company, or a part of this one
+            return (f"This is {report.name}'s report, and the question asks about {named}. FaithGuard checks answers against the "
+                    "chosen report only: if that is another company, pick its report; if it is a part of this one, the tables "
+                    "give only the whole company's figures, so ask about those.")
+        return (f"This is {report.name}'s report, and the question asks about {named}. FaithGuard checks answers "
                 "against the chosen report only: pick that company's report, or ask about this one.")
+    for m in _ACRONYM_AFTER.finditer(text or ""):  # a lone acronym after "of", "for", "at" or "from": another company's
+        if m.group(1).lower() not in NOT_A_COMPANY | lines and not _is_own(m.group(1).lower(), own):
+            return (f"This is {report.name}'s report, and the question asks about {m.group(1)}. FaithGuard checks answers "
+                    "against the chosen report only: pick that company's report, or ask about this one.")
     return None
 
 
@@ -139,6 +179,9 @@ def bad_question(text) -> str | None:
         return f"That question is too long for the demo ({MAX_QUESTION} characters at most)."
     if any(ord(ch) > 0xFFFF for ch in text):
         return "Emoji and other symbols outside the basic character set are not supported in the demo."
+    if any(ch.isalpha() and not unicodedata.name(ch, "").startswith("LATIN") for ch in text):
+        return ("FaithGuard reads questions in English only: the checker, the template answers and the AI's prompt are "
+                "all English. Ask it in English.")
     return None
 
 
@@ -212,10 +255,11 @@ def _display_label(label: str) -> str:
 
 def _verb(label: str) -> str:
     """'was' or 'were' for the head of the label: 'revenue from contracts with customers was', 'total assets were',
-    'amounts due to related parties were'."""
+    'amounts due to related parties were', 'profit before taxes on financial services was'."""
     if _DUE.match(label):
         return "were"
-    head = re.split(r"\s+(?:due|from|of|on|in|with|for|to|at|attributable|net of)\s+", label.strip(), maxsplit=1, flags=re.I)[0]
+    head = re.split(r"\s+(?:due|from|of|on|in|with|for|to|at|before|after|attributable|net of)\s+", label.strip(), maxsplit=1,
+                    flags=re.I)[0]
     last = head.split()[-1].lower() if head.split() else ""
     return "were" if last.endswith("s") and not last.endswith(("ss", "us", "is")) else "was"
 
@@ -240,18 +284,28 @@ def read_question(report: Report, text: str) -> tuple[str, str | None, str]:
     """(the question as the checker gets it, its period, a note for the screen when it was rewritten).
 
     The benchmark's writers set a question's period by hand; here it is read from short forms the checker's year
-    reader skips ("FY25", "the previous year"). A company name with "Bank" or "Company" in it would read as that
-    column ("Sampath Bank's profit" as the Bank's, not the Group's), so it is shortened to the name before it."""
-    text = typography(" ".join(text.split()))
-    note = ""
+    reader skips ("FY25", "the previous year", "the year before last"). A company name with "Bank" or "Company" in it
+    would read as that column ("Sampath Bank's profit" as the Bank's, not the Group's), so it is shortened to the name
+    before it. A split year the checker would read as its first year ("FY25/26" as 2025) is written in full (FY2025/26,
+    the 2026 column), and "the Bank and its subsidiaries" is read as the Group."""
+    vocab = report.vocab()
+    text = typography(" ".join(text.split()), vocab)
+    notes = []
     if report.real:
         short = _ENTITY_IN_NAME.split(report.name, maxsplit=1)[0]
         if short != report.name:
             rewritten = re.sub(re.escape(short) + _ENTITY_IN_NAME.pattern, short, text, flags=re.I)
             if rewritten != text:
-                note = f"Read as “{rewritten}”: the “{_ENTITY_IN_NAME.search(report.name).group(1)}” in the company's name is not that column."
+                word = _ENTITY_IN_NAME.search(report.name).group(1)
+                notes.append(f"Read as “{rewritten}”: the “{word}” in the company's name is not that column." if word.lower() in vocab.entities
+                             else f"Read as “{rewritten}”: the report has no {word} column, so that word of the company's name is left out.")
                 text = rewritten
-    vocab = report.vocab()
+    text, split_notes = split_years(text)
+    notes += split_notes
+    if "group" in vocab.entities and (m := _AND_SUBSIDIARIES.search(text)):
+        notes.append(f"Read “{m.group(0)}” as the Group.")
+        text = text[:m.start()] + "the Group" + text[m.end():]
+    note = " ".join(notes)
     own_name = _own_words(report)
     if vocab.metric_in(text) is None and (metric := _metric_from_words(vocab, text, own_name, strict=True)):
         # a short name the checker does not know ("revenue" for "revenue from contracts with customers"): without the
@@ -260,14 +314,15 @@ def read_question(report: Report, text: str) -> tuple[str, str | None, str]:
         shared = {_stem(w) for w in metric.split()}
         words = list(re.finditer(r"[A-Za-z][A-Za-z'’&-]*", text))
         spans = [w for w in words if _stem(normalise_metric(w.group())) in shared and w.group().lower() not in own_name]
-        if line and spans and vocab.metric_in(line) == metric:
+        if line and spans and vocab.metric_in(line) == metric and not re.search(r"\d|\$", line):  # not a label with figures in it
             start, end = spans[0].start(), spans[-1].end()
             rewritten = text[:start] + _in_sentence(line) + text[end:]
             if vocab.metric_in(rewritten) == metric:
                 shown = text[:start] + _in_sentence(_display_label(line)) + text[end:]
+                # not "How many number of employees"
                 note = (note + " " if note else "") + (
                     f"Read “{text[start:end]}” as the report's line “{line}”." if re.search(r"\bmany\s+$", text[:start], re.I)
-                    else f"Read as “{shown}”: the report calls this line “{line}”.")  # not "How many number of employees"
+                    else f"Read as “{shown}”: FaithGuard reads “{text[start:end]}” as the report's line “{line}”.")
                 text = rewritten
     years = [y for y in years_in(text) if y in vocab.periods]
     period = None
@@ -276,8 +331,13 @@ def read_question(report: Report, text: str) -> tuple[str, str | None, str]:
         latest = vocab.latest_period()
         previous = [p for p in vocab.periods if p < (latest or "")]
         m = _PREVIOUS.search(text)
+        before_last = re.search(r"\bthe\s+year\s+before\s+last\b", text, re.I)
         if short_year in vocab.periods:
             period = short_year
+        elif before_last and previous:  # read as "last year" is: the year before the report's latest
+            period = previous[-1]
+            note = (note + " " if note else "") + (f"Read “{before_last.group(0)}” as {period}, the year before the report's latest; "
+                                                   "give the year to be sure.")
         elif m and previous:
             if question_type(text, vocab) != "lookup" or _BASE_BEFORE.search(text[:m.start()]):
                 period = latest  # "How did X change compared with last year?": the change into the latest year
@@ -291,13 +351,28 @@ def read_question(report: Report, text: str) -> tuple[str, str | None, str]:
 
 
 _BASE_BEFORE = re.compile(r"\b(?:compared\s+(?:with|to)|than|versus|vs\.?|from|since|over|against)\s+(?:the\s+)?$", re.I)
+# "FY25/26": the checker's year reader takes its first year (2025), the reports' columns its second (2025/26 is 2026)
+_SPLIT_FY = re.compile(r"\bFY\s?(\d{2})\s?[/-]\s?(\d{2})\b", re.I)
+
+
+def split_years(text: str) -> tuple[str, list[str]]:
+    """The text with each short split year written in full ("FY25/26" as "FY2025/26", which the checker reads as the
+    2026 column), and a note for each. The AI is asked the question so written too, so it answers in the full form."""
+    splits = [m for m in _SPLIT_FY.finditer(text) if int(m.group(2)) == (int(m.group(1)) + 1) % 100]
+    notes = [f"Read “{m.group(0)}” as FY20{m.group(1)}/{m.group(2)}, the {normalise_period(f'FY20{m.group(1)}/{m.group(2)}')} column."
+             for m in splits]
+    for m in reversed(splits):
+        text = text[:m.start()] + f"FY20{m.group(1)}/{m.group(2)}" + text[m.end():]
+    return text, notes
+_AND_SUBSIDIARIES = re.compile(r"\bthe\s+(?:bank|company)\s+and\s+its\s+subsidiaries\b", re.I)
 QUESTION_WORDS = {"percentage", "percent", "grow", "grew", "growth", "change", "changed", "increase", "decrease", "rise", "fall",
                   "compare", "compared", "last", "previous", "prior", "preceding", "many", "have", "has", "had"}
 
 
 def _own_words(report: Report) -> set[str]:
-    """The report's own name and the words of a question's type: not words that name a line item."""
-    return {w.lower() for w in re.findall(r"[A-Za-z]+", report.name)} | QUESTION_WORDS
+    """The report's own name (its ticker and initials too: "KNSL's net income") and the words of a question's type: not
+    words that name a line item."""
+    return _own_name(report, plurals=False) | QUESTION_WORDS
 
 
 def _cap(s: str) -> str:
@@ -377,10 +452,20 @@ def candidate_questions(report: Report) -> tuple[list[str], list[tuple[str, str]
 _PLURAL_POSSESSIVE = re.compile(r"(?<=[sS])'(?=\s|$)")
 
 
-def typography(text: str) -> str:
+def typography(text: str, vocab: Vocabulary | None = None) -> str:
     """A plural possessive with a straight apostrophe written as the reports print it: the frozen checker drops "’" but
-    keeps "'", so "stockholders' equity" would not match the line "Stockholders’ equity" and read as a shorter one."""
-    return _PLURAL_POSSESSIVE.sub("’", text)
+    keeps "'", so "stockholders' equity" would not match the line "Stockholders’ equity" and read as a shorter one. With
+    the vocabulary, only where that changes the lines the sentence names, so the rest of a pasted answer is shown and
+    sent as pasted ("Sunshine Holdings' total liabilities" stays as typed)."""
+    if vocab is None:
+        return _PLURAL_POSSESSIVE.sub("’", text)
+    out = text
+    for m in reversed(list(_PLURAL_POSSESSIVE.finditer(text))):
+        s, e = sentence_bounds(out, m.start())
+        curly = out[:m.start()] + "’" + out[m.end():]
+        if vocab.metrics_named(out[s:e]) != vocab.metrics_named(curly[s:e]):
+            out = curly  # one character for one: offsets are unchanged
+    return out
 
 
 def make_item(report: Report, item_id: str, question: str, answer: str, generator: str) -> Item:
@@ -388,7 +473,7 @@ def make_item(report: Report, item_id: str, question: str, answer: str, generato
     q = Question(id=item_id, issuer=report.id, country=report.country, text=text, period=period,
                  question_type=question_type(text, report.vocab()), source="demo")
     return Item(id=item_id, question=q, evidence=report.evidence,
-                answer=Answer(id=item_id, question_id=item_id, generator=generator, text=typography(answer)))
+                answer=Answer(id=item_id, question_id=item_id, generator=generator, text=typography(answer, report.vocab())))
 
 
 def _find(report: Report, metric: str | None, entity: str | None, period: str | None, question: str = "") -> Cell | None:
@@ -423,7 +508,9 @@ def _metric_from_words(vocab: Vocabulary, question: str, extra_stop: set[str] = 
     """A short name the checker's vocabulary does not know ("revenue" for "revenue from contracts with customers",
     "revenue" for "total revenues"): the one metric holding the most content words the question shares with the
     metrics, if there is just one. Strict: only if every content word of the question is in that metric's name (so
-    "What dividend did Sunshine pay?" is not read as dividend income)."""
+    "What dividend did Sunshine pay?" is not read as dividend income), and every word of the name's head is in the
+    question, bar harmless ones ("total revenues" and "number of employees" pass; "revenue" is not "net other revenue",
+    "interest income" not "net interest income", "profit before taxes" not "operating profit before taxes on ...")."""
     words = {_stem(w) for w in normalise_metric(question).split()} - {_stem(w) for w in STOPWORDS | set(extra_stop)}
     words = {w for w in words if w and not re.fullmatch(r"(?:fy|q|h)?\d+", w)}  # also "FY26", which normalise_metric keeps
     shared = {m: words & {_stem(w) for w in m.split()} for m in {s.metric for s in vocab.surfaces}}
@@ -431,6 +518,10 @@ def _metric_from_words(vocab: Vocabulary, question: str, extra_stop: set[str] = 
     found = [m for m, w in shared.items() if w and len(w) == best]
     if not best or len(found) != 1 or (strict and shared[found[0]] != words):
         return None
+    if strict:
+        head = re.split(r"\s+(?:from|of|on|in|with|for|to|at|before|after|attributable|due|net of)\s+", found[0], maxsplit=1)[0]
+        if {_stem(w) for w in head.split()} - words - {_stem(w) for w in STOPWORDS | _HARMLESS | _HEAD_UNITS}:
+            return None
     return found[0]
 
 
@@ -460,7 +551,11 @@ _SHORT_FY = re.compile(r"\bFY\s?\d{2}\b", re.I)
 # a row that counts people or places, printed in a table headed in money ("Number of employees" under Rs. '000)
 _COUNT_ROW = re.compile(r"^\s*(?:number|no\.?)\s+of\b|\b(?:employees|branches|staff|outlets|headcount)\b", re.I)
 # words beside a line's name that do not make it a longer name: "the Group's annual revenue" is still revenue
-_HARMLESS = {"reported", "annual", "yearly", "full", "overall", "total", "consolidated", "standalone", "approximately", "amounts"}
+_HARMLESS = {"reported", "annual", "yearly", "full", "overall", "total", "consolidated", "standalone", "approximately", "amounts",
+             "figure", "figures", "amount"}
+# words of a line's name a question need not repeat: "number of employees", "net asset value per share - Rs.", "basic and
+# diluted earnings per share" (a report printing basic and diluted apart has two lines, and the reading refuses)
+_HEAD_UNITS = {"number", "no", "rs", "lkr", "usd", "us", "cents", "basic", "diluted"}
 
 
 def _longer_name(vocab: Vocabulary, text: str, metric: str, extra_stop: set[str]) -> str | None:
@@ -504,7 +599,8 @@ def draft(report: Report, question: str) -> str:
                            "return. Ask the AI or type an answer.")
     if kind not in ("lookup", "growth", "difference"):
         raise Unanswerable("The template writes lookups, growth rates and changes only. Ask the AI or type an answer.")
-    entities = {ENTITY_WORDS[w] for w in re.findall(r"[a-z]+", text.lower()) if w in ENTITY_WORDS} & set(vocab.entities)
+    # "owners of the company" says whose profit it is, not a second entity (the checker reads it so too)
+    entities = {ENTITY_WORDS[w] for w in re.findall(r"[a-z]+", _HOLDERS_OF.sub(" ", text).lower()) if w in ENTITY_WORDS} & set(vocab.entities)
     if len(entities) > 1:
         raise Unanswerable("The question compares two entities; the template writes one entity's figures only. "
                            "Ask the AI or type an answer.")
@@ -518,7 +614,10 @@ def draft(report: Report, question: str) -> str:
     if metric is None:
         raise Unanswerable("The tables have no line item that this question names, so there is no cell to write an answer from. "
                            "Try a line item listed under the question, ask the AI, or type an answer.")
-    if ctx.metric and (longer := _longer_name(vocab, text, metric, _own_words(report))):
+    longer = _longer_name(vocab, text, metric, _own_words(report)) if ctx.metric else None
+    if longer and {_stem(w) for w in longer.split()} - {_stem(w) for w in metric.split()} == {"net"} and "profit" in metric:
+        longer = None  # "net profit for the year", "net profit after tax": the same line (the checker's aliases say so)
+    if longer:
         label = next((clean_label(c, vocab) for c in report.evidence.cells() if c.metric == metric and c.row_label.strip()), metric)
         close = difflib.get_close_matches(longer, sorted({c.metric for c in report.evidence.cells() if c.metric}), n=1, cutoff=0.8)
         meant = next((clean_label(c, vocab) for c in report.evidence.cells() if close and c.metric == close[0] and c.row_label.strip()), None)
@@ -527,6 +626,9 @@ def draft(report: Report, question: str) -> str:
                            + (f" Did you mean “{_display_label(meant)}”?" if meant else "")
                            + " Name the line as the report prints it, ask the AI, or type an answer.")
     a = _find(report, metric, ctx.entity, years[-1] if years else ctx.period, text)
+    if a is not None and re.search(r"\d|\$", _label(a)):  # "..., net of allowance for credit losses of $27,328 in 2025 and ..."
+        raise Unanswerable("The report prints this line's name with figures in it, so the template does not write it (the "
+                           "checker would read them as figures of the answer). Ask the AI or type an answer.")
     if a is None:
         raise Unanswerable(f"No figure for {metric}{f' ({ctx.entity})' if ctx.entity else ''} in {years[-1] if years else ctx.period}: "
                            "the template has nothing to copy. Ask the AI or type an answer.")
@@ -567,9 +669,11 @@ def caveats(item: Item, det: DetectorOutput, action: str) -> list[str]:
     vocab = Vocabulary(item.evidence.cells())
     metric = question_context(item.question, vocab).metric
     by_id = {c.id: c for c in item.evidence.cells()}
+    text = item.answer.text
     supported = [c for c in det.checks if c.verdict == "supported"]
-    # the cells the checker read for the answer: not those a computed figure matched by chance (views' loose_match)
-    traced = {cid for check in det.checks if not _loose(check) for cid in check.cells}
+    # the cells the checker read for the answer: not those a computed figure matched by chance (views' loose_match), nor
+    # those of a supported change or ratio whose line it never knew (the CEO's salary as a difference of two pension cells)
+    traced = {cid for check in det.checks if not _loose(check) and not _chance(check) for cid in check.cells}
     bracketed = [c for c in item.evidence.cells() if c.kind == "amount" and c.value is not None and c.value < 0
                  and ((metric is not None and c.metric == metric) or c.id in traced)]
     out = []
@@ -579,7 +683,7 @@ def caveats(item: Item, det: DetectorOutput, action: str) -> list[str]:
     if any(c.value == 0 and "000" in c.text for c in det.claims):
         out.append("“000” in the answer is a units note, but the rule checker reads it as a number.")
     asked = vocab.entity_in(_singular(item.question.text))
-    m = re.search(r"\b\w+(?:\s+\w+)?\s+(Bank|Company)\b", item.answer.text)
+    m = re.search(r"\b\w+(?:\s+\w+)?\s+(Bank|Company)\b", text)
     name_word = _ENTITY_IN_NAME.search(issuer_names().get(item.question.issuer, ""))
     if (m and name_word and name_word.group(1).lower() == m.group(1).lower()
             and m.group(0).split()[0].lower() in issuer_names().get(item.question.issuer, "").lower()
@@ -587,18 +691,34 @@ def caveats(item: Item, det: DetectorOutput, action: str) -> list[str]:
         # only when the checker did read that column, and the question asks about another part (or names none)
         out.append(f"The answer says “{m.group(0)}”: the rule checker reads the “{m.group(1)}” in the company's name as the "
                    f"{m.group(1)} column, not the Group's.")
-    if action == "abstain" and det.checks and len(supported) == len(det.checks):
+    levels, directions = _level_notes(item, det, vocab, by_id), _direction_notes(item, det, by_id)
+    # "every number is supported" is not said of an answer whose figure or direction word is wrong in a way the checker misses
+    if action == "abstain" and det.checks and len(supported) == len(det.checks) and not levels and not directions:
+        amounts = [c for c in det.claims if c.kind == "amount"]
         if item.question.question_type == "lookup" and any(  # "X in 2025, up from Y in 2024"
                 c.direction is not None and c.kind == "amount" and det.check(c.id).relation == "cell" for c in det.claims):
             out.append("Every number is supported, yet the policy withholds the answer: a direction word (“up”, “down”) beside a "
                        "looked-up figure raises its P(unsafe), because it counts the figures that carry one, a feature it learned on "
                        "the controlled track. Writing “compared with” instead of “up from” may let the answer through.")
+        elif (len(amounts) == 1 and det.check(amounts[0].id).relation == "cell"
+              and any(c.kind == "percent" and det.check(c.id).relation == "growth"
+                      and det.check(c.id).intended.metric == det.check(amounts[0].id).intended.metric for c in det.claims)):
+            # "grew 21.8% to Rs. 61.01 billion in 2026": the same figures with both years' are sent (a rate of the same
+            # line: not "total revenues were $1.87 billion, while net investment income grew 27.9%")
+            out.append("Every number is supported, yet the policy withholds the answer: a growth rate given with only the new year's "
+                       "figure (“grew X% to Y”) scores a high P(unsafe) on these large reports. Written with both years' figures "
+                       "(“from X in 2025 to Y in 2026”), as the template answer is, the same figures may be sent.")
         else:
-            out.append("Every number is supported, yet the policy withholds the answer: it was certified on the controlled track's small "
-                       "tables, and on large real reports (and on “by how much” questions) its P(unsafe) runs high, so it errs on the safe side.")
+            out.append("Every number is supported, yet the policy withholds the answer: it was certified on the controlled track, whose "
+                       "tables are small and whose answers are written from templates; on large real reports, on questions "
+                       "about the size of a change (“by how much”, “did it rise”, “what was the change in”) and on some "
+                       "wordings its P(unsafe) runs high, so it errs on the safe side.")
+    out += levels + directions
     if metric is None and any(c.intended.metric is None for c in supported):
         out.append(f"{UNKNOWN_LINE} FaithGuard could not tell which line of the report the question is about, so it only checked "
-                   "that each figure appears somewhere in the tables (a known limitation). Name the line as the report prints it.")
+                   "that each figure equals a figure in the tables, or a growth rate, difference, share or ratio of two of them "
+                   "(a known limitation). If the report prints this line, name it as the report does; if it does not, a match "
+                   "proves nothing.")
     elif metric is None and supported:
         # the question names no line, so the answer's own words chose the line each figure was checked against
         lines = list(dict.fromkeys(clean_label(by_id[c.cells[0]], vocab) for c in supported if c.cells and c.cells[0] in by_id))
@@ -608,9 +728,20 @@ def caveats(item: Item, det: DetectorOutput, action: str) -> list[str]:
     if re.search(r"\battributable\b", item.question.text, re.I):
         out.append("“Attributable to” is a breakdown the checker can confuse with the total row (profit for the year, including "
                    "non-controlling interests): check the owners' share against the report yourself (a known limitation).")
-    words = EXPLAIN.search(item.answer.text)
+    words = EXPLAIN.search(text)
     if words:
-        out.append(f"FaithGuard checks the numbers, not the words around them: “{words.group(0)}” was not checked.")
+        phrase = f" {normalise_metric(words.group(0))} "
+        read = next((c for c in det.claims if (k := det.check(c.id)).verdict != "supported" and "metric" in k.slots
+                     and k.intended.metric and any(s.metric == k.intended.metric and f" {s.text} " in phrase for s in vocab.surfaces)),
+                    None)
+        if read is not None:  # "grew 18.0% to $1.87 billion in 2025, driven by higher net earned premiums"
+            line = next((clean_label(x, vocab) for x in item.evidence.cells()
+                         if x.metric == det.check(read.id).intended.metric and x.row_label.strip()), det.check(read.id).intended.metric)
+            out.append(f"“{read.text}” was read as {_in_sentence(_display_label(line))} because the words “{words.group(0)}” name that "
+                       "line: FaithGuard reads a figure as a line its sentence names, and checks the numbers, not the words around "
+                       "them (a known limitation). The figure may be right.")
+        else:
+            out.append(f"FaithGuard checks the numbers, not the words around them: “{words.group(0)}” was not checked.")
     given = {e for c in supported if (e := _entity_of(c, by_id))}
     if asked and given and asked not in given:
         other = sorted(given)[0]
@@ -630,29 +761,224 @@ def caveats(item: Item, det: DetectorOutput, action: str) -> list[str]:
     if year and years and year not in years and len(supported) == len(det.checks):  # a misread figure may be the year asked
         out.append(f"The question asks about {year}, but the answer gives the {max(years)} figure. FaithGuard checks each number "
                    "against what the answer says it is, not whether it answers the question asked.")
+    if metric is not None and supported and len(supported) == len(det.checks):  # the line version: another line given openly
+        given_cells = [by_id[x] for c in supported for x in c.cells if x in by_id]
+        shown = given_cells[0] if given_cells and not any(x.metric == metric for x in given_cells) else None
+        asked_cell = next((x for x in item.evidence.cells() if x.metric == metric and x.row_label.strip()), None)
+        if shown is not None and asked_cell is not None and not any(  # not a row of the asked line printing the same figure
+                x.metric == metric and x.value == shown.value and (x.period, x.entity) == (shown.period, shown.entity)
+                for x in item.evidence.cells()):
+            out.append(f"The question asks about “{_display_label(clean_label(asked_cell, vocab))}”, but the answer gives the figure for "
+                       f"“{_display_label(clean_label(shown, vocab))}”. FaithGuard checks each number against what the answer says it "
+                       "is, not whether it answers the question asked.")
     if action != "repair" and any("restated" in (by_id[cid].column_label or "").lower() for cid in traced if cid in by_id):
         out.append(RESTATED)  # for a repair, released_problems says it of the cells behind the released text
-    counts = [c for c in det.claims if c.kind == "number" and c.currency is None and COUNT_AFTER.match(item.answer.text[c.end:c.end + 25])
-              and not (det.check(c.id).verdict == "supported"  # the report's own count: "Number of employees"
-                       and any(_COUNT_ROW.search(_label(by_id[x])) for x in det.check(c.id).cells if x in by_id))]
+    counts = [c for c in det.claims if c.kind == "number" and c.currency is None and COUNT_AFTER.match(text[c.end:c.end + 25])
+              and not _count_row(det.check(c.id), by_id)]  # the report's own count, "Number of employees", right or wrong
     if counts:
         out.append(f"“{counts[0].text}” is a count, not a report figure, but FaithGuard reads every number as a figure of the line asked "
                    "about (a known limitation): ignore what it does with it.")
+    refs = [c for c in det.claims if c.kind == "number" and c.currency is None and _BARE.match(c.text.strip())
+            and _REF_BEFORE.search(text[max(0, c.start - 12):c.start])
+            and (action != "repair" or det.check(c.id).verdict == "supported")]  # a figure the fix overwrote: released_problems
+    if refs:
+        out.append(f"“{refs[0].text}” looks like a page or note number, not a report figure, but FaithGuard reads every number as a "
+                   "figure of the line asked about (a known limitation): ignore what it says about it.")
     kind = item.question.question_type
     unchecked = [c for c in det.claims if c.kind in ("amount", "number") and det.check(c.id).verdict != "supported"]
-    if kind in ("sum", "average") and unchecked and action != "repair":  # for a repair, released_problems says it
+    if _adds_up(item.question, vocab) and unchecked and action != "repair":  # for a repair, released_problems says it
         total = max(unchecked, key=lambda c: abs(c.value))
         out.append(f"{SUM} “{total.text}” {'adds up' if kind == 'sum' else 'averages'} several lines, and FaithGuard compares a "
                    "figure with one line only (a known limitation).")
+    for c in det.claims:  # "changed by (22.5%)": a fall in accounting brackets, not an aside after a figure ("Rs X (3%)")
+        check = det.check(c.id)
+        if (c.kind == "percent" and check.verdict != "supported" and "sign" in check.slots and re.match(r"\s*\)", text[c.end:])
+                and re.search(r"\b(?:by|of|was|were|is|at|changed?|changes|growth|movement|decline|rise)\s*\(\s*$|:\s*\(\s*$",
+                              text[max(0, c.start - 20):c.start], re.I)):
+            right = set(check.slots) == {"sign"} and check.expected is not None and check.expected < 0
+            out.append(f"{BRACKETS} “({c.text})” is written in accounting brackets (a fall), but the frozen checker reads a bracketed "
+                       "rate as a rise (a known limitation)" + ("; read as a fall, it matches the report." if right else "."))
+            break
+    for c in det.claims:  # "decreased by Rs. 879.2 million, or 25.4%": the down word is the amount's, the rate has none of its own
+        check = det.check(c.id)
+        cells = [by_id.get(x) for x in check.cells]
+        if (c.kind != "percent" or check.verdict == "supported" or set(check.slots) != {"sign"} or c.direction_span
+                or check.relation != "growth" or re.match(r"\s*\)", text[c.end:]) or len(cells) != 2
+                or any(x is None or x.value is None for x in cells) or not cells[1].value):
+            continue
+        g = ops.growth(cells[0].value, cells[1].value)  # the report's rate: a fall that the rate's digits give
+        if g >= 0 or abs(abs(g) - abs(c.value)) > _unit(c) / 2:
+            continue
+        down = next((o for o in det.claims if o is not c and o.direction == "down" and o.direction_span and o.end <= c.start
+                     and sentence_bounds(text, o.start) == sentence_bounds(text, c.start)), None)
+        if down is not None:
+            out.append(f"{RATE_SIGN} “{c.text}” has no up/down word of its own (the sentence's “{text[slice(*down.direction_span)]}” is "
+                       f"on {down.text}), and the frozen checker reads such a rate as a rise (a known limitation); read as a fall, as the "
+                       "sentence says, it matches the report.")
+            break
+    out += _no_unit_notes(item, det, by_id)
     if action != "repair":  # for a repair, released_problems says it of the figure the fix changed
         for i, claim in enumerate(det.claims):  # one note per figure, each quoting its figure first (the pages key on it)
             check = det.check(claim.id)
-            if check.verdict != "supported" and set(check.slots) == {"period"} and not _own_year(item.answer.text, det.claims, i):
-                source = "the clause's year" if years_in(item.answer.text[slice(*sentence_bounds(item.answer.text, claim.start))]) \
-                    else "the question's year"
-                out.append(f"{ONE_YEAR} “{claim.text}” has no year of its own, so FaithGuard read it as {check.intended.period}, "
-                           f"{source} (a known limitation); it may be right.")
+            if check.verdict == "supported" or set(check.slots) != {"period"}:
+                continue
+            read = check.intended.period
+            if (split := _split_year(text, claim, read, vocab)):
+                out.append(f"{ONE_YEAR} “{claim.text}” is given for “{split[0]}”, which the frozen checker reads as {read}, not as the "
+                           f"report's {split[1]} column (a known limitation); it may be right. Write {split[1]} or {split[2]}.")
+                continue
+            if _own_year(text, det.claims, i) or not _another_year(text, claim, read):
+                continue  # a figure with no year, in a sentence that names no other: the question's year is the right reading
+            source = "the clause's year" if years_in(text[slice(*sentence_bounds(text, claim.start))]) else "the question's year"
+            if (bracket := _BRACKET_YEAR.match(text[claim.end:])):  # "Rs 13.87bn (FY2025)": the checker skips the aside
+                out.append(f"{ONE_YEAR} “{claim.text}” has its year in brackets after it (“{bracket.group(0).strip()}”), which "
+                           f"FaithGuard skips, so it read it as {read}, {source} (a known limitation); it may be right.")
+            else:
+                out.append(f"{ONE_YEAR} “{claim.text}” has no year of its own, so FaithGuard read it as {read}, {source} "
+                           "(a known limitation); it may be right.")
     return out
+
+
+def _chance(check) -> bool:
+    """A supported growth rate, difference, share or ratio whose line the checker never knew: a figure that equals some
+    two cells' change by chance ("Rs. 45 million" for the CEO's salary)."""
+    return check.verdict == "supported" and check.relation in ("growth", "diff", "share", "ratio") and check.intended.metric is None
+
+
+def _count_row(check, by_id: dict) -> bool:
+    """Whether the checker read a figure as the report's own count row ("Number of employees"), whatever its verdict."""
+    return (any(_COUNT_ROW.search(_label(by_id[x])) for x in set(check.cells) | set(_refs(check.fix)) if x in by_id)
+            or bool(_COUNT_ROW.search(check.intended.metric or "")))
+
+
+def _adds_up(question: Question, vocab: Vocabulary) -> bool:
+    """A sum or average question that does add up several figures: an average, or a sum naming two lines or two years.
+    "The Group's combined revenue" is one line's figure, whatever its type."""
+    if question.question_type == "average":
+        return True
+    return question.question_type == "sum" and (len(named_metrics(vocab, question.text)) > 1 or len(set(years_in(question.text))) > 1
+                                                 or bool(re.search(r"_\s+(?:and|plus)\s+_", _masked(question.text, vocab))))
+
+
+def _close(claim, value: Decimal, cell: Cell) -> bool:
+    """Whether the claim gives this value, to its printed rounding: in base units, or in the table's units when the
+    figure has no unit of its own ("1,256,522" for 1,256,522 thousand)."""
+    k = Decimal(10) ** cell.scale if claim.scale == 0 and claim.currency is None and cell.scale else Decimal(1)
+    return abs(abs(claim.value) * k - abs(value)) <= _unit(claim) * k / 2
+
+
+def _level_notes(item: Item, det: DetectorOutput, vocab: Vocabulary, by_id: dict) -> list[str]:
+    """A year's total given as a change ("increased by Rs. 3,500,217", "Profit rose by $570,128 thousand"): the checker
+    supports it against a level cell, so every number looks right while the change is wrong."""
+    text, out = item.answer.text, []
+    asked = question_context(item.question, vocab).metric
+    for c in det.claims:
+        check = det.check(c.id)
+        cell = by_id.get(check.cells[0]) if len(check.cells) == 1 else None
+        joint = re.fullmatch(r"\s+(by|of)\s+(?:about\s+|approximately\s+|around\s+|roughly\s+|nearly\s+|some\s+)?",
+                             text[c.direction_span[1]:c.start], re.I) if c.direction_span else None
+        if check.verdict != "supported" or check.relation != "cell" or c.kind != "amount" or cell is None or joint is None:
+            continue
+        base = max((p for p in vocab.periods if p < (cell.period or "")), default=None)
+
+        def change(of: Cell, base: str | None = base):
+            prev = next((x for x in item.evidence.cells() if (x.table_id, x.row, x.entity) == (of.table_id, of.row, of.entity)
+                         and x.period == base and x.value is not None), None)
+            return (of.value - prev.value, prev) if prev is not None else (None, None)
+
+        lines = {asked, check.intended.metric} - {None}  # the line asked about, and the one the answer names
+        changes = [change(cell)] + [change(x) for x in item.evidence.cells() if x.metric in lines and x.value is not None
+                                    and (x.period, x.entity) == (cell.period, cell.entity)]
+        if any(d is not None and _close(c, d, cell) for d, _ in changes):
+            continue  # a change that happens to equal a cell is still the change
+        d, prev = changes[0]
+        whose = f"the {ENTITY_WORD[cell.entity]}'s " if cell.entity in ENTITY_WORD and len(vocab.entities) > 1 else ""
+        out.append(f"{LEVEL} “{c.text}” follows “{text[slice(*c.direction_span)]} {joint.group(1)}”, but it is the report's "
+                   f"{cell.period} figure for {whose}{_in_sentence(clean_label(cell, vocab))}, "
+                   + (f"not the change from {prev.period} ({render(abs(d), _style(cell))})" if d is not None else "not a change")
+                   + ". The frozen checker accepts it because it matches a cell (a known limitation).")
+    return out
+
+
+_WORD_AFTER = re.compile(r"\s*(higher|lower|more|less|up|down|above|below|greater|smaller)\b", re.I)
+
+
+def _direction_notes(item: Item, det: DetectorOutput, by_id: dict) -> list[str]:
+    """Supported rates whose up/down word is wrong, which the checker did not check: a rate read from the report's
+    printed change column ("fell by 13%" for Sampath's +13), or one followed by a word the frozen extractor does not
+    read ("13% lower than in 2024" for a rise). A right word is not noted."""
+    text, out = item.answer.text, []
+    for c in det.claims:
+        check = det.check(c.id)
+        after = None if c.direction_span else _WORD_AFTER.match(text[c.end:])
+        word = text[slice(*c.direction_span)] if c.direction_span else after.group(1) if after else None
+        if check.verdict != "supported" or c.kind != "percent" or not word:
+            continue
+        up = c.direction == "up" if c.direction else word.lower() in ("higher", "more", "up", "above", "greater")
+        cell = by_id.get(check.cells[0]) if len(check.cells) == 1 else None
+        if check.relation == "cell" and cell is not None and cell.value is not None and re.search(r"\bchange\b", cell.column_label or "", re.I):
+            sign = cell.value
+            why = f"is read from the report's printed change column, so FaithGuard did not check the word “{word}” beside it"
+            fact = f"the report prints {cell.text} there, a {'rise' if sign > 0 else 'fall'}"
+        elif check.relation == "growth" and after and len(check.cells) == 2 and all(by_id.get(x) is not None for x in check.cells):
+            new, old = (by_id[x].value for x in check.cells)
+            sign = new - old if new is not None and old is not None else Decimal(0)
+            why = f"is followed by “{word}”, which FaithGuard does not read as a direction, so it did not check it"
+            fact = f"the report's figures give a {'rise' if sign > 0 else 'fall'}"
+        else:
+            continue
+        if sign != 0 and (sign > 0) != up:
+            out.append(f"{DIRECTION} “{c.text}” {why}: {fact} (a known limitation).")
+    return out
+
+
+_UNITS = re.compile(r"['’‘]\s*000|\b000\b|\b(?:thousands?|millions?|billions?|trillions?|mn|bn|lakhs?|crores?)\b", re.I)
+_SIZE = {3: ("thousands", "1,000"), 6: ("millions", "1,000,000"), 9: ("billions", "1,000,000,000")}
+
+
+def _no_unit_notes(item: Item, det: DetectorOutput, by_id: dict) -> list[str]:
+    """A figure with no unit matched by its digits to a cell printed in thousands or millions ("total assets were
+    1,284,560,210" for Rs. 1,284,560,210 thousand): as written it is that many times too small."""
+    if _UNITS.search(item.answer.text):
+        return []  # a unit anywhere ("Rs. '000", "in thousands") may be this figure's
+    for c in det.claims:
+        check = det.check(c.id)
+        cell = by_id.get(check.cells[0]) if check.relation == "cell" and len(check.cells) == 1 else None
+        if (check.verdict == "supported" and cell is not None and cell.kind == "amount" and cell.raw is not None
+                and cell.scale in _SIZE and c.kind in ("amount", "number") and c.currency is None and c.scale == 0
+                and abs(c.value - cell.raw) <= _unit(c) / 2 and not _COUNT_ROW.search(_label(cell))):
+            unit, times = _SIZE[cell.scale]
+            return [f"{NO_UNIT} “{c.text}” has no unit, but the table is in {unit}, so as written it is {times} times too small; "
+                    "FaithGuard matches its digits to the cell (a known limitation)."]
+    return []
+
+
+def _split_year(text: str, claim, read: str | None, vocab: Vocabulary) -> tuple[str, str, str] | None:
+    """("FY25/26", "2026", "FY2025/26") when the figure's sentence gives it for a split year that the frozen checker read
+    as its first year: the reports' FY2025/26 is their 2026 column."""
+    sentence = text[slice(*sentence_bounds(text, claim.start))]
+    for m in _SPLIT_FY.finditer(sentence):
+        first, second = f"20{m.group(1)}", str(2000 + int(m.group(2)))
+        if int(m.group(2)) == (int(m.group(1)) + 1) % 100 and read == first and second in vocab.periods:
+            return m.group(0), second, f"FY{first}/{m.group(2)}"
+    return None
+
+
+# a comparison in the sentence, so a figure with no year of its own may be another year's: "(2025: ...)", "compared
+# with", "than", "a year earlier", "the previous year", "from Rs. X", a markdown table's "|"
+_COMPARATIVE = re.compile(r"\(\s*(?:FY\s?)?(?:19|20)\d{2}[^()]*:|\b(?:compared|versus|vs\.?|than|earlier|ago|last\s+year)\b"
+                          r"|\b(?:prior|previous|preceding)\s+(?:financial\s+|fiscal\s+)?(?:year|period)\b"
+                          r"|\bfrom\s+(?:Rs\.?|LKR|US\$|\$|\d)|\|", re.I)
+_BRACKET_YEAR = re.compile(r"\s*\(\s*((?:FY\s?)?(?:19|20)\d{2}(?:\s?[/-]\s?\d{2,4})?)\s*\)", re.I)
+_REF_BEFORE = re.compile(r"\b(?:pages?|p\.|pp\.|notes?)\s*$", re.I)
+
+
+def _another_year(text: str, claim, read: str | None) -> bool:
+    """Whether a figure the checker read with its clause's (or the question's) year may be another year's: its sentence
+    names another year or compares two. Else ("The Group's revenue was Rs. 59,282,247 thousand.") the year read is the
+    one the answer gives it, and a fix to it is a fix."""
+    sentence = text[slice(*sentence_bounds(text, claim.start))]
+    return any(y != read for y in years_in(sentence)) or bool(_COMPARATIVE.search(sentence))
 
 
 def _singular(text: str) -> str:
@@ -690,14 +1016,23 @@ def _own_year(text: str, claims: list, index: int) -> bool:
     claim = claims[index]
     s_start, s_end = sentence_bounds(text, claim.start)
     clause = text[max(s_start, claims[index - 1].end if index else 0):claim.start]
-    if index and claims[index - 1].end >= s_start and (m := _PERIOD_AFTER.match(_ASIDE_AFTER.sub("", clause, count=1))):
-        clause = _ASIDE_AFTER.sub("", clause, count=1)[m.end():]  # the previous figure's year
-    if normalise_period(clause) or _PREVIOUS_YEAR.search(clause):
+    if index and claims[index - 1].end >= s_start:
+        clause = _ASIDE_AFTER.sub("", clause, count=1)  # the previous figure's aside: "Rs 14.21bn (FY2026) vs Rs 13.87bn"
+        if (m := _PERIOD_AFTER.match(clause)):
+            clause = clause[m.end():]  # the previous figure's year
+    # "the previous year's X" gives X its year, unless a direction word makes X a change, read with the sentence's year
+    if normalise_period(clause) or (_PREVIOUS_YEAR.search(clause) and not is_change_claim(text, claims, index)):
         return True
     next_start = claims[index + 1].start if index + 1 < len(claims) else s_end
     after = text[claim.end:min(next_start, s_end)]
     rest = _ASIDE_AFTER.sub("", after if after.strip(" (") else text[claim.end:s_end], count=1)
-    return bool(_PERIOD_AFTER.match(rest) or _PREVIOUS_AFTER.match(rest))
+    return bool(_PERIOD_AFTER.match(rest) or _PREVIOUS_AFTER.match(rest) or _NOUN_THEN_YEAR.match(rest))
+
+
+# "$414.8 million of net income in 2025", "4,428 employees in 2025": a year after a few words naming the figure
+_NOUN_THEN_YEAR = re.compile(r"^\s*(?:(?!(?:than|from|compared|versus|vs|over|since|against|up|down|higher|lower|more|less|above|"
+                             r"below|by|to|and|or)\b)[A-Za-z’'-]+\s+){1,4}(?:in|for|during|as at|as of)\s+(?:the\s+)?"
+                             r"(?:(?:fiscal|financial)\s+)?(?:year\s+)?(?:FY\s?)?(?:19|20)\d{2}\b", re.I)
 
 
 UNKNOWN_LINE = "Unknown line item:"
@@ -706,6 +1041,11 @@ ROUNDED = "Rounded:"
 ONE_YEAR = "One year per clause:"
 SUM = "Not checkable:"
 WORDING = "Wording:"
+LEVEL = "A total given as a change:"  # a supported figure that is a year's total, written as the change
+NO_UNIT = "No unit:"  # a supported figure with no unit, matched by its digits to a cell in thousands or millions
+BRACKETS = "Accounting brackets:"  # a fall written "(22.5%)", read by the checker as a rise
+DIRECTION = "Direction not checked:"  # an up/down word beside a rate whose direction the checker did not check
+RATE_SIGN = "Rate read as a rise:"  # a fall's rate with no up/down word of its own ("decreased by X, or 25.4%")
 RESTATED = "A figure comes from a restated comparative column (Restated*); the figure as originally reported is not in the tables."
 EXPLAIN = re.compile(r"\b(driven by|due to(?! (?:depositors|banks|other banks|customers|related|subsidiar|the group|the parent|holding))|"
                      r"because of|because|as a result of|owing to|thanks to|reflecting|on the back of|"
@@ -768,12 +1108,13 @@ def _same_name_row(item: Item, old, copied: list[str]) -> tuple[str, str, str] |
 
 def released_problems(item: Item, final) -> list[str]:
     """For a repaired answer, what the frozen gate passes but the demo says: a count or note number overwritten with a
-    figure, a figure that is another row's of the same name, a total overwritten with one line's figure, a figure read
-    under the clause's year and changed, one figure
-    written for two things, a repaired figure beside
-    a year that is not its cell's year, a restating bracket that now disagrees, the fix giving another part of the company
-    than the question asks about or mixing two parts in one sentence, the restated note for the cells behind the released
-    text, and a direction word the executor swapped ungrammatically."""
+    figure, a figure that is another row's of the same name, a right figure of the line asked about moved to another
+    line the answer's words name, a total overwritten with one line's figure, a figure read under the clause's year (or
+    a split year's first) and changed, a fix that gives another year than the question asks, one figure written for two
+    things, a repaired figure beside a year that is not its cell's year, a restating bracket that now disagrees, a figure
+    rounded far off in the answer's unit, the fix giving another part of the company than the question asks about or
+    mixing two parts in one sentence, the restated note for the cells behind the released text, and a direction word
+    the executor swapped ungrammatically."""
     if final.action != "repair" or not final.text or not final.repair or not final.repair.program:
         return []
     from faithguard.claims import extract_claims
@@ -788,14 +1129,20 @@ def released_problems(item: Item, final) -> list[str]:
     text = item.answer.text
     claims = {c.id: c for c in det.claims}
     by_id = {c.id: c for c in item.evidence.cells()}
+    vocab = Vocabulary(item.evidence.cells())
     for ch in res.changes:
         old = claims.get(ch.claim_id)
+        if old and old.value == 0 and "000" in old.text and ch.new != ch.old:  # "(Rs 000)" made a figure
+            out.append(f"{UNTRUSTED} “{old.text}” is a units note, not a report figure, and FaithGuard wrote {ch.new} over it (it "
+                       "reads every number as a figure: a known limitation).")
+            break
         if old and old.currency is None and old.scale == 0 and old.kind in ("amount", "number") and (
-                _BARE.match(old.text.strip()) or COUNT_AFTER.match(text[old.end:old.end + 25])):
+                _BARE.match(old.text.strip()) or COUNT_AFTER.match(text[old.end:old.end + 25])) and not (
+                _count_row(det.check(ch.claim_id), by_id)):  # the report's own count, "Number of employees", is a figure
             out.append(f"{UNTRUSTED} “{old.text}” looks like a count or a reference, not a report figure, and FaithGuard wrote "
                        f"{ch.new} over it (it reads every number as a figure: a known limitation).")
             break
-    if item.question.question_type in ("sum", "average"):
+    if _adds_up(item.question, vocab):
         moved = [c for c in res.changes if c.new != c.old and c.claim_id in claims]
         ch = max(moved, key=lambda c: abs(claims[c.claim_id].value), default=None)  # the total is the largest figure
         if ch is not None:
@@ -805,10 +1152,16 @@ def released_problems(item: Item, final) -> list[str]:
     for ch in res.changes:  # one note per changed figure, each quoting it first (the pages key on it)
         i = next((k for k, c in enumerate(det.claims) if c.id == ch.claim_id), None)
         check = det.check(ch.claim_id)
-        if (i is None or ch.new == ch.old or check.verdict == "supported" or set(check.slots) != {"period"}
-                or _own_year(text, det.claims, i)):
+        if i is None or ch.new == ch.old or check.verdict == "supported" or set(check.slots) != {"period"}:
             continue
         read = check.intended.period
+        if (split := _split_year(text, det.claims[i], read, vocab)):
+            out.append(f"{UNTRUSTED} “{ch.old}” is given for “{split[0]}”, which the frozen checker reads as {read}, so it changed it to "
+                       f"{ch.new}, the {read} figure; the report's {split[2]} is its {split[1]} column (a known limitation).")
+            one_year = True
+            continue
+        if _own_year(text, det.claims, i) or not _another_year(text, det.claims[i], read):
+            continue  # the year read is the one the answer gives the figure: a wrong-year figure, fixed
         meant, said = _meant_year(text, det.claims, i, read, item)
         source = "the clause's year" if years_in(text[slice(*sentence_bounds(text, det.claims[i].start))]) else "the question's year"
         out.append(f"{UNTRUSTED} FaithGuard reads one year per clause, so it read “{ch.old}” as {read}, {source}, and changed it, but the "
@@ -822,24 +1175,38 @@ def released_problems(item: Item, final) -> list[str]:
         if (cell is not None and cell.kind == "amount" and cell.value and written and ch.new != cell.text
                 and not (old and old.currency is None and old.scale == 0)  # a unit-less page or note number has no unit to keep
                 and abs(written[0].value - cell.value) > abs(cell.value) * Decimal("0.001")):
-            out.append(f"{ROUNDED} the fix keeps the answer's unit, so the report's figure {cell.text} is written as {ch.new}.")
+            shown, off = render(cell.value, _style(cell)), abs(written[0].value - cell.value) / abs(cell.value)
+            out.append(f"{UNTRUSTED} the fix keeps the answer's unit, so it writes the report's figure {shown} as {ch.new}, "
+                       f"{off * 100:.0f}% off (a known limitation): check the figure against the report." if off > Decimal("0.01")
+                       else f"{ROUNDED} the fix keeps the answer's unit, so the report's figure {shown} is written as {ch.new}.")
             break
+    noted = set()
     for ch in res.changes:
         if (named := _named_line(item, claims.get(ch.claim_id), ch.cells)):
             out.append(f"{UNTRUSTED} “{claims[ch.claim_id].text}” is the report's figure for “{named}”, the line the answer "
                        f"names, but FaithGuard read a shorter line name and changed it to {ch.new} (a known limitation).")
+            noted.add(ch.claim_id)
             break
         if ch.new != ch.old and (same := _same_name_row(item, claims.get(ch.claim_id), ch.cells)):
             label, where, read_in = (s[0].lower() + s[1:] if i else s for i, s in enumerate(same))
             out.append(f"{UNTRUSTED} “{claims[ch.claim_id].text}” is the report's figure for “{label}” in the {where}, but FaithGuard "
                        + (f"read the row of the same name in the {read_in}" if where != read_in else "read another row of that name")
                        + f" and changed it to {ch.new}; rows that share a name are a known limitation.")
+            noted.add(ch.claim_id)
+            break
+    for ch in res.changes:  # a right figure of the line asked about, moved to another line that the answer's words name
+        if ch.claim_id not in noted and (moved := _moved_line(item, vocab, claims.get(ch.claim_id), ch)):
+            asked_line, read_line = moved
+            out.append(f"{UNTRUSTED} “{claims[ch.claim_id].text}” is the report's figure for “{asked_line}”, the line the question asks "
+                       f"about, but FaithGuard read “{read_line}” in the answer's words and changed it to {ch.new} (a known limitation).")
             break
     changed, shift = [], 0
     for start, end, new_text in sorted(res.replacements):
         changed.append((start + shift, start + shift + len(new_text)))
         shift += len(new_text) - (end - start)
 
+    # the released text read again: whose figures it gives, from which columns and rows
+    rdet = detect(item.model_copy(update={"answer": item.answer.model_copy(update={"text": final.text})}))
     released = extract_claims(final.text)
     aligned = len(released) == len(det.claims)  # a repair swaps numbers for numbers, so the i-th figure stays the i-th
     restating = {i for i in range(len(det.claims) - 1) if _restates(text, det.claims[i], det.claims[i + 1])} if aligned else set()
@@ -849,13 +1216,23 @@ def released_problems(item: Item, final) -> list[str]:
             out.append(f"{UNTRUSTED} the answer gave one figure twice, {det.claims[i].text} ({det.claims[i + 1].text}), and the fix "
                        f"changed them to two different figures, {a.text} and {b.text}.")
             break
+
+    def one_line(a, b) -> bool:
+        """Two figures of one row in two years, or two cells that print the same figure: an unchanged line, not one
+        figure for two things ("Rs. 570,200 thousand in 2026, unchanged from Rs. 570,200 thousand in 2025")."""
+        if not any(c.id == a.id for c in rdet.claims) or not any(c.id == b.id for c in rdet.claims):
+            return False
+        ca, cb = set(rdet.check(a.id).cells) & set(by_id), set(rdet.check(b.id).cells) & set(by_id)
+        return bool(ca and cb and not ca & cb and ({(by_id[x].table_id, by_id[x].row) for x in ca} & {(by_id[x].table_id, by_id[x].row) for x in cb}
+                                                  or {by_id[x].text for x in ca} & {by_id[x].text for x in cb}))
+
     for i, a in enumerate(released):
         if one_year:
             break  # the same two figures: said above
         twin = next((b for j, b in enumerate(released) if j > i and not (j == i + 1 and i in restating)
                      and (a.kind == b.kind or {a.kind, b.kind} <= {"amount", "number"}) and a.value
                      and any(s <= c.start < e for c in (a, b) for s, e in changed)
-                     and abs(abs(a.value) - abs(b.value)) <= max(_unit(a), _unit(b)) / 2), None)
+                     and abs(abs(a.value) - abs(b.value)) <= max(_unit(a), _unit(b)) / 2 and not one_line(a, b)), None)
         if twin is not None:
             out.append(f"{UNTRUSTED} the fixed answer gives the same figure ({a.text} and {twin.text}) for two different things.")
             break
@@ -870,14 +1247,12 @@ def released_problems(item: Item, final) -> list[str]:
         tail = re.split(r"[,;]|\.\s*$|\.\s+[A-Z]|\bto\b|\band\b", final.text[s + len(new): s + len(new) + 40])[0]
         if re.match(r"\s*\)", tail):
             continue  # a figure in brackets: the year after them is the sentence's ("(X thousand) from 2025 to 2026")
+        tail = _BASE_YEAR.sub(" ", tail)  # "11.2% higher than in 2025": the year compared with, not the figure's
         years = years_in(tail) or [p for p in [normalise_period(tail)] if p]  # also "FY25", which years_in skips
         if len(periods) == 1 and years and years[0] not in periods:
             out.append(f"{UNTRUSTED} {new} is the {next(iter(periods))} figure, but the sentence says {years[0]}.")
             break
 
-    # the released text read again: whose figures it gives, and from which columns
-    rdet = detect(item.model_copy(update={"answer": item.answer.model_copy(update={"text": final.text})}))
-    vocab = Vocabulary(item.evidence.cells())
     asked = vocab.entity_in(_singular(item.question.text))
     given = {e for c in rdet.checks if c.verdict == "supported" and (e := _entity_of(c, by_id))}
     written = {by_id[x].entity for ch in res.changes for x in ch.cells if x in by_id} - {None}
@@ -887,6 +1262,13 @@ def released_problems(item: Item, final) -> list[str]:
         out.append(f"{UNTRUSTED} FaithGuard changed the figure to the {ENTITY_WORD.get(other, other)}'s "
                    + (f"because the answer says “{said.group(0)}”" if said else f"because it read the answer as about the {ENTITY_WORD.get(other, other)}")
                    + f", but the question asks about the {ENTITY_WORD.get(asked, asked)} (a known limitation).")
+    # the year version, worded as caveats() words it for a sent answer (the pages read both the same way)
+    year = item.question.period or max((y for y in years_in(item.question.text) if y in vocab.periods), default=None)
+    given_years = {by_id[x].period for c in rdet.checks if c.verdict == "supported" for x in c.cells if x in by_id} - {None}
+    written_years = {by_id[x].period for ch in res.changes for x in ch.cells if x in by_id} - {None}
+    if year and given_years and year not in given_years and written_years - {year}:
+        out.append(f"The question asks about {year}, but the answer gives the {max(written_years - {year})} figure. FaithGuard checks "
+                   "each number against what the answer says it is, not whether it answers the question asked.")
     kept = [c for c in det.claims if c.id not in {ch.claim_id for ch in res.changes} and det.check(c.id).verdict == "supported"]
     for ch in res.changes:
         entities = {by_id[x].entity for x in ch.cells if x in by_id} - {None}
@@ -912,6 +1294,27 @@ def released_problems(item: Item, final) -> list[str]:
     return out
 
 
+_BASE_YEAR = re.compile(r"\b(?:than|compared\s+(?:with|to)|from|versus|vs\.?|over|since|against)\s+(?:in\s+)?(?:FY\s?)?(?:19|20)\d{2}"
+                        r"(?:\s?[/-]\s?\d{2,4})?", re.I)
+
+
+def _moved_line(item: Item, vocab: Vocabulary, old, ch) -> tuple[str, str] | None:
+    """(the asked line, the line read) when a fix replaced a figure that equals, to its printed rounding, the asked
+    line's cell for the period and entity of the cell it copied, with a cell of another line: the figure was right, and
+    the checker read another line the answer's words name ("gross profit for the year ended 31 March 2026" read as
+    profit for the year, "..., driven by higher net earned premiums", "..., while net investment income grew 27.9%")."""
+    asked = question_context(item.question, vocab).metric
+    by_id = {c.id: c for c in item.evidence.cells()}
+    cell = by_id.get(ch.cells[0]) if len(ch.cells) == 1 else None
+    if not asked or old is None or old.kind != "amount" or ch.new == ch.old or cell is None or cell.metric in (None, asked):
+        return None
+    right = next((c for c in item.evidence.cells() if c.metric == asked and c.kind == "amount" and c.value is not None
+                  and (c.period, c.entity) == (cell.period, cell.entity) and abs(c.value - old.value) <= _unit(old) / 2), None)
+    if right is None:
+        return None
+    return _display_label(clean_label(right, vocab)), _display_label(clean_label(cell, vocab))
+
+
 def _unit(c) -> Decimal:
     """Half of this is the rounding a printed figure carries: 1 in its last digit, at its scale."""
     return Decimal(1).scaleb(-c.decimals) * (Decimal(10) ** c.scale if c.kind == "amount" else 1)
@@ -931,12 +1334,15 @@ _EARLIER_AFTER = re.compile(r"^[\s,]*(?:a\s+year\s+(?:earlier|before|ago)|(?:in\
 
 def _meant_year(text: str, claims: list, index: int, read: str | None, item: Item) -> tuple[str | None, bool]:
     """(the year the answer gives a figure that has no year of its own, whether the answer says it). Said: "a year
-    earlier", or the column of a year-headed table. Not said: the year the question asks about. (None, False) else."""
+    earlier", a year in brackets after it, or the column of a year-headed table. Not said: the year the question asks
+    about. (None, False) else."""
     claim = claims[index]
     s_start, s_end = sentence_bounds(text, claim.start)
     end = claims[index + 1].start if index + 1 < len(claims) else s_end
     if read and read.isdigit() and _EARLIER_AFTER.match(text[claim.end:min(end, s_end)]):
         return str(int(read) - 1), True
+    if (bracket := _BRACKET_YEAR.match(text[claim.end:])) and (year := normalise_period(bracket.group(1))) and year != read:
+        return year, True  # "$414.8 million (FY2024)": the checker skips the aside
     line_start = text.rfind("\n", 0, claim.start) + 1
     column = text[line_start:claim.start].count("|")
     header = next((line for line in text[:line_start].splitlines() if line.count("|") >= 2 and years_in(line)), None)
@@ -954,7 +1360,8 @@ _NOUN_OPPOSITE = {"decline": "growth", "drop": "rise"}  # the executor writes th
 def _direction_words(text: str, det: DetectorOutput, replacements: list) -> list[tuple]:
     """For each direction word the executor swapped: (its word, the grammatical word, the article before it, the
     replacements that write it grammatically). "a decline of" -> the executor's "a grow of", grammatically "a growth of";
-    "an increase" -> "an decrease", grammatically "a decrease"."""
+    "an increase" -> "an decrease", grammatically "a decrease"; "an 11.2% decline" -> "an 11.2% grow", grammatically
+    "an 11.2% growth". The article is the match of the words before the noun ("an", or "an 11.2%")."""
     spans = {tuple(c.direction_span) for c in det.claims if c.direction_span}
     out = []
     for s, e, new in replacements:
@@ -962,22 +1369,25 @@ def _direction_words(text: str, det: DetectorOutput, replacements: list) -> list
             continue
         old = text[s:e]
         article = re.search(r"\b(an?|the)\s+$", text[:s], re.I)
-        noun = bool(article) or bool(re.match(r"\s+(?:of|in)\b", text[e:], re.I))
+        lead = article or re.search(r"\b(an?|the)\s+(?:about\s+|approximately\s+|around\s+|nearly\s+)?[\d.,]+\s*(?:%|per\s?cent)\s+$",
+                                    text[:s], re.I)
+        noun = bool(lead) or bool(re.match(r"\s+(?:of|in)\b", text[e:], re.I))
         word = _match_case(_NOUN_OPPOSITE[old.lower()], old) if noun and old.lower() in _NOUN_OPPOSITE else new
         fixes = [(s, e, word)]
         if article and article.group(1).lower() in ("a", "an"):
             want = "an" if word[:1].lower() in "aeiou" else "a"
             if want != article.group(1).lower():
                 fixes.append((article.start(1), article.end(1), _match_case(want, article.group(1))))
-        out.append((new, word, article, fixes, bool(re.match(r"\s+of\b", text[e:], re.I))))
+        out.append((new, word, lead, fixes, bool(re.match(r"\s+of\b", text[e:], re.I))))
     return out
 
 
 def _bad_wording(text: str, det: DetectorOutput, replacements: list) -> list[tuple[str, str]]:
     """(what the released sentence reads, what the executor left) for each direction word it swapped ungrammatically."""
     out = []
-    for new, word, article, fixes, of in _direction_words(text, det, replacements):
-        before = f"{article.group(1)} " if article else ""
+    for new, word, lead, fixes, of in _direction_words(text, det, replacements):
+        start, s = (lead.start() if lead else fixes[0][0]), fixes[0][0]  # the words before it, as released ("an 11.2% ")
+        before = apply(text[start:s], [(a - start, b - start, n) for a, b, n in replacements if start <= a and b <= s])
         if word != new:
             out.append((f"{before}{new}{' of' if of else ''}", "its noun"))
         elif len(fixes) > 1:
@@ -1019,8 +1429,14 @@ def contradictions(text: str | None, det: DetectorOutput) -> list[str]:
                 # "grew by 21.4% ... from $503.6 million to $503.6 million": a rate from a figure to itself
                 out.append(f"{CONTRADICTION} “{rate.text}” cannot be the change from {a.text} to the same figure {b.text}. {unchecked}")
                 continue
-            metrics = {det.check(c.id).intended.metric for c in amounts}
-            if len(metrics) == 1 and None not in metrics and all(det.check(c.id).verdict == "supported" for c in amounts):
+            ca, cb, cr = (det.check(c.id) for c in (a, b, rate))
+            # a rate beside two levels of its own line, of one part of the company, in two years or "from ... to": not a
+            # change amount ("increased by $88.8 million, or 21.4%, to $503.6 million"), a margin ("30.2% (gross profit of X
+            # on revenue of Y)"), another part's figure ("..., while the Company's revenue was ...") or another line's rate
+            if (ca.verdict == cb.verdict == "supported" and ca.relation == cb.relation == "cell" and ca.intended.metric is not None
+                    and ca.intended.metric == cb.intended.metric == cr.intended.metric and ca.intended.entity == cb.intended.entity
+                    and cr.relation not in ("share", "ratio") and not _RATIO_WORDS.search(text[slice(*sentence_bounds(text, rate.start))])
+                    and (ca.intended.period != cb.intended.period or _from_to(text, det, amounts) is not None)):
                 order = _order(text, det, a, b)  # the earlier year is the base, whatever order the sentence gives them in
                 if not any(_rate_fits(rate, base, new) for base, new in ([order] if order else [(a, b), (b, a)])):
                     base, new = order or (a, b)
@@ -1032,7 +1448,9 @@ def contradictions(text: str | None, det: DetectorOutput) -> list[str]:
         if pair is None:
             continue
         base, new = pair
-        words = [c for c in claims if c.direction and c not in pair] or [c for c in pair if c.direction]
+        line = det.check(base.id).intended.metric  # a direction word of the pair's own line: not "..., while revenue rose 11.2%"
+        words = ([c for c in claims if c.direction and c not in pair and det.check(c.id).intended.metric == line]
+                 or [c for c in pair if c.direction])
         if words and new.value != base.value and (words[0].direction == "up") == (new.value < base.value):
             out.append(f"{CONTRADICTION} it says “{text[slice(*words[0].direction_span)]}”, but from {base.text} to {new.text} "
                        f"is a {'fall' if new.value < base.value else 'rise'}. {unchecked}")
@@ -1172,9 +1590,11 @@ def plant(item: Item, det: DetectorOutput) -> list[tuple[str, str]]:
     lookups = sorted([(claim, check) for claim, check in traced if check.relation == "cell"],
                      key=lambda x: by_id[x[1].cells[0]].period or "", reverse=True)
     in_answer = {by_id[check.cells[0]].id for _, check in lookups}
+    # nor a figure the answer gives already, right or not: "rose 0.0% from X to X"
+    taken = {by_id[x].value for check in det.checks if not _loose(check) for x in check.cells if x in by_id}
     for claim, check in lookups:
         a = by_id[check.cells[0]]
-        s = _sibling([c for c in cells if c.id not in in_answer], a, ("metric", "entity", "table_id"), "period",
+        s = _sibling([c for c in cells if c.id not in in_answer and c.value not in taken], a, ("metric", "entity", "table_id"), "period",
                      prefer=lambda c: (c.period or "") > (a.period or ""))
         if s is not None and (planted := _swap(item, det, traced, claim.id, a, s)):
             out.append((f"Wrong year: the {s.period} figure", planted))

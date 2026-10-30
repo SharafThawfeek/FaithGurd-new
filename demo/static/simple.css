@@ -67,6 +67,10 @@ textarea { width: 100%; min-height: 80px; padding: 10px 12px; border: 1px solid 
 .hint { font-size: 14px; color: var(--text-2); }
 .hint.pre { margin-top: 8px; }
 .err { background: var(--warn-soft); border: 1px solid #e9c46a; color: var(--warn-ink); border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 16px; }
+/* the AI's text when it was cut off: shown greyed, not checked */
+.cut { background: var(--surface-2); border: 1px dashed var(--line); color: var(--text-2); border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: 16px; }
+.cut .k { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+.cut[hidden] { display: none; }
 .spin { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.5); border-top-color: #fff; border-radius: 50%;
   animation: rot 0.8s linear infinite; vertical-align: -2px; margin-right: 6px; }
 .btn:not(.primary) .spin { border-color: var(--line); border-top-color: var(--accent); }

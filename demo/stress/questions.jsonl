@@ -1,0 +1,68 @@
+{"n": 1, "report": "demo:fictional-bank", "question": "What was the Group's profit after tax in 2025?"}
+{"n": 2, "report": "demo:fictional-bank", "question": "By what percentage did the Group's profit after tax grow in 2025?"}
+{"n": 3, "report": "demo:fictional-bank", "question": "What was the Group's net interest income in 2025?"}
+{"n": 4, "report": "demo:fictional-bank", "question": "How did the Bank's profit after tax change in 2025 compared with 2024?"}
+{"n": 5, "report": "demo:fictional-bank", "question": "What was the Group's total assets in 2025?"}
+{"n": 6, "report": "demo:fictional-bank", "question": "By what percentage did the Group's profit after tax change in 2025?"}
+{"n": 7, "report": "demo:fictional-bank", "question": "What were the total assets in the latest year?"}
+{"n": 8, "report": "demo:fictional-bank", "question": "Did profit rise or fall in the latest year, and by how much?"}
+{"n": 9, "report": "LK:SUN", "question": "What was the Group's profit for the year in 2026?"}
+{"n": 10, "report": "LK:SUN", "question": "By what percentage did the Group's profit for the year grow in 2026?"}
+{"n": 11, "report": "LK:SUN", "question": "What was the Group's revenue in 2026?"}
+{"n": 12, "report": "LK:SUN", "question": "How did the Company's profit for the year change in 2026 compared with 2025?"}
+{"n": 13, "report": "LK:SUN", "question": "What was the Group's other income in 2026?"}
+{"n": 14, "report": "LK:SUN", "question": "What was the Group's impairment reversal on trade receivables in 2026?"}
+{"n": 15, "report": "LK:SUN", "question": "What was the Group's finance income in 2026?"}
+{"n": 16, "report": "LK:SUN", "question": "By what percentage did the Group's gross profit change in 2026?"}
+{"n": 17, "report": "LK:SUN", "question": "By what percentage did the Group's impairment reversal on trade receivables change in 2026?"}
+{"n": 18, "report": "LK:SUN", "question": "By what percentage did the Group's profit before tax change in 2026?"}
+{"n": 19, "report": "LK:SUN", "question": "What were the total assets in the latest year?"}
+{"n": 20, "report": "LK:SUN", "question": "Did profit rise or fall in the latest year, and by how much?"}
+{"n": 21, "report": "US:KNSL", "question": "What was Kinsale's total revenues in 2025?"}
+{"n": 22, "report": "US:KNSL", "question": "By what percentage did Kinsale's total revenues grow in 2025?"}
+{"n": 23, "report": "US:KNSL", "question": "What was Kinsale's net earned premiums in 2025?"}
+{"n": 24, "report": "US:KNSL", "question": "What was Kinsale's net investment income in 2025?"}
+{"n": 25, "report": "US:KNSL", "question": "What was Kinsale's net realized investment gains in 2025?"}
+{"n": 26, "report": "US:KNSL", "question": "By what percentage did Kinsale's net written premiums change in 2025?"}
+{"n": 27, "report": "US:KNSL", "question": "By what percentage did Kinsale's net investment income change in 2025?"}
+{"n": 28, "report": "US:KNSL", "question": "By what percentage did Kinsale's other income change in 2025?"}
+{"n": 29, "report": "US:KNSL", "question": "What were the total assets in the latest year?"}
+{"n": 30, "report": "US:KNSL", "question": "Did profit rise or fall in the latest year, and by how much?"}
+{"n": 31, "report": "LK:CFIN", "question": "What was the Group's profit for the year in 2026?"}
+{"n": 32, "report": "LK:CFIN", "question": "By what percentage did the Group's profit for the year grow in 2026?"}
+{"n": 33, "report": "LK:CFIN", "question": "What was the Group's net interest income in 2026?"}
+{"n": 34, "report": "LK:CFIN", "question": "How did the Company's profit for the year change in 2026 compared with 2025?"}
+{"n": 35, "report": "LK:CFIN", "question": "What was the Group's net other revenue in 2026?"}
+{"n": 36, "report": "LK:CFIN", "question": "What was the Group's other income/ in 2026?"}
+{"n": 37, "report": "LK:CFIN", "question": "What was the Group's impairment / reversal and other credit losses in 2026?"}
+{"n": 38, "report": "LK:CFIN", "question": "By what percentage did the Group's interest income change in 2026?"}
+{"n": 39, "report": "LK:CFIN", "question": "By what percentage did the Group's net other revenue change in 2026?"}
+{"n": 40, "report": "LK:CFIN", "question": "By what percentage did the Group's total operating income change in 2026?"}
+{"n": 41, "report": "LK:CFIN", "question": "What were the total assets in the latest year?"}
+{"n": 42, "report": "LK:CFIN", "question": "Did profit rise or fall in the latest year, and by how much?"}
+{"n": 43, "report": "LK:SAMP", "question": "What was the Group's profit for the year in 2025?"}
+{"n": 44, "report": "LK:SAMP", "question": "By what percentage did the Group's profit for the year grow in 2025?"}
+{"n": 45, "report": "LK:SAMP", "question": "What was the Group's total Assets in 2025?"}
+{"n": 46, "report": "LK:SAMP", "question": "How did the Bank's profit for the year change in 2025 compared with 2024?"}
+{"n": 47, "report": "LK:SAMP", "question": "What was the Group's fee & commission income in 2025?"}
+{"n": 48, "report": "LK:SAMP", "question": "What was the Group's net fee & commission income in 2025?"}
+{"n": 49, "report": "LK:SAMP", "question": "What was the Group's total operating income in 2025?"}
+{"n": 50, "report": "LK:SAMP", "question": "What was the Group's personnel expenses in 2025?"}
+{"n": 51, "report": "LK:SAMP", "question": "By what percentage did the Group's less: Interest expense change in 2025?"}
+{"n": 52, "report": "LK:SAMP", "question": "By what percentage did the Group's net fee & commission income change in 2025?"}
+{"n": 53, "report": "LK:SAMP", "question": "By what percentage did the Group's net operating income change in 2025?"}
+{"n": 54, "report": "LK:SAMP", "question": "What were the total assets in the latest year?"}
+{"n": 55, "report": "LK:SAMP", "question": "Did profit rise or fall in the latest year, and by how much?"}
+{"n": 56, "report": "LK:TKYO", "question": "What was the Group's profit for the year in 2026?"}
+{"n": 57, "report": "LK:TKYO", "question": "By what percentage did the Group's profit for the year grow in 2026?"}
+{"n": 58, "report": "LK:TKYO", "question": "What was the Group's revenue from contracts with customers in 2026?"}
+{"n": 59, "report": "LK:TKYO", "question": "How did the Company's profit for the year change in 2026 compared with 2025?"}
+{"n": 60, "report": "LK:TKYO", "question": "What was the Group's other income in 2026?"}
+{"n": 61, "report": "LK:TKYO", "question": "What was the Group's profit before interest and tax in 2026?"}
+{"n": 62, "report": "LK:TKYO", "question": "What was the Group's profit before tax in 2026?"}
+{"n": 63, "report": "LK:TKYO", "question": "What was the Group's tax impact on other comprehensive income in 2026?"}
+{"n": 64, "report": "LK:TKYO", "question": "By what percentage did the Group's gross profit change in 2026?"}
+{"n": 65, "report": "LK:TKYO", "question": "By what percentage did the Group's profit before interest and tax change in 2026?"}
+{"n": 66, "report": "LK:TKYO", "question": "By what percentage did the Group's profit for the year change in 2026?"}
+{"n": 67, "report": "LK:TKYO", "question": "What were the total assets in the latest year?"}
+{"n": 68, "report": "LK:TKYO", "question": "Did profit rise or fall in the latest year, and by how much?"}

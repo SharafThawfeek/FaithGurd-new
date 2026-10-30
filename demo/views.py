@@ -13,7 +13,7 @@ from decimal import Decimal
 
 from faithguard.calc import expr
 from faithguard.calc.numbers import render
-from faithguard.claims import mention_of
+from faithguard.claims import Vocabulary, mention_of, question_context
 from faithguard.detect.channel_a import SLOT_NAMES
 from faithguard.detect.rules import EvidenceIndex
 from faithguard.executor import ExecError, execute
@@ -27,9 +27,10 @@ GATE_CHECKS = [
     ("closure", "growth rates built on a changed number were recomputed too"),
     ("envelope", "nothing outside the edited numbers changed"),
     ("recheck", "the rule checker supports every number in the repaired answer"),
-    # what the frozen check computes (repair/gate.py, detect/rules.py answers_question): the entity and year are not compared
-    ("relevance", "if the original had a supported number on the question's line item, the repair still has one "
-                  "(entity and year not compared)"),
+    # what the frozen check computes (repair/gate.py, detect/rules.py answers_question): the entity and year are not compared,
+    # and when the question names no line the checker reads, any supported number counts
+    ("relevance", "if the original had a supported number on the question's line item (any supported number, when the question "
+                  "names no line the checker reads), the repair still has one (entity and year not compared)"),
 ]
 
 
@@ -190,7 +191,8 @@ SHOWN_FEATURES = [
     ("risk", "Channel B risk"), ("n_claims", "numbers in the answer"), ("n_supported", "supported"),
     ("n_unsupported", "unsupported"), ("n_unverifiable", "unverifiable"), ("missing_operands", "missing operands"),
     ("evidence_sufficient", "evidence holds every fix"),
-    ("answers_question", "a supported number is on the question's line item (entity and year not compared)"),
+    ("answers_question", "a supported number is on the question's line item, or the question names no line the checker reads "
+                         "(entity and year not compared)"),
     ("n_percent_claims", "percentages"), ("n_directional_claims", "with a direction word"), ("n_cells", "evidence cells"),
 ]
 
@@ -205,6 +207,8 @@ def control_view(item: Item, det: DetectorOutput, final: FinalOutput, outcome_po
         "features": shown, "action": final.decision.action, "reason": final.decision.reason, "policy": final.decision.policy,
         "baseline": {"name": baseline.policy, "action": baseline.action, "reason": baseline.reason},
         "certificate": certificate,
+        # the line the frozen answers_question compares with (detect/rules.py): without one, any supported number is a "yes"
+        "question_line_named": question_context(item.question, Vocabulary(item.evidence.cells())).metric is not None,
     }
     if outcome_policy is not None:
         p_unsafe, p_fix = outcome_policy.scores(item, det)

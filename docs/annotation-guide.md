@@ -1,5 +1,7 @@
 # Annotation guide v2
 
+> **Note (D-114 (2)):** the freeze condition in the next paragraph was never met, since no person reviewed the pilot labels. The guide used for all main labels is this one as it stood in the filed commit (`prereg-v1`), and the labels were made by blind Claude passes, not people (D-103, D-105). The labelling rules below are unchanged.
+
 This guide says how to label AI answers about financial reports in Label Studio. Version 1 was used for the pilot (phase 3). Version 2 adds the hard cases the pilot raised ([Hard cases](#hard-cases), and [Changes from v1](#changes-from-v1) at the end) and is used for all main labelling. It is frozen once a person has reviewed the pilot labels and found no case it leaves open; after that, any change needs a decision-log entry.
 
 ## What you see

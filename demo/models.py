@@ -93,7 +93,9 @@ class LiveModels:
 
     def start(self, channel_a: bool = True, repairer: bool = True) -> threading.Thread:
         if not repairer:
-            self.repairer.detail = "not loaded (--no-repairer)"
+            self.repairer.detail = "started with --no-repairer"
+        elif channel_a and self.adapter_dir is not None and Path(self.adapter_dir).exists():
+            self.repairer.state, self.repairer.detail = "loading", "waiting for Channel A to load first"  # not "off" meanwhile
         thread = threading.Thread(target=self._load, args=(channel_a, repairer), daemon=True)
         thread.start()
         return thread

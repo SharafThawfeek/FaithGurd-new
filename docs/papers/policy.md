@@ -2,7 +2,7 @@
 
 Sharaf, M.L Ahamed, M.S.A Ahamed
 
-> **Draft status (2026-10-29).** The test set is locked (394 questions, 788 answers) and labelled (D-103 to D-105). The results on natural answers (the abstract and §6.2) are filled from the pre-registered analysis of the main runs ([runs/main/report.md](../../runs/main/report.md); [preregistration](../preregistration.md); D-109 to D-112). The method follows the filed pre-registration and D-100 to D-112. Still to do: the citations (below) and a final edit of the whole paper. Numbers marked *development* come from the controlled track and test no hypothesis. Citations marked `[verify]` or `[CITE: …]` must be checked against the source and entered in [related-work/policy.md](../related-work/policy.md) before submission.
+> **Draft status (2026-10-30).** The test set is locked (394 questions, 788 answers) and labelled (D-103 to D-105). The results on natural answers (the abstract and §6.2) are filled from the pre-registered analysis of the main runs ([runs/main/report.md](../../runs/main/report.md); [preregistration](../preregistration.md); D-109 to D-112). The method follows the filed pre-registration and D-100 to D-112. Still to do: the citations (below) and a final edit of the whole paper. Numbers marked *development* come from the controlled track and test no hypothesis. Citations marked `[verify]` or `[CITE: …]` must be checked against the source and entered in [related-work/policy.md](../related-work/policy.md) before submission.
 
 ## Abstract
 
@@ -28,13 +28,13 @@ We do not claim the first accept-repair-abstain policy, nor the first risk-contr
 
 **Distribution-free risk control.** Risk-controlling prediction sets (Bates et al., 2021) and Learn-then-Test (Angelopoulos et al., 2021 `[verify]`) certify that a chosen parameter keeps a risk below α with probability at least 1 − δ, using p-values such as the Hoeffding–Bentkus bound and multiple-testing procedures such as fixed-sequence testing. We apply Learn-then-Test to a grid of accept-repair-abstain rules, with a linearised loss so that a ratio (errors among sent answers) can be certified. `[CITE: SCoRE / score-select — open and verify]` offers a selection procedure whose guarantee holds in expectation; we use it as a comparator for the send-or-abstain decision.
 
-**Accept-repair-abstain policies.** `[CITE: CORA — open and verify]` and `[CITE: Release Control — open and verify]` already combine accepting, repairing and abstaining. We differ in certifying the whole pipeline's risk including repair-introduced errors, in reporting the label budget, and in studying transfer across a change of repairer. `[CITE: Conformal Policy Control — verify]` is a possible fourth transfer arm (stretch).
+**Accept-repair-abstain policies.** The revised plan names two accept-repair-abstain systems, CORA and Release Control. We have not yet located or read either, so we make no claim about what they do, and they are left out of the references until someone has opened them ([related-work/policy.md](../related-work/policy.md)). We do not claim the first accept-repair-abstain policy (§1). Our claim is narrower: we certify the whole pipeline's risk including repair-introduced errors, report the label budget, and study transfer across a change of repairer. `[CITE: Conformal Policy Control — verify]` is a possible fourth transfer arm (stretch).
 
 **Outcome models.** We use gradient-boosted trees (LightGBM; Ke et al., 2017) and, as one challenger, a fine-tuned encoder of the ModernBERT family `[CITE: ModernBERT — verify]`, `[CITE: mmBERT — verify]`: the one the companion detection paper's learned detector starts from `[CITE: LettuceDetect — verify]`.
 
 ## 3. Setting
 
-Each item is a question, frozen evidence and an answer. A detector (companion detection paper) produces claim-level verdicts and a calibrated risk; a repairer (companion repair paper) can return a repaired answer or withhold. Each action's outcome is one of:
+Each item is a question, frozen evidence and an answer. A detector produces claim-level verdicts and a risk. In this study the detector is the companion detection paper's rule checker (Channel B) alone, whose risk takes three values (0, 0.5 and 1); the learned detector (Channel A) and the fused score do not enter the policy (frozen code, D-104). A repairer (companion repair paper) can return a repaired answer or withhold. Each action's outcome is one of:
 
 | State | Meaning |
 | --- | --- |
@@ -53,7 +53,7 @@ For every item the replay harness runs the detector, records the features known 
 
 ### 4.2 Features and outcome models
 
-Features are pre-action only: the detector's risk; counts of claims, of supported, unsupported and unverifiable claims, and of evidence links; failing slots by type; missing operands; whether every failing claim has a correct value in the evidence (evidence sufficiency); whether the answer addresses the question; the size of the evidence; percentage and directional claims; the learned detector's highest span score; and the question type. Nothing comes from the gold store or from a repair attempt.
+Features are pre-action only: the detector's risk; counts of claims, of supported, unsupported and unverifiable claims, and of evidence links; failing slots by type; missing operands; whether every failing claim has a correct value in the evidence (evidence sufficiency); whether a supported number is on the question's line item (the entity and year are not compared); the size of the evidence; percentage and directional claims; the learned detector's highest span score (0 throughout this study, since the rule checker produces no learned spans); and the question type. Nothing comes from the gold store or from a repair attempt.
 
 The benchmark has no fit or tune issuers, so the policy is fitted and tuned on the controlled track's fit and tune records (D-102). Two LightGBM models are trained on the controlled track's fit split:
 
@@ -174,13 +174,11 @@ Claude (Anthropic's Claude Opus 5.5) wrote the project's code and drafted its do
 
 `[Check every entry against the source and fill docs/related-work/policy.md.]`
 
-- Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan, M. I. and Lei, L. 2021. Learn then Test: Calibrating predictive algorithms to achieve risk control. arXiv. `[verify venue]`
+- Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan, M. I. and Lei, L. 2021. Learn then Test: Calibrating predictive algorithms to achieve risk control. arXiv. `[verify venue: the literature-review workbooks give The Annals of Applied Statistics 19(2), 2025, doi:10.1214/24-AOAS1998; not yet checked against the source]`
 - Bates, S., Angelopoulos, A., Lei, L., Malik, J. and Jordan, M. 2021. Distribution-free, risk-controlling prediction sets. Journal of the ACM. `[verify]`
 - Geifman, Y. and El-Yaniv, R. 2017. Selective classification for deep neural networks. NeurIPS.
 - Ke, G. et al. 2017. LightGBM: A highly efficient gradient boosting decision tree. NeurIPS.
 - `[CITE: SCoRE / score-select]`
-- `[CITE: CORA]`
-- `[CITE: Release Control]`
 - `[CITE: Conformal Policy Control]`
 - `[CITE: ModernBERT]`
 - `[CITE: mmBERT]`

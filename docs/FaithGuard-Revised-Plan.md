@@ -1,6 +1,6 @@
 # FaithGuard: Revised Research Plan
 
-> **Superseded in two places (D-114):** the human labelling and checking, listed below as never cut, were replaced by blind Claude passes (D-103), and the test set was locked on 29 October 2026, not 31 January 2027 (D-104); the decision log records what was done instead.
+> **Superseded where the decision log says so (D-114), notably:** the human labelling and checking, listed below as never cut, were replaced by blind Claude passes (D-103), so an LLM labelled the test set, which the plan below rules out; the test set was locked on 29 October 2026, not 31 January 2027 (D-104); no table was hand-corrected, so the main-test tables are the project's readers' output, kept when every total adds up (D-114 (3)); the neural outcome model (mmBERT) replaced TabICLv2 as the policy's one challenger (D-096); recalibration uses 100 and 200 labels and all available, not 25 or 50 (D-102 (6)); and the extracted-evidence condition was not run on the main answers (D-113). The decision log records what was done instead.
 
 8 October 2026 (updated the same day: no university GPU)
 

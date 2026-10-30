@@ -40,6 +40,12 @@ TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=u
 CHANNEL_A_DIR = ROOT / "data" / "demo-models" / "channel-a" / "model"
 ADAPTER_DIR = ROOT / "data" / "demo-models" / "repair-v1" / "adapter"
 MAX_FIGURES = 25  # an answer with hundreds of figures would tie up the checker for everyone
+# forms the frozen checker misreads, refused with how to write them: "31.03.2026" (read as figures and overwritten) and
+# millions or billions before the number, "Rs. Mn 2,580" or "(Rs. Mn) was 2,580" (read as Rs. 2,580); "Rs. '000 1,280"
+# and "Rs. thousand 1,280" are read right
+NUMERIC_DATE = re.compile(r"\b\d{1,2}[./-]\d{1,2}[./-](?:\d{4}|\d{2})\b|\b\d{4}-\d{2}-\d{2}\b")
+UNIT_FIRST = re.compile(r"((?:\bRs\b\.?|\bLKR\b|\bUSD\b|US\$|\$)\s*(?:mn|bn|million|billion)\b\.?)\)?"
+                        r"\s*(?:(?:was|were|is|of)\s+|:\s*)?\d", re.I)
 
 
 def friendly(err: Exception) -> str:
@@ -66,27 +72,49 @@ def bad_answer(answer) -> str | None:
         return "That answer is too long for the demo (4,000 characters at most)."
     if any(ord(ch) > 0xFFFF for ch in answer):
         return "Emoji and other symbols outside the basic character set are not supported in the demo."
-    if len(re.findall(r"\d[\d,.]*", answer)) > MAX_FIGURES:
-        return f"That answer has too many figures for the demo ({MAX_FIGURES} at most)."
+    if len([n for n in re.findall(r"\d[\d,.]*", answer) if not re.fullmatch(r"(?:19|20)\d\d", n)]) > MAX_FIGURES:
+        return f"That answer has too many figures for the demo ({MAX_FIGURES} at most, years not counted)."
+    if (m := NUMERIC_DATE.search(answer)):
+        return (f"Write dates in words (“31 March 2026”): FaithGuard reads every number in an answer as a report figure, so it "
+                f"would read “{m.group(0)}” as figures and could overwrite them (a known limitation).")
+    if (m := UNIT_FIRST.search(answer)):
+        return (f"Write the unit after the number (“Rs. 2,580 million”): FaithGuard ignores “{m.group(1)}” written before "
+                "the number, so it would read the figure without its unit (a known limitation).")
     return None
 
 
 STARTED = time.time()
+# What the server runs, for "+ local changes": its Python code, the pages, and the files in git it reads at start. The
+# docs (demo/README.md, demo/SIMPLE.md) and the stress test's files (demo/stress/) do not count.
+CODE = (":(glob)src/**/*.py", ":(glob)demo/*.py", "demo/static", "demo/rehearsal.json", "runs/policy/controlled/results.json",
+        "manifests/issuers.csv")
+# Read once at start (the pages' own files are served fresh): a change to one needs a restart. The policy and the
+# examples list are not in git (*.pkl, data/), so only this check sees them.
+READ_AT_START = (HERE / "rehearsal.json", ROOT / "runs" / "policy" / "controlled" / "policy.pkl",
+                 ROOT / "runs" / "policy" / "controlled" / "results.json", ROOT / "data" / "demo" / "examples.json",
+                 ROOT / "manifests" / "issuers.csv")
 
 
 def edited_since(started: float) -> bool:
-    """A Python file of demo/ or src/ (or the rehearsal recordings) changed after the server started: it still runs the
-    older code. The pages' own files are served fresh, so they do not count."""
-    files = [*(ROOT / "src").rglob("*.py"), *HERE.glob("*.py"), HERE / "rehearsal.json"]
+    """A Python file of demo/ or src/, or a file read at start, changed after the server started: it still runs the older
+    code or data."""
+    files = [*(ROOT / "src").rglob("*.py"), *HERE.glob("*.py"), *READ_AT_START]
     return any(p.exists() and p.stat().st_mtime > started for p in files)
 
 
+def local_changes() -> list[str]:
+    """The files of CODE that differ from the last commit, as git status lists them."""
+    out = subprocess.run(["git", "status", "--porcelain", "--", *CODE], cwd=ROOT, capture_output=True, text=True, timeout=5)
+    return out.stdout.splitlines()
+
+
 def version(started: float | None = None) -> str:
-    """The code: the commit, whether demo/ or src/ differ from it, and whether they were edited after the server started.
-    Read again on every status request, so the pill on screen never shows a state older than the working tree."""
+    """The code: the commit, whether the code the server runs differs from it, and whether that code (or a file read at
+    start) was edited after the server started. Read again on every status request, so the pill on screen never shows a
+    state older than the working tree."""
     try:
         head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True, timeout=5).stdout.strip()
-        dirty = subprocess.run(["git", "status", "--porcelain", "--", "demo", "src"], cwd=ROOT, capture_output=True, text=True, timeout=5).stdout.strip()
+        dirty = local_changes()
     except (OSError, subprocess.SubprocessError):
         return ""
     stale = started is not None and edited_since(started)

@@ -86,5 +86,8 @@ def results(root: Path) -> dict:
         "policy": _fresh(_text(root / "runs/policy/controlled/report.md")),
         "main": _text(root / MAIN),
     }
+    # the select lists the table's runs first, in its order, then the other reports (superseded runs among them, kept as run)
+    order = {Path(path).parent.name: i for i, (path, *_) in enumerate(REPAIRERS) if path.startswith("kaggle/")}
+    found = sorted((root / "runs/repair/kaggle").glob("*/report.md"), key=lambda p: (order.get(p.parent.name, len(REPAIRERS)), p.parent.name))
     return {"detectors": det_rows, "repairers": rep_rows, "pilot_repair": pilot_rows, "reports": reports,
-            "repair_reports": {p.parent.name: _text(p) for p in sorted((root / "runs/repair/kaggle").glob("*/report.md"))}}
+            "repair_reports": {p.parent.name: _text(p) for p in found}}

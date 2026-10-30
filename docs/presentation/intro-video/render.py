@@ -481,18 +481,20 @@ class Flow:
         for i, (k, name) in enumerate(rows):
             items += [(icon(k, 40, BRONZE), 36, 96 + i * 70), (text_sprite(name, "semibold", 30, NAVY), 92, 94 + i * 70)]
         self.inp = compose(inp, items)
-        steps = [(1, "Detect", "Every number is checked against the report's tables. What does not fit is flagged, with the reason."),
+        # the rule checker misses 26 of 170 wrong numeric answers (runs/main/labels/report.md), so the card says so
+        steps = [(1, "Detect", "Every number is checked against the report's tables. Mismatches are flagged, with the reason. Some errors are missed."),
                  (2, "Decide", "Send it as it is, repair it, or hold it back?"),
-                 (3, "Repair", "Wrong numbers are replaced with the report's own figures, each traced to its source.")]
+                 (3, "Repair", "Flagged numbers are replaced with the report's own figures, each traced to its source.")]
         self.steps, self.steps_hl = [], []
         for n, title, body in steps:
             content = [(badge(n), 34, 34), (text_sprite(title, "semibold", 44, NAVY), 104, 30),
                        (text_sprite(body, "regular", 28, INK2, max_w=340), 34, 116)]
             self.steps.append(compose(card(400, 330), content))
             self.steps_hl.append(compose(card(400, 330, border=BRONZE, bw=3, shadow=0.2), content))
+        # sent, not "trusted": no policy was certified on the benchmark's answers (runs/main/report.md, D-113)
         self.ok = compose(card(400, 116, fill=GREEN_BG),
                           [(icon("check", 56, WHITE, bg=GREEN, inner=0.6), 28, 30),
-                           (text_sprite("Trusted answer,\nwith its sources", "semibold", 28, GREEN, spacing=1.18), 104, 20)])
+                           (text_sprite("Answer sent,\nwith its sources", "semibold", 28, GREEN, spacing=1.18), 104, 20)])
         self.hold = compose(card(400, 116, fill=AMBER_BG),
                             [(icon("info", 56, WHITE, bg=AMBER, inner=0.6), 28, 30),
                              (text_sprite("Held back: evidence\nand an honest reason", "semibold", 28, AMBER, spacing=1.18), 104, 20)])
@@ -514,7 +516,7 @@ class Flow:
             lift = -8 * hl[i]
             blit(fr, self.steps[i], self.x[i + 1], y + 24 * (1 - b) + lift, b)
             blit(fr, self.steps_hl[i], self.x[i + 1], y + lift, b * hl[i])
-        g = ramp(t, sc.at(3, "so every corrected"), 0.6)
+        g = ramp(t, sc.at(3, "so every changed"), 0.6)
         blit(fr, self.down, self.x[3] + 200 - self.down.w / 2, y + 344, g)
         blit(fr, self.ok, self.x[3], y + 418 + 20 * (1 - g), g)
         k = ramp(t, sc.at(4) + 0.2, 0.6)
@@ -544,7 +546,7 @@ class Example:
         # the report extract: headers in the card, figures drawn above their highlights
         self.cols = ["Profit after tax (Rs. '000)", "Group 2025", "Group 2024", "Bank 2025"]
         self.cw = [400, 240, 240, 240]
-        items = [(label_sprite("Annual report extract", 20, INK2), 32, 22)]
+        items = [(label_sprite("Annual report extract (fictional bank, made-up figures)", 20, INK2), 32, 22)]
         x = 32
         for i, cname in enumerate(self.cols):
             items.append((text_sprite(cname, "semibold" if i else "regular", 27, NAVY if i else INK2), x, 68))
@@ -600,7 +602,8 @@ class Different:
 
     def __init__(self):
         self.head = heading("What makes it different")
-        rows = [("search", "Learns context mistakes from real company filings"),
+        # D-H1 was untestable (4 wrong-context test answers) and the development ablation showed no gain
+        rows = [("search", "Trains on context mistakes built from US filings; not shown to help"),
                 ("edit", "Fixes numbers precisely, instead of rewriting answers"),
                 ("gauge", "Tests a limit on wrong answers, and says when it is not met"),
                 ("chip", "Runs on small, open models and free hardware"),

@@ -145,6 +145,8 @@ Step by step:
 
 `faithguard.pipeline.run(item, detector, policy, repairer)` wires these stages together. Each stage is a plain function or object, so the rule-only versions (detector v0 = Channel B, policy v0 = threshold, repairer v0 = rules) and the trained versions are interchangeable without changing the pipeline.
 
+**What the evaluated system uses.** In the frozen code (`prereg-v1`, D-104), the pipeline, the replay harness, the benchmark analysis and the GPU systems run all give the policy the rule checker's output (`faithguard.detect.detect`, detector v0). Channel A and fusion (steps 5 and 6) are evaluated in the detection paper, and Channel A's spans drive the repair variants that use them, but neither feeds the policy: its risk takes the rule checker's three values (0, 0.5 and 1), and Channel A's span-score feature is 0 throughout.
+
 ### 2.3 The offline side in detail
 
 ```mermaid
@@ -421,7 +423,7 @@ How it works:
 2. **Trace each claim.** An amount is compared with cells; a percentage with growth rates, shares and printed percentage cells; a difference with differences. Comparison uses the printed precision of the claim.
 3. **Name the slots.** If the number only matches a cell whose context differs from the intended one, every differing part becomes a slot: another entity is `entity_scope`, another year is `period`, another line item is `metric`. Right digits with the wrong unit word is `scale_currency`; a direction word that disagrees with the sign is `sign`; a growth computed on the wrong base is `basis`; a needed cell absent from the evidence is `missing_operand`.
 4. **Record the fix.** For the intended context, the checker records the expression that gives the correct value. The policy uses whether such fixes exist (*evidence sufficiency*), and the rule-only repairer uses them directly.
-5. **Relevance.** The checker also records whether the answer addresses the question (`answers_question`), which the gate later uses.
+5. **Relevance.** The checker also records whether the answer has a supported number on the question's line item (`answers_question`; any supported number when the question names no line item), which the gate later uses. It does not compare the entity or the year, so it does not show that the answer answers the question asked.
 
 Text-only numbers count only weakly: a number found only in a text passage that does not name the intended metric is "unverifiable", not "supported" (D-017). When a metric appears in several rows with different values, the checker uses the row the answer's other numbers came from (D-019).
 
@@ -504,7 +506,7 @@ flowchart LR
     PC --> RISK["Item risk = 1 - prod(1 - p_claim)<br/>(0.5 if no claim to check)"]
 ```
 
-The item risk is the chance that at least one claim is wrong, treating claims as independent. It feeds the policy as a feature and is what the calibrated detector-threshold baseline thresholds. The fusion study (`train/fusion_study.py`) fits and compares "B only", "A only" and "A + B" on a hash split of development items.
+The item risk is the chance that at least one claim is wrong, treating claims as independent. In the design it feeds the policy as a feature and is what the calibrated detector-threshold baseline thresholds; in the evaluated system both read the rule checker's risk instead (section 2.2), and the fused risk is evaluated in the detection paper. The fusion study (`train/fusion_study.py`) fits and compares "B only", "A only" and "A + B" on a hash split of development items.
 
 ### 5.6 Focusing large evidence
 
@@ -550,7 +552,7 @@ flowchart LR
     R -->|"else"| A["abstain"]
 ```
 
-**Features** (pre-action only: nothing from gold, nothing from a repair attempt): the detector's risk; numbers of claims, supported, unsupported and unverifiable claims; evidence links; missing operands; *evidence sufficiency* (every failing claim has a correct value in the evidence); whether the answer addresses the question; evidence size; percentage and directional claims; Channel A's highest span score; counts of each failing slot; and the question type.
+**Features** (pre-action only: nothing from gold, nothing from a repair attempt): the detector's risk; numbers of claims, supported, unsupported and unverifiable claims; evidence links; missing operands; *evidence sufficiency* (every failing claim has a correct value in the evidence); whether a supported number is on the question's line item (`answers_question`); evidence size; percentage and directional claims; Channel A's highest span score (0 throughout the evaluated system, whose policy reads the rule checker alone; section 2.2); counts of each failing slot; and the question type.
 
 **Outcome models.** Two LightGBM classifiers trained on replay records of the fit split. The one challenger is a neural outcome model (D-096, `policy/neural.py`): Channel A's v2 mmBERT encoder fine-tuned on a GPU with one output each for P(unsafe) and P(fix), reading the question, the focused evidence, the answer and the same features written as text. It trains on the fit split with early stopping on tune, and the study reads back the probabilities it wrote and certifies them on the same grid.
 
@@ -692,13 +694,13 @@ flowchart TD
     P --> C["Closure<br/>growth rates built on a changed<br/>amount were recomputed"]
     C --> E["Envelope<br/>nothing outside the edited claims<br/>and their direction words changed"]
     E --> K["Recheck<br/>Channel B supports every claim<br/>in the repaired answer"]
-    K --> V["Relevance<br/>the repaired answer still<br/>answers the question"]
+    K --> V["Relevance<br/>a supported number on the question's<br/>line item is kept (entity and<br/>year not compared)"]
     V --> D{"All passed?"}
     D -->|yes| OK["Release the repaired answer"]
     D -->|no| F["Failures listed, e.g.<br/>provenance: k2 uses t1r3c3 (entity_scope)"]
 ```
 
-Each check closes a specific way a repair can go wrong: copying the right-looking number from the wrong place (provenance), fixing an amount but leaving the growth rate built on it stale (closure), quietly changing other text (envelope), producing a number the evidence does not support (recheck), and answering a different question (relevance). The failure messages are fed back to the model for its one retry.
+Each check closes a specific way a repair can go wrong: copying the right-looking number from the wrong place (provenance), fixing an amount but leaving the growth rate built on it stale (closure), quietly changing other text (envelope), producing a number the evidence does not support (recheck), and dropping the question's line item (relevance; the entity and year are not compared, so a repair that keeps the Bank's figure for a question about the Group, or another year's figure, passes it). The failure messages are fed back to the model for its one retry.
 
 ### 7.6 The model repairer loop
 

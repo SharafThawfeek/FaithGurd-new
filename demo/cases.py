@@ -28,8 +28,9 @@ from faithguard.pipeline import run
 from faithguard.policy import ThresholdPolicy
 from faithguard.records import Item, RepairOutput, read_jsonl
 
-from ask import (Unanswerable, candidate_questions, caveats, contradictions, draft, figures_match, make_item, missing_year,
-                 other_company, plant, read_question, released_problems, reports_of)
+from ask import (BRACKETS, CONTRADICTION, DIRECTION, LEVEL, NO_UNIT, ONE_YEAR, RATE_SIGN, SUM, UNKNOWN_LINE, UNTRUSTED, Unanswerable,
+                 candidate_questions, caveats, contradictions, draft, figures_match, make_item, missing_year, other_company, plant,
+                 read_question, released_problems, reports_of, split_years)
 from models import ANSWER_TOKENS
 from views import catch_view, channel_a_view, control_view, evidence_view, jsonable, output_view, repair_view
 
@@ -43,7 +44,9 @@ FICTIONAL_TITLES = {
     "entity": ("Entity error", "The answer quotes the Bank's figures for a question about the Group."),
     "scale": ("Scale error", "Rs. '000 read as millions: the amount is a thousand times too large."),
     "period": ("Period error", "The 2024 figure is given for FY2025."),
-    "sign": ("Sign error", "Profit rose, but the answer says it fell."),
+    "sign": ("Sign error", "Profit rose, but the answer says it fell. The frozen demo data types all six fictional questions as "
+                           "lookups, so the policy reads this change question as a lookup (question type on Control); typed on "
+                           "Ask, the same question is typed as a growth question."),
     "missing_operand": ("Missing operand", "Return on equity is not in the evidence. 15.2% matches no ratio of two cells, so the "
                         "answer is withheld. A figure that does match one is traced to those cells and sent: 3.8% (net interest "
                         "income ÷ total assets, what the trained repairer writes here) or 29.5% (profit after tax ÷ net interest "
@@ -74,10 +77,18 @@ ANSWER_SOURCES = {
     "template": "a template, written from the cells the question names",
     "typed": "typed in the demo",
     "recorded": "Qwen3.5-2B, its answer to this question recorded at rehearsal (the live AI is not loaded)",
+    "recorded-loading": "Qwen3.5-2B, its answer to this question recorded at rehearsal (the live AI is still loading)",
     "recorded-failed": "Qwen3.5-2B, its answer to this question recorded at rehearsal (the live AI did not answer)",
 }
 REHEARSAL = Path(__file__).resolve().parent / "rehearsal.json"  # the live AI's answers to the script's questions
 MAX_SUGGESTIONS = 4
+# Notes that say a released fix or figure may be wrong, or that the checker misread a figure
+DOUBTFUL = (UNTRUSTED, CONTRADICTION, ONE_YEAR, SUM, LEVEL, NO_UNIT, BRACKETS, DIRECTION, RATE_SIGN)
+# The period, entity and line notes: the answer gives another year's, part's or line's figure than the question asks
+OFF_QUESTION = "The question asks about"
+# The Unknown-line note's advice to name the line, which a sidebar example's fixed question cannot take
+_NAME_THE_LINE = re.compile(r" (?:If the report prints this line, name it as the report does; if it does not, a match proves nothing\."
+                            r"|Name the line as the report prints it\.)$")
 # The stored Kaggle repair outputs, by the run folder data/demo/examples.json points at. Its own label was written while
 # v1 was a candidate; the run used the adapter later frozen as v1, and the live adapter reproduces its programs.
 KAGGLE_LABELS = {
@@ -89,6 +100,17 @@ PILOT_CAPTIONS = {
     "SAMP-2025-06:gemma": "Rs. 1,627,060,300 thousand is about Rs. 1,627 billion, not Rs. 1.63 billion. The checker traces Rs. 1.63 "
                           "billion to the right cell read at the wrong scale, but it did not read “owe its depositors” as the line "
                           "“due to depositors”, so it has no fix to copy, and the answer is withheld with the cell.",
+    "CFIN-2026-03:gemma": "The Company's growth is 11.662%. The rules recompute it from the Company columns; the trained repairer used "
+                          "a Group cell and the gate rejected it. The checker's match for 11.67% (two unrelated Group rows) is a "
+                          "coincidence. The reference answer on Output is written to one decimal (11.7%), so it fits 11.67% and "
+                          "11.66% alike; at the two decimals the answer prints, the report gives 11.66%, so 11.67% is a slip in the "
+                          "last digit (the checker compares each figure at the precision it is printed, “approximately” or not).",
+    "TKYO-2026-02:gemma": "A rounding slip (21.79% written as 21.7%). The rules match 21.7% to unrelated rows by coincidence "
+                          "(interest-bearing borrowings), cannot fix it, and the policy withholds the answer, showing those rows as its "
+                          "evidence. Here the trained repairer's program gives the right 21.8%. On the 23 wrong pilot answers the rules "
+                          "corrected more with the rule checker's flags (43.5% vs 39.1%); on the locked test both correct about half (the "
+                          "rule repairer 50.6%, v1 49.4% by the same gold scorer and 50.6% with labels for its changed repairs, D-112), "
+                          "and v1 makes far fewer new errors (0.4% vs 6.2%).",
 }
 # A cut-off AI answer is checked only up to its last complete sentence: an end mark the next sentence follows
 # ("Rs. 3,692" does not end one), so a trailing partial number never reaches the checker.
@@ -121,6 +143,7 @@ class Example:
     planted: bool = False  # ask only: edits hold the planted errors, each with the action the pipeline took
     planted_on: str = "original"  # or "repaired": the answer had no supported figure, so they went into its repair
     planted_dropped: int = 0  # planted errors left out because their repair did not give the figures back
+    planted_on_wrong: bool = False  # those left out were judged against an answer with a wrong figure, which their repair changed too
 
 
 def _rows(path: Path) -> dict[str, dict]:
@@ -287,14 +310,18 @@ class Demo:
             rule["not_released"] = True
 
         report = self.reports.get(e.report or e.item.question.issuer)  # its name on screen, for the sidebar examples too
+        notes = self.released_notes(item, final)
+        if e.group != "ask":  # a sidebar example's question cannot be edited: no advice to name the line
+            notes = [_NAME_THE_LINE.sub(" A match does not show that a figure is the one the question asks for.", n)
+                     if n.startswith(UNKNOWN_LINE) else n for n in notes]
         return jsonable({
             "id": e.item.id, "group": e.group, "title": e.title, "caption": e.caption, "expect": e.expect, "edited": edited,
             "question": e.item.question.model_dump(mode="json"), "answer": item.answer.text, "original_answer": e.item.answer.text,
             "generator": e.item.answer.generator, "evidence": evidence_view(item, det),
             "report": {"id": report.id, "name": report.name, "real": report.real} if report else None, "planted": e.planted,
-            "planted_on": e.planted_on, "planted_dropped": e.planted_dropped,
+            "planted_on": e.planted_on, "planted_dropped": e.planted_dropped, "planted_on_wrong": e.planted_on_wrong,
             # the known limitations this answer runs into, for the sidebar examples and their edits as for own questions
-            "caveats": caveats(item, det, final.action) + self.released_contradictions(item, final) + released_problems(item, final),
+            "caveats": notes,
             "edits": [{"label": label, "answer": answer, "expect": expect} for label, answer, expect in e.edits],
             "catch": catch_view(item, det, a_view),
             "control": control_view(item, det, final, self.policy, self.certificate),
@@ -388,26 +415,45 @@ class Demo:
     def ai_ready(self) -> bool:
         return self.models is not None and self.models.repairer.state == "ready"
 
+    def ai_loading(self) -> bool:
+        return self.models is not None and self.models.repairer.state == "loading"
+
+    def ai_off(self) -> str:
+        """Why Ask the AI has no live answer to give, as the status bar has it."""
+        if self.models is None:
+            return ("The AI is off: the demo was started with --no-models, and this question has no answer recorded at rehearsal. "
+                    "Write a template answer from the table, or type one.")
+        if getattr(self.models, "ai_stopped", False):
+            return "The AI is off: the model on the GPU failed several times in a row. Write a template answer from the table, or type one."
+        repairer = self.models.repairer
+        if repairer.state == "loading":
+            return ("The AI is still loading on the GPU (about a minute after the demo starts): try again in a moment, "
+                    "or write a template answer from the table, or type one.")
+        if repairer.state == "failed":
+            return f"The AI did not load on this laptop ({repairer.detail}): write a template answer from the table, or type one."
+        return (f"The AI is not loaded on this laptop ({repairer.detail or 'it needs the GPU and the model files'}): "
+                "write a template answer from the table, or type one.")
+
     def _recorded(self, r, question: str, recorded: dict, source: str) -> dict:
         self.generated[(r.id, question.strip(), recorded["answer"])] = source
         return {"answer": recorded["answer"], "source": "recorded", "by": f"{ANSWER_SOURCES[source]} on {recorded['recorded']}"}
+
+    def _recording(self, r, question: str) -> dict | None:
+        return self.recorded.get(r.id, {}).get(" ".join(question.split()))
 
     def ask_ai(self, report_id: str, question: str) -> dict:
         r = self.report(report_id)
         if (problem := other_company(r, question) or missing_year(r, question)):
             return {"error": problem}  # the same refusal as the table answer's, before the AI is asked
-        recorded = self.recorded.get(r.id, {}).get(" ".join(question.split()))
+        recorded = self._recording(r, question)
         stopped = bool(getattr(self.models, "ai_stopped", False))
         if not self.ai_ready():
-            if recorded:  # the AI is off (no GPU, --no-models, or it stopped answering): its answer to this question at rehearsal
-                return self._recorded(r, question, recorded, "recorded-failed" if stopped else "recorded")
-            if stopped:
-                return {"error": "The AI is off: the model on the GPU failed several times in a row. "
-                                 "Write a template answer from the table, or type one."}
-            return {"error": "The AI is not loaded on this laptop (it needs the GPU and the model files): "
-                             "write a template answer from the table, or type one."}
-        try:
-            text, seconds, cut = self.models.answer(question, r.evidence)
+            if recorded:  # the AI is off (no GPU, --no-models, still loading, or it stopped answering): its answer at rehearsal
+                return self._recorded(r, question, recorded,
+                                      "recorded-failed" if stopped else "recorded-loading" if self.ai_loading() else "recorded")
+            return {"error": self.ai_off()}
+        try:  # "FY25/26" asked as "FY2025/26", so the AI answers in a form the checker reads as the 2026 column
+            text, seconds, cut = self.models.answer(split_years(question)[0], r.evidence)
         except Exception as err:
             if recorded:
                 return self._recorded(r, question, recorded, "recorded-failed")
@@ -417,9 +463,10 @@ class Demo:
         out = {}
         if cut:  # it ran out of tokens mid-sentence, maybe mid-number: check only the sentences it finished
             ends = list(_SENTENCE_END.finditer(text))
-            if not ends:
+            if not ends:  # the usual case, as the prompt asks for one sentence: refused, its text shown as not checked
                 return {"error": f"The AI's answer ran past {ANSWER_TOKENS} tokens and was cut off before a sentence clearly "
-                                 "ended, so it is not checked. Ask a shorter question, write a template answer from the table, or type one."}
+                                 "ended, so it is not checked. Ask about one figure at a time, write a template answer from the "
+                                 "table, or type one.", "cut_text": text}
             text = text[:ends[-1].end()]
             out["note"] = f"The AI's answer ran past {ANSWER_TOKENS} tokens and was cut off; only its complete sentences are checked."
         self.generated[(r.id, question.strip(), text)] = "ai"
@@ -432,7 +479,11 @@ class Demo:
         try:
             text = draft(r, question)
         except Unanswerable as err:
-            return {"error": str(err)}
+            msg = str(err)
+            if not (self.ai_ready() or self.ai_loading() or self._recording(r, question)):
+                # the AI has no answer to this question either, so the refusal does not send the user to it
+                msg = re.sub(r"\bAsk the AI,? or type", "Type", re.sub(r",? ask the AI,", ",", msg))
+            return {"error": msg}
         self.generated[(r.id, question.strip(), text)] = "template"
         return {"answer": text, "source": "template", "by": ANSWER_SOURCES["template"]}
 
@@ -464,24 +515,44 @@ class Demo:
                 return e.item.model_copy(update={"answer": e.item.answer.model_copy(update={"text": text})})
 
             det = detect(e.item)
-            base, variants = e.item, plant(e.item, det)
+            original = run(e.item, policy=policy)
+            fixed = original.action == "repair" and original.text and original.text != e.item.answer.text
+            base, base_det, variants, ref = e.item, det, plant(e.item, det), e.item.answer.text
+            notes = self.released_notes(e.item, original) if fixed else []
+            doubtful = bool(fixed) and self.doubtful(e.item, original, notes=notes)
             if not any(c.verdict == "supported" for c in det.checks):
-                # a wrong answer has no supported figure to spoil: plant into its repair, if it got one that changed a figure
-                final = run(e.item, policy=policy)
-                if final.action == "repair" and final.text and final.text != e.item.answer.text:
-                    base = with_text(final.text)
-                    variants = plant(base, detect(base))
+                # a wrong answer has no supported figure to spoil: plant into its repair, if it got one that changed a figure,
+                # carries no warning that it may be wrong (a right figure "fixed" into another line's is no base) and answers
+                # the year, line and part of the company the question asks about
+                if fixed and not doubtful and not any(n.startswith(OFF_QUESTION) for n in notes):
+                    base = with_text(original.text)
+                    base_det = detect(base)
+                    variants, ref = plant(base, base_det), original.text
                     e.planted_on = "repaired"
+            elif fixed and not doubtful:
+                # a half-right answer: a repair fixes its wrong figure too, so each planted one is judged against that repair
+                ref = original.text
             edits, e.planted_dropped = [], 0
             for label, text in variants:
                 try:
                     final = run(with_text(text), policy=policy)
                 except Exception:  # a variant the pipeline cannot read is not offered
                     continue
-                if final.action == "repair" and not figures_match(final.text, base.answer.text):
+                if final.action == "repair" and not figures_match(final.text, ref):
                     e.planted_dropped += 1  # its repair does not give the figures back (a frozen-checker limitation)
                     continue
                 edits.append((label, text, final.action))
+            # judged against an answer with a wrong figure, which every repair changes as well: that is why they were left out
+            e.planted_on_wrong = (e.planted_dropped > 0 and ref == base.answer.text
+                                  and any(c.verdict == "unsupported" for c in base_det.checks))
             e.edits, e.planted = edits, True
         return {"edits": [{"label": label, "answer": answer, "expect": expect} for label, answer, expect in e.edits],
-                "on": e.planted_on, "dropped": e.planted_dropped}
+                "on": e.planted_on, "dropped": e.planted_dropped, "on_wrong": e.planted_on_wrong}
+
+    def released_notes(self, item: Item, final) -> list[str]:
+        """The notes the pages show with this answer (as case() writes them for an own question)."""
+        return caveats(item, final.detector, final.action) + self.released_contradictions(item, final) + released_problems(item, final)
+
+    def doubtful(self, item: Item, final, notes: list[str] | None = None) -> bool:
+        """The released answer carries a warning that its fix or its figures may be wrong (the pages show it in red)."""
+        return any(n.startswith(DOUBTFUL) for n in (self.released_notes(item, final) if notes is None else notes))
