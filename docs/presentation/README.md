@@ -1,6 +1,6 @@
 # Intro video
 
-`FaithGuard-Intro.mp4` is the current cut of the intro video that opens the defence (30 October 2026, 2 min 18 s, 1920×1080). Play this one. The cuts in `old/` are superseded: they are kept as a record of what was corrected, and they overclaim in the ways listed below.
+`FaithGuard-Intro.mp4` is the last cut of the AI-voiced intro video (30 October 2026, 2 min 18 s, 1920×1080). Do not play it at Progress Presentation 1: the module's PP1 template asks for a 1 to 2 minute video, and its handwritten note reads as recorded by a person, with AI tools for images only. The team records its own video from the script in the demo and viva run-sheet. The cuts in `old/` are superseded: they are kept as a record of what was corrected, and they overclaim in the ways listed below.
 
 The narration is a synthetic voice (Microsoft Edge text-to-speech, en-US-AndrewNeural), not a team member. Like the rest of the repository, the script and the render code were written by Claude at the team's direction (README, "AI assistance").
 
